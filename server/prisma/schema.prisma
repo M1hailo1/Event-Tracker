@@ -4,10 +4,82 @@
 // Get a free hosted Postgres database in seconds: `npx create-db`
 
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  createdAt DateTime @default(now())
+
+  events        Event[]        @relation("EventCreator")
+  registrations Registration[]
+  categories    Category[]
+}
+
+model Category {
+  id              String   @id @default(uuid())
+  name            String
+  isCustom        Boolean  @default(false)
+  createdByUserId String?
+  createdBy       User?    @relation(fields: [createdByUserId], references: [id])
+
+  events Event[]
+}
+
+enum RecurrencePattern {
+  DAILY
+  WEEKLY
+  MONTHLY
+  YEARLY
+}
+
+enum RegistrationStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+}
+
+model Event {
+  id                String             @id @default(uuid())
+  name              String
+  description       String?
+  date              DateTime
+  location          String
+  latitude          Float
+  longitude         Float
+  maxCapacity       Int?
+  isRecurring       Boolean            @default(false)
+  recurrencePattern RecurrencePattern?
+  isInviteOnly      Boolean            @default(false)
+  createdAt         DateTime           @default(now())
+
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id])
+
+  createdByUserId String
+  createdBy       User   @relation("EventCreator", fields: [createdByUserId], references: [id])
+
+  registrations Registration[]
+}
+
+model Registration {
+  id            String             @id @default(uuid())
+  status        RegistrationStatus @default(PENDING)
+  registeredAt  DateTime           @default(now())
+
+  userId  String
+  user    User   @relation(fields: [userId], references: [id])
+
+  eventId String
+  event   Event  @relation(fields: [eventId], references: [id])
+
+  @@unique([userId, eventId])
 }
