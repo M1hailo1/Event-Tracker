@@ -44,19 +44,26 @@ export async function createEvent(req: Request, res: Response) {
     },
   });
 
+  await prisma.registration.create({
+    data: {
+      userId: req.userId!,
+      eventId: event.id,
+      status: "CONFIRMED",
+    },
+  });
+
   res.status(201).json(event);
 }
 
 export async function getAllEvents(req: Request, res: Response) {
+  const showPast = req.query.includePast === "true";
+
   const events = await prisma.event.findMany({
+    where: showPast ? {} : { date: { gte: new Date() } },
     include: {
       category: true,
-      createdBy: {
-        select: { id: true, name: true },
-      },
-      _count: {
-        select: { registrations: true },
-      },
+      createdBy: { select: { id: true, name: true } },
+      _count: { select: { registrations: true } },
     },
     orderBy: { date: "asc" },
   });
@@ -116,6 +123,12 @@ export async function updateEvent(req: Request, res: Response) {
       .json({ error: "You don't have permission to edit this event" });
   }
 
+  if (existingEvent.date < new Date()) {
+    return res
+      .status(403)
+      .json({ error: "You can't edit events that finished" });
+  }
+
   const parseResult = updateEventSchema.safeParse(req.body);
   if (!parseResult.success) {
     return res.status(400).json({ error: parseResult.error.flatten() });
@@ -164,7 +177,16 @@ export async function deleteEvent(req: Request, res: Response) {
       .json({ error: "You don't have permission to delete this event" });
   }
 
-  await prisma.event.delete({ where: { id } });
+  if (existingEvent.date < new Date()) {
+    return res
+      .status(403)
+      .json({ error: "You can't delete events that finished" });
+  }
+
+  await prisma.$transaction([
+    prisma.registration.deleteMany({ where: { eventId: id } }),
+    prisma.event.delete({ where: { id } }),
+  ]);
 
   res.status(200).json({ message: "Event successfully deleted" });
 }
