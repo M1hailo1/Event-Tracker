@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { GoogleLogin } from "@react-oauth/google";
 
 const inputClass =
   "w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500";
@@ -13,7 +14,7 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [name, setName] = useState("");
   const [error, setError] = useState("");
-  const { register } = useAuth();
+  const { register, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
 
   async function handleSubmit(e: FormEvent) {
@@ -30,6 +31,20 @@ export default function RegisterPage() {
       navigate("/");
     } catch (err) {
       setError("Registration failed. Check your data.");
+      console.error(err);
+    }
+  }
+
+  async function handleGoogleSuccess(credentialResponse: {
+    credential?: string;
+  }) {
+    if (!credentialResponse.credential) return;
+    setError("");
+    try {
+      await loginWithGoogle(credentialResponse.credential);
+      navigate("/");
+    } catch (err) {
+      setError("Google sign in failed");
       console.error(err);
     }
   }
@@ -99,6 +114,13 @@ export default function RegisterPage() {
           Register
         </button>
       </form>
+
+      <div className="mt-4 pt-4 border-t border-gray-100">
+        <GoogleLogin
+          onSuccess={handleGoogleSuccess}
+          onError={() => setError("Google registration failed")}
+        />
+      </div>
 
       <p className="text-sm text-gray-500 text-center mt-4">
         Already have an account?{" "}

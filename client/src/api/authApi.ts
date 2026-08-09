@@ -24,3 +24,12 @@ export async function loginUser(
   });
   return response.data;
 }
+
+export async function googleAuthRequest(
+  credential: string,
+): Promise<AuthResponse> {
+  const response = await axiosInstance.post<AuthResponse>("/auth/google", {
+    credential,
+  });
+  return response.data;
+}
