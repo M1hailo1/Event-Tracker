@@ -20,7 +20,11 @@ export default function CreateEventPage() {
   return (
     <div>
       <h1>Create event</h1>
-      <EventForm onSubmit={handleCreate} submitLabel="Create event" />
+      <EventForm
+        onSubmit={handleCreate}
+        onCancel={() => navigate("/")}
+        submitLabel="Create event"
+      />
     </div>
   );
 }

@@ -57,11 +57,9 @@ export default function EditEventPage() {
           isInviteOnly: event.isInviteOnly,
         }}
         onSubmit={handleUpdate}
+        onCancel={() => navigate(`/events/${id}`)}
         submitLabel="Save changes"
       />
-      <button type="button" onClick={() => navigate(`/events/${id}`)}>
-        Discard changes
-      </button>
     </div>
   );
 }

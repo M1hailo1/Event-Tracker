@@ -24,7 +24,7 @@ function ClickHandler({
       if (onAddressFound) {
         try {
           const response = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`,
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=sr-Latn`,
             { headers: { "User-Agent": "EventTrackerApp/1.0" } },
           );
           const data = await response.json();

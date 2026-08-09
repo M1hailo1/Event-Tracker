@@ -6,19 +6,23 @@ import EventDetailsPage from "./pages/EventDetailsPage";
 import CreateEventPage from "./pages/CreateEventPage";
 import EditEventPage from "./pages/EditEventPage";
 import ProfilePage from "./pages/ProfilePage";
+import Navbar from "./components/Navbar";
 
 function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<EventsListPage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/events/:id" element={<EventDetailsPage />} />
-        <Route path="/events/new" element={<CreateEventPage />} />
-        <Route path="/events/:id/edit" element={<EditEventPage />} />
-        <Route path="/profile" element={<ProfilePage />} />
-      </Routes>
+      <Navbar />
+      <div className="max-w-5xl mx-auto px-6 py-8">
+        <Routes>
+          <Route path="/" element={<EventsListPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/events/:id" element={<EventDetailsPage />} />
+          <Route path="/events/new" element={<CreateEventPage />} />
+          <Route path="/events/:id/edit" element={<EditEventPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
+        </Routes>
+      </div>
     </BrowserRouter>
   );
 }

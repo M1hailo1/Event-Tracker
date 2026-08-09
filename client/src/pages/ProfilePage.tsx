@@ -22,35 +22,58 @@ export default function ProfilePage() {
       .finally(() => setIsLoading(false));
   }, []);
 
-  if (isLoading) return <p>Loading...</p>;
-  if (error) return <p style={{ color: "red" }}>{error}</p>;
+  if (isLoading) return <p className="text-gray-500">Loading...</p>;
+  if (error) return <p className="text-red-600">{error}</p>;
   if (!profile) return null;
 
   return (
-    <div>
-      <h1>{profile.name}</h1>
-      <p>{profile.email}</p>
-      <p>
-        Member since: {new Date(profile.createdAt).toLocaleDateString("sr-RS")}
-      </p>
+    <div className="max-w-2xl mx-auto">
+      <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
+        <div className="flex items-center gap-4 mb-4">
+          <div className="w-14 h-14 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xl font-bold">
+            {profile.name.charAt(0).toUpperCase()}
+          </div>
+          <div>
+            <h1 className="text-xl font-bold text-gray-900">{profile.name}</h1>
+            <p className="text-sm text-gray-500">{profile.email}</p>
+          </div>
+        </div>
 
-      {stats && stats.topCategory && (
-        <p>
-          <strong>{getTitleForCategory(stats.topCategory.name)}</strong>
+        <p className="text-xs text-gray-400">
+          Member since {new Date(profile.createdAt).toLocaleDateString("en-GB")}
         </p>
-      )}
+
+        {stats && stats.topCategory && (
+          <div className="mt-4 inline-block bg-indigo-50 text-indigo-700 text-sm font-medium px-4 py-2 rounded-full">
+            {getTitleForCategory(stats.topCategory.name)}
+          </div>
+        )}
+      </div>
 
       {stats && (
-        <div>
-          <h3>Statistics</h3>
-          <p>Number of attended events: {stats.totalEvents}</p>
-          <ul>
-            {stats.categoryCounts.map((c) => (
-              <li key={c.categoryId}>
-                {c.name}: {c.count}
-              </li>
-            ))}
-          </ul>
+        <div className="bg-white rounded-xl border border-gray-200 p-6">
+          <h2 className="text-sm font-semibold text-gray-700 mb-4">
+            Statistics
+          </h2>
+
+          <p className="text-3xl font-bold text-gray-900 mb-1">
+            {stats.totalEvents}
+          </p>
+          <p className="text-sm text-gray-500 mb-5">attended events</p>
+
+          {stats.categoryCounts.length > 0 && (
+            <ul className="space-y-2">
+              {stats.categoryCounts.map((c) => (
+                <li
+                  key={c.categoryId}
+                  className="flex items-center justify-between text-sm"
+                >
+                  <span className="text-gray-700">{c.name}</span>
+                  <span className="font-medium text-gray-900">{c.count}</span>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       )}
     </div>

@@ -37,6 +37,7 @@ interface EventFormProps {
     isInviteOnly: boolean;
   };
   onSubmit: (values: EventFormValues) => Promise<void>;
+  onCancel: () => void;
   submitLabel: string;
 }
 
@@ -46,9 +47,14 @@ function toDatetimeLocalValue(isoDate: string): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
+const inputClass =
+  "w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500";
+const labelClass = "block text-sm font-medium text-gray-700 mb-1";
+
 export default function EventForm({
   initialData,
   onSubmit,
+  onCancel,
   submitLabel,
 }: EventFormProps) {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -148,146 +154,178 @@ export default function EventForm({
   }
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form
+      onSubmit={handleSubmit}
+      className="bg-white rounded-xl border border-gray-200 p-6 space-y-5"
+    >
       <div>
-        <label>Title</label>
+        <label className={labelClass}>Title</label>
         <input
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
           required
+          className={inputClass}
         />
       </div>
 
       <div>
-        <label>Description</label>
+        <label className={labelClass}>Description</label>
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
+          rows={3}
+          className={inputClass}
         />
       </div>
 
-      <div>
-        <label>Category</label>
-        <select
-          value={categoryId}
-          onChange={(e) => setCategoryId(e.target.value)}
-          required
-        >
-          <option value="">-- Choose --</option>
-          {categories.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-          <option value="CUSTOM">+ Custom</option>
-        </select>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label className={labelClass}>Category</label>
+          <select
+            value={categoryId}
+            onChange={(e) => setCategoryId(e.target.value)}
+            required
+            className={inputClass}
+          >
+            <option value="">-- Choose --</option>
+            {categories.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+            <option value="CUSTOM">+ Custom</option>
+          </select>
+        </div>
+
+        <div>
+          <label className={labelClass}>Date and time</label>
+          <input
+            type="datetime-local"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            min={new Date().toISOString().slice(0, 16)}
+            required
+            className={inputClass}
+          />
+        </div>
       </div>
 
       {categoryId === "CUSTOM" && (
         <div>
-          <label>Custom category title</label>
+          <label className={labelClass}>Custom category title</label>
           <input
             type="text"
             value={customCategoryName}
             onChange={(e) => setCustomCategoryName(e.target.value)}
             required
+            className={inputClass}
           />
         </div>
       )}
 
       <div>
-        <label>Date and time</label>
-        <input
-          type="datetime-local"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-          min={new Date().toISOString().slice(0, 16)}
-          required
-        />
-      </div>
-
-      <div>
-        <label>Location</label>
+        <label className={labelClass}>Location</label>
         <input
           type="text"
           value={location}
           onChange={(e) => setLocation(e.target.value)}
           required
+          className={inputClass}
         />
       </div>
 
       <div>
-        <label>Choose location on map</label>
-        <LocationPicker
-          latitude={latitude}
-          longitude={longitude}
-          onLocationSelect={(lat, lng) => {
-            setLatitude(lat);
-            setLongitude(lng);
-          }}
-          onAddressFound={(address) => setLocation(address)}
-        />
+        <label className={labelClass}>Choose location on map</label>
+        <div className="rounded-lg overflow-hidden border border-gray-200">
+          <LocationPicker
+            latitude={latitude}
+            longitude={longitude}
+            onLocationSelect={(lat, lng) => {
+              setLatitude(lat);
+              setLongitude(lng);
+            }}
+            onAddressFound={(address) => setLocation(address)}
+          />
+        </div>
         {latitude !== null && longitude !== null && (
-          <p>
-            Izabrano: {latitude.toFixed(5)}, {longitude.toFixed(5)}
+          <p className="text-xs text-gray-500 mt-1">
+            Selected: {latitude.toFixed(5)}, {longitude.toFixed(5)}
           </p>
         )}
       </div>
 
-      <div>
-        <label>Capacity (optional)</label>
-        <input
-          type="number"
-          value={maxCapacity}
-          onChange={(e) => setMaxCapacity(e.target.value)}
-          min={1}
-        />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label className={labelClass}>Capacity (optional)</label>
+          <input
+            type="number"
+            value={maxCapacity}
+            onChange={(e) => setMaxCapacity(e.target.value)}
+            min={1}
+            className={inputClass}
+          />
+        </div>
+
+        {isRecurring && (
+          <div>
+            <label className={labelClass}>Frequency</label>
+            <select
+              value={recurrencePattern}
+              onChange={(e) =>
+                setRecurrencePattern(e.target.value as RecurrencePattern)
+              }
+              className={inputClass}
+            >
+              <option value="DAILY">Every day</option>
+              <option value="WEEKLY">Every week</option>
+              <option value="MONTHLY">Every month</option>
+              <option value="YEARLY">Every year</option>
+            </select>
+          </div>
+        )}
       </div>
 
-      <div>
-        <label>
+      <div className="flex gap-6">
+        <label className="flex items-center gap-2 text-sm text-gray-700">
           <input
             type="checkbox"
             checked={isRecurring}
             onChange={(e) => setIsRecurring(e.target.checked)}
+            className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
           />
           Recurring event
         </label>
-      </div>
 
-      {isRecurring && (
-        <div>
-          <label>Frequency</label>
-          <select
-            value={recurrencePattern}
-            onChange={(e) =>
-              setRecurrencePattern(e.target.value as RecurrencePattern)
-            }
-          >
-            <option value="DAILY">Every day</option>
-            <option value="WEEKLY">Every week</option>
-            <option value="MONTHLY">Every month</option>
-            <option value="YEARLY">Every year</option>
-          </select>
-        </div>
-      )}
-
-      <div>
-        <label>
+        <label className="flex items-center gap-2 text-sm text-gray-700">
           <input
             type="checkbox"
             checked={isInviteOnly}
             onChange={(e) => setIsInviteOnly(e.target.checked)}
+            className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
           />
           Invite only
         </label>
       </div>
 
-      {error && <p style={{ color: "red" }}>{error}</p>}
-      <button type="submit" disabled={isSubmitting}>
-        {isSubmitting ? "Saving..." : submitLabel}
-      </button>
+      {error && <p className="text-red-600 text-sm">{error}</p>}
+
+      <div className="flex items-center gap-4">
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="bg-indigo-600 text-white font-medium px-5 py-2.5 rounded-lg hover:bg-indigo-700 disabled:opacity-50"
+        >
+          {isSubmitting ? "Saving..." : submitLabel}
+        </button>
+        <button
+          type="button"
+          onClick={onCancel}
+          className="text-sm font-medium text-gray-500 hover:text-gray-700"
+        >
+          Cancel
+        </button>
+      </div>
     </form>
   );
 }
