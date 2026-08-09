@@ -68,6 +68,10 @@ model Event {
   createdBy       User   @relation("EventCreator", fields: [createdByUserId], references: [id])
 
   registrations Registration[]
+
+  parentEventId String?
+  parentEvent   Event?  @relation("EventSeries", fields: [parentEventId], references: [id])
+  nextInstances Event[] @relation("EventSeries")
 }
 
 model Registration {

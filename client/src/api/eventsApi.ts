@@ -1,8 +1,10 @@
 import axiosInstance from "./axiosInstance";
 import type { Event } from "../types";
 
-export async function getAllEvents(): Promise<Event[]> {
-  const response = await axiosInstance.get<Event[]>("/events");
+export async function getAllEvents(includePast = false): Promise<Event[]> {
+  const response = await axiosInstance.get<Event[]>("/events", {
+    params: includePast ? { includePast: "true" } : {},
+  });
   return response.data;
 }
 

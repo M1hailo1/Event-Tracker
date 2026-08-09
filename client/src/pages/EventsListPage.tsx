@@ -9,11 +9,13 @@ export default function EventsListPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const { user, logout } = useAuth();
+  const [showPast, setShowPast] = useState(false);
 
   useEffect(() => {
     async function fetchEvents() {
+      setIsLoading(true);
       try {
-        const data = await getAllEvents();
+        const data = await getAllEvents(showPast);
         setEvents(data);
       } catch (err) {
         setError("Mistake while trying to load events");
@@ -23,7 +25,7 @@ export default function EventsListPage() {
       }
     }
     fetchEvents();
-  }, []);
+  }, [showPast]);
 
   if (isLoading) return <p>Loading...</p>;
   if (error) return <p style={{ color: "red" }}>{error}</p>;
@@ -31,7 +33,7 @@ export default function EventsListPage() {
   return (
     <div>
       <header>
-        <h1>Events</h1>
+        <h1>{showPast ? "Event history" : "Events"}</h1>
         {user ? (
           <div>
             <span>Hello, {user.name}</span>
@@ -43,6 +45,10 @@ export default function EventsListPage() {
           <Link to="/login">Sign in</Link>
         )}
       </header>
+
+      <button onClick={() => setShowPast(!showPast)}>
+        {showPast ? "Show future events" : "Show history"}
+      </button>
 
       {events.length === 0 && <p>No events taking place.</p>}
 

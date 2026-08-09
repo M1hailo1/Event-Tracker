@@ -6,16 +6,31 @@ import authRoutes from "./routes/authRoutes";
 import eventRoutes from "./routes/eventRoutes";
 import categoryRoutes from "./routes/categoryRoutes";
 import userRoutes from "./routes/userRoutes";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
 
 const app = express();
 const PORT = 3000;
 
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  message: { error: "Too many attempts. Try again later." },
+});
+
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 300,
+});
+
 app.use(cors({ origin: "http://localhost:5173" }));
+app.use(helmet());
 app.use(express.json());
-app.use("/auth", authRoutes);
+app.use("/auth", authLimiter, authRoutes);
 app.use("/events", eventRoutes);
 app.use("/categories", categoryRoutes);
 app.use("/users", userRoutes);
+app.use(globalLimiter);
 
 app.get("/", async (req, res) => {
   const userCount = await prisma.user.count();

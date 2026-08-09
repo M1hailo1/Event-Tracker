@@ -1,8 +1,9 @@
 import { Request, Response } from "express";
 import { z } from "zod";
 import prisma from "../prisma";
+import { getNextDate } from "../utils/recurrence";
 
-const createEventSchema = z.object({
+const baseEventSchema = z.object({
   name: z.string().min(2),
   description: z.string().optional(),
   categoryId: z.string().uuid(),
@@ -17,6 +18,14 @@ const createEventSchema = z.object({
     .optional(),
   isInviteOnly: z.boolean().optional().default(false),
 });
+
+const createEventSchema = baseEventSchema.refine(
+  (data) => new Date(data.date) > new Date(),
+  {
+    message: "Event date must be in the future",
+    path: ["date"],
+  },
+);
 
 export async function createEvent(req: Request, res: Response) {
   const parseResult = createEventSchema.safeParse(req.body);
@@ -56,16 +65,20 @@ export async function createEvent(req: Request, res: Response) {
 }
 
 export async function getAllEvents(req: Request, res: Response) {
+  await generateMissingRecurringInstances();
+
   const showPast = req.query.includePast === "true";
 
   const events = await prisma.event.findMany({
-    where: showPast ? {} : { date: { gte: new Date() } },
+    where: showPast
+      ? { date: { lt: new Date() } }
+      : { date: { gte: new Date() } },
     include: {
       category: true,
       createdBy: { select: { id: true, name: true } },
       _count: { select: { registrations: true } },
     },
-    orderBy: { date: "asc" },
+    orderBy: { date: showPast ? "desc" : "asc" },
   });
 
   res.status(200).json(events);
@@ -104,7 +117,12 @@ export async function getEventById(req: Request, res: Response) {
   res.status(200).json(event);
 }
 
-const updateEventSchema = createEventSchema.partial();
+const updateEventSchema = baseEventSchema
+  .partial()
+  .refine((data) => !data.date || new Date(data.date) > new Date(), {
+    message: "Event date must be in the future",
+    path: ["date"],
+  });
 
 export async function updateEvent(req: Request, res: Response) {
   const id = req.params.id;
@@ -189,4 +207,42 @@ export async function deleteEvent(req: Request, res: Response) {
   ]);
 
   res.status(200).json({ message: "Event successfully deleted" });
+}
+
+async function generateMissingRecurringInstances() {
+  const expiredRecurring = await prisma.event.findMany({
+    where: {
+      isRecurring: true,
+      date: { lt: new Date() },
+      nextInstances: { none: {} },
+    },
+  });
+
+  for (const event of expiredRecurring) {
+    if (!event.recurrencePattern) continue;
+
+    let nextDate = getNextDate(event.date, event.recurrencePattern);
+
+    while (nextDate < new Date()) {
+      nextDate = getNextDate(nextDate, event.recurrencePattern);
+    }
+
+    await prisma.event.create({
+      data: {
+        name: event.name,
+        description: event.description,
+        categoryId: event.categoryId,
+        date: nextDate,
+        location: event.location,
+        latitude: event.latitude,
+        longitude: event.longitude,
+        maxCapacity: event.maxCapacity,
+        isRecurring: event.isRecurring,
+        recurrencePattern: event.recurrencePattern,
+        isInviteOnly: event.isInviteOnly,
+        createdByUserId: event.createdByUserId,
+        parentEventId: event.id,
+      },
+    });
+  }
 }

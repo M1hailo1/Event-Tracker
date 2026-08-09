@@ -1,6 +1,10 @@
 import { useState, useEffect } from "react";
 import type { FormEvent } from "react";
-import { getAllCategories, createCategory } from "../api/categoriesApi";
+import {
+  getAllCategories,
+  createCategory,
+  getCategoryById,
+} from "../api/categoriesApi";
 import type { Category, RecurrencePattern } from "../types";
 import LocationPicker from "./LocationPicker";
 
@@ -80,8 +84,21 @@ export default function EventForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    getAllCategories().then(setCategories).catch(console.error);
-  }, []);
+    getAllCategories()
+      .then((cats) => {
+        if (
+          initialData?.categoryId &&
+          !cats.some((c) => c.id === initialData.categoryId)
+        ) {
+          getCategoryById(initialData.categoryId)
+            .then((customCat) => setCategories([...cats, customCat]))
+            .catch(() => setCategories(cats));
+        } else {
+          setCategories(cats);
+        }
+      })
+      .catch(console.error);
+  }, [initialData?.categoryId]);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -185,6 +202,7 @@ export default function EventForm({
           type="datetime-local"
           value={date}
           onChange={(e) => setDate(e.target.value)}
+          min={new Date().toISOString().slice(0, 16)}
           required
         />
       </div>
@@ -208,6 +226,7 @@ export default function EventForm({
             setLatitude(lat);
             setLongitude(lng);
           }}
+          onAddressFound={(address) => setLocation(address)}
         />
         {latitude !== null && longitude !== null && (
           <p>

@@ -59,6 +59,9 @@ export default function EditEventPage() {
         onSubmit={handleUpdate}
         submitLabel="Save changes"
       />
+      <button type="button" onClick={() => navigate(`/events/${id}`)}>
+        Discard changes
+      </button>
     </div>
   );
 }

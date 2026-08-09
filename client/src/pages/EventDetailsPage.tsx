@@ -91,6 +91,8 @@ export default function EventDetailsPage() {
   if (error) return <p style={{ color: "red" }}>{error}</p>;
   if (!event) return <p>Event not found</p>;
 
+  const isPastEvent = new Date(event.date) < new Date();
+
   const isFull =
     event.maxCapacity !== null &&
     (event._count?.registrations ?? 0) >= event.maxCapacity;
@@ -127,7 +129,11 @@ export default function EventDetailsPage() {
 
       {actionError && <p style={{ color: "red" }}>{actionError}</p>}
 
-      {user ? (
+      {isPastEvent ? (
+        <p>
+          <em>This event already finished.</em>
+        </p>
+      ) : user ? (
         isRegistered ? (
           <button onClick={handleUnregister} disabled={isActionLoading}>
             Leave event
@@ -143,7 +149,7 @@ export default function EventDetailsPage() {
         </p>
       )}
 
-      {user && user.id === event.createdByUserId && (
+      {user && user.id === event.createdByUserId && !isPastEvent && (
         <div style={{ marginTop: "1rem" }}>
           <button onClick={() => navigate(`/events/${event.id}/edit`)}>
             Edit event
