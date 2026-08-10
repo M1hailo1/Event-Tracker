@@ -8,6 +8,7 @@ const baseEventSchema = z.object({
   description: z.string().optional(),
   categoryId: z.string().uuid(),
   date: z.string().datetime(),
+  endDate: z.string().datetime().optional(),
   location: z.string().min(2),
   latitude: z.number(),
   longitude: z.number(),
@@ -19,13 +20,15 @@ const baseEventSchema = z.object({
   isInviteOnly: z.boolean().optional().default(false),
 });
 
-const createEventSchema = baseEventSchema.refine(
-  (data) => new Date(data.date) > new Date(),
-  {
+const createEventSchema = baseEventSchema
+  .refine((data) => new Date(data.date) > new Date(), {
     message: "Event date must be in the future",
     path: ["date"],
-  },
-);
+  })
+  .refine(
+    (data) => !data.endDate || new Date(data.endDate) > new Date(data.date),
+    { message: "End date must be after the start date", path: ["endDate"] },
+  );
 
 export async function createEvent(req: Request, res: Response) {
   const parseResult = createEventSchema.safeParse(req.body);
@@ -42,6 +45,7 @@ export async function createEvent(req: Request, res: Response) {
       description: data.description ?? null,
       categoryId: data.categoryId,
       date: new Date(data.date),
+      endDate: data.endDate ? new Date(data.endDate) : null,
       location: data.location,
       latitude: data.latitude,
       longitude: data.longitude,
@@ -161,6 +165,9 @@ export async function updateEvent(req: Request, res: Response) {
       ...(data.description !== undefined && { description: data.description }),
       ...(data.categoryId !== undefined && { categoryId: data.categoryId }),
       ...(data.date !== undefined && { date: new Date(data.date) }),
+      ...(data.endDate !== undefined && {
+        endDate: data.endDate ? new Date(data.endDate) : null,
+      }),
       ...(data.location !== undefined && { location: data.location }),
       ...(data.latitude !== undefined && { latitude: data.latitude }),
       ...(data.longitude !== undefined && { longitude: data.longitude }),

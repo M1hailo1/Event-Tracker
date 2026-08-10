@@ -14,7 +14,7 @@ function MapResizeFix() {
   useEffect(() => {
     setTimeout(() => {
       map.invalidateSize();
-    }, 150);
+    }, 350);
   }, [map]);
 
   return null;

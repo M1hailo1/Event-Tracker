@@ -48,6 +48,7 @@ export default function EditEventPage() {
           description: event.description,
           categoryId: event.categoryId,
           date: event.date,
+          endDate: event.endDate,
           location: event.location,
           latitude: event.latitude,
           longitude: event.longitude,

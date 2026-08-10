@@ -124,6 +124,7 @@ export default function EventDetailsPage() {
             <span className="text-gray-400">Date</span>
             <p className="font-medium text-gray-800">
               {formatEventDate(event.date)}
+              {event.endDate && ` — ${formatEventDate(event.endDate)}`}
             </p>
           </div>
           <div>
@@ -147,7 +148,7 @@ export default function EventDetailsPage() {
 
         {event.isRecurring && (
           <p className="text-xs text-gray-500 mb-4">
-            Ponavlja se: {event.recurrencePattern}
+            Takes place: {event.recurrencePattern}
           </p>
         )}
 

@@ -13,6 +13,7 @@ export interface EventFormValues {
   description?: string;
   categoryId: string;
   date: string;
+  endDate?: string;
   location: string;
   latitude: number;
   longitude: number;
@@ -28,6 +29,7 @@ interface EventFormProps {
     description: string | null;
     categoryId: string;
     date: string;
+    endDate: string | null;
     location: string;
     latitude: number;
     longitude: number;
@@ -66,6 +68,9 @@ export default function EventForm({
   const [customCategoryName, setCustomCategoryName] = useState("");
   const [date, setDate] = useState(
     initialData ? toDatetimeLocalValue(initialData.date) : "",
+  );
+  const [endDate, setEndDate] = useState(
+    initialData?.endDate ? toDatetimeLocalValue(initialData.endDate) : "",
   );
   const [location, setLocation] = useState(initialData?.location ?? "");
   const [latitude, setLatitude] = useState<number | null>(
@@ -137,6 +142,7 @@ export default function EventForm({
         description: description || undefined,
         categoryId: finalCategoryId,
         date: new Date(date).toISOString(),
+        endDate: endDate ? new Date(endDate).toISOString() : undefined,
         location,
         latitude,
         longitude,
@@ -179,7 +185,7 @@ export default function EventForm({
         />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div>
           <label className={labelClass}>Category</label>
           <select
@@ -199,13 +205,24 @@ export default function EventForm({
         </div>
 
         <div>
-          <label className={labelClass}>Date and time</label>
+          <label className={labelClass}>Start date and time</label>
           <input
             type="datetime-local"
             value={date}
             onChange={(e) => setDate(e.target.value)}
             min={new Date().toISOString().slice(0, 16)}
             required
+            className={inputClass}
+          />
+        </div>
+
+        <div>
+          <label className={labelClass}>End date and time (optional)</label>
+          <input
+            type="datetime-local"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+            min={date || new Date().toISOString().slice(0, 16)}
             className={inputClass}
           />
         </div>
