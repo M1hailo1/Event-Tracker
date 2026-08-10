@@ -1,5 +1,24 @@
-import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  useMapEvents,
+  useMap,
+} from "react-leaflet";
+import { useEffect } from "react";
 import "../utils/leafletIconFix";
+
+function MapResizeFix() {
+  const map = useMap();
+
+  useEffect(() => {
+    setTimeout(() => {
+      map.invalidateSize();
+    }, 150);
+  }, [map]);
+
+  return null;
+}
 
 interface LocationPickerProps {
   latitude: number | null;
@@ -73,6 +92,7 @@ export default function LocationPicker({
       scrollWheelZoom={!readOnly}
       doubleClickZoom={!readOnly}
     >
+      <MapResizeFix />
       <TileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
