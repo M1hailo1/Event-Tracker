@@ -23,7 +23,12 @@ const globalLimiter = rateLimit({
   max: 300,
 });
 
-app.use(cors({ origin: "http://localhost:5173" }));
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://event-tracker-liard-seven.vercel.app",
+];
+
+app.use(cors({ origin: allowedOrigins }));
 app.use(helmet());
 app.use(express.json());
 app.use("/auth", authLimiter, authRoutes);
