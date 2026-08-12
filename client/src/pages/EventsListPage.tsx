@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { getAllEvents } from "../api/eventsApi";
 import type { Event } from "../types";
-import { formatEventDate } from "../utils/formatDate";
+import { formatEventDateRange } from "../utils/formatDate";
 
 export default function EventsListPage() {
   const [events, setEvents] = useState<Event[]>([]);
@@ -71,7 +71,7 @@ export default function EventsListPage() {
             </div>
 
             <p className="text-sm text-gray-500 mb-1">
-              {formatEventDate(event.date)}
+              {formatEventDateRange(event.date, event.endDate)}
             </p>
             <p className="text-sm text-gray-500 mb-3">{event.location}</p>
 

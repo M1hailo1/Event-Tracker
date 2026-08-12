@@ -152,7 +152,7 @@ export default function EventForm({
         isInviteOnly,
       });
     } catch (err) {
-      setError("Failed to edit event");
+      setError("Failed to create/edit event");
       console.error(err);
     } finally {
       setIsSubmitting(false);
