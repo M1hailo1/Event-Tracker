@@ -51,3 +51,21 @@ export async function getMyStats(req: Request, res: Response) {
     topCategory: sorted[0] ?? null,
   });
 }
+
+export async function getUserById(req: Request, res: Response) {
+  const id = req.params.id;
+  if (!id || typeof id !== "string") {
+    return res.status(400).json({ error: "Invalid ID" });
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id },
+    select: { id: true, name: true, createdAt: true },
+  });
+
+  if (!user) {
+    return res.status(404).json({ error: "User not found" });
+  }
+
+  res.status(200).json(user);
+}

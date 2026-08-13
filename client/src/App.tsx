@@ -7,6 +7,7 @@ import CreateEventPage from "./pages/CreateEventPage";
 import EditEventPage from "./pages/EditEventPage";
 import ProfilePage from "./pages/ProfilePage";
 import Navbar from "./components/Navbar";
+import UserProfilePage from "./pages/UserProfilePage";
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
           <Route path="/events/new" element={<CreateEventPage />} />
           <Route path="/events/:id/edit" element={<EditEventPage />} />
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/users/:id" element={<UserProfilePage />} />
         </Routes>
       </div>
     </BrowserRouter>

@@ -8,6 +8,7 @@ import categoryRoutes from "./routes/categoryRoutes";
 import userRoutes from "./routes/userRoutes";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
+import followRoutes from "./routes/followRoutes";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -35,6 +36,7 @@ app.use("/auth", authLimiter, authRoutes);
 app.use("/events", eventRoutes);
 app.use("/categories", categoryRoutes);
 app.use("/users", userRoutes);
+app.use("/users", followRoutes);
 app.use(globalLimiter);
 
 app.get("/", async (req, res) => {

@@ -67,3 +67,14 @@ export interface UserStats {
   categoryCounts: CategoryCount[];
   topCategory: CategoryCount | null;
 }
+
+export interface FollowUser {
+  id: string;
+  name: string;
+}
+
+export interface PublicUser {
+  id: string;
+  name: string;
+  createdAt: string;
+}

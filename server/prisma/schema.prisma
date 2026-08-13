@@ -23,6 +23,9 @@ model User {
   events        Event[]        @relation("EventCreator")
   registrations Registration[]
   categories    Category[]
+
+  following Follow[] @relation("Following")
+  followers Follow[] @relation("Followers")
 }
 
 model Category {
@@ -88,4 +91,15 @@ model Registration {
   event   Event  @relation(fields: [eventId], references: [id])
 
   @@unique([userId, eventId])
+}
+
+model Follow {
+  id          String   @id @default(uuid())
+  followerId  String
+  follower    User     @relation("Following", fields: [followerId], references: [id])
+  followingId String
+  following   User     @relation("Followers", fields: [followingId], references: [id])
+  createdAt   DateTime @default(now())
+
+  @@unique([followerId, followingId])
 }

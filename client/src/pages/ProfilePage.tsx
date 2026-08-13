@@ -2,18 +2,30 @@ import { useState, useEffect } from "react";
 import { getMyProfile, getMyStats } from "../api/userApi";
 import type { UserProfile, UserStats } from "../types";
 import { getTitleForCategory } from "../utils/categoryTitles";
+import { getFollowers, getFollowing } from "../api/followApi";
+import type { FollowUser } from "../types";
 
 export default function ProfilePage() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [stats, setStats] = useState<UserStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const [followers, setFollowers] = useState<FollowUser[]>([]);
+  const [following, setFollowing] = useState<FollowUser[]>([]);
 
   useEffect(() => {
     Promise.all([getMyProfile(), getMyStats()])
       .then(([profileData, statsData]) => {
         setProfile(profileData);
         setStats(statsData);
+        return Promise.all([
+          getFollowers(profileData.id),
+          getFollowing(profileData.id),
+        ]);
+      })
+      .then(([followersData, followingData]) => {
+        setFollowers(followersData);
+        setFollowing(followingData);
       })
       .catch((err) => {
         setError("Mistake while loading profile");
@@ -76,6 +88,32 @@ export default function ProfilePage() {
           )}
         </div>
       )}
+
+      <div className="grid grid-cols-2 gap-4 mt-6">
+        <div className="bg-white rounded-xl border border-gray-200 p-4">
+          <p className="text-2xl font-bold text-gray-900">{followers.length}</p>
+          <p className="text-sm text-gray-500 mb-3">Followers</p>
+          <ul className="space-y-1">
+            {followers.map((f) => (
+              <li key={f.id} className="text-sm text-gray-700">
+                {f.name}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="bg-white rounded-xl border border-gray-200 p-4">
+          <p className="text-2xl font-bold text-gray-900">{following.length}</p>
+          <p className="text-sm text-gray-500 mb-3">Following</p>
+          <ul className="space-y-1">
+            {following.map((f) => (
+              <li key={f.id} className="text-sm text-gray-700">
+                {f.name}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
     </div>
   );
 }

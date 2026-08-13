@@ -133,7 +133,16 @@ export default function EventDetailsPage() {
           </div>
           <div>
             <span className="text-gray-400">Creator</span>
-            <p className="font-medium text-gray-800">{event.createdBy?.name}</p>
+            <p className="font-medium text-gray-800">
+              {event.createdBy && (
+                <Link
+                  to={`/users/${event.createdBy.id}`}
+                  className="text-indigo-600 hover:text-indigo-700"
+                >
+                  {event.createdBy.name}
+                </Link>
+              )}
+            </p>
           </div>
           <div>
             <span className="text-gray-400">Attendees</span>
