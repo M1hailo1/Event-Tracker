@@ -26,6 +26,8 @@ model User {
 
   following Follow[] @relation("Following")
   followers Follow[] @relation("Followers")
+
+  notifications Notification[]
 }
 
 model Category {
@@ -102,4 +104,24 @@ model Follow {
   createdAt   DateTime @default(now())
 
   @@unique([followerId, followingId])
+}
+
+enum NotificationType {
+  NEW_EVENT_FROM_FOLLOWED
+  EVENT_UPDATED
+  EVENT_CANCELLED
+  EVENT_REMINDER
+  NEW_FOLLOWER
+  EVENT_INVITE
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id])
+  type      NotificationType
+  message   String
+  eventId   String?
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
 }

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { CalendarDays, Menu, X } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import NotificationBell from "./NotificationBell";
 
 export default function Navbar() {
   const { user, logout } = useAuth();
@@ -33,6 +34,7 @@ export default function Navbar() {
         <div className="hidden md:flex items-center gap-4">
           {user ? (
             <>
+              <NotificationBell />
               <Link
                 to="/events/new"
                 className="text-sm font-medium text-gray-700 hover:text-indigo-600"
@@ -70,13 +72,16 @@ export default function Navbar() {
           )}
         </div>
 
-        <button
-          className="md:hidden text-gray-700"
-          onClick={() => setIsMenuOpen(!isMenuOpen)}
-          aria-label="Toggle menu"
-        >
-          {isMenuOpen ? <X size={26} /> : <Menu size={26} />}
-        </button>
+        <div className="md:hidden flex items-center gap-4">
+          {user && <NotificationBell />}
+          <button
+            className="text-gray-700"
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            aria-label="Toggle menu"
+          >
+            {isMenuOpen ? <X size={26} /> : <Menu size={26} />}
+          </button>
+        </div>
       </div>
 
       {isMenuOpen && (

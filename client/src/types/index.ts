@@ -78,3 +78,21 @@ export interface PublicUser {
   name: string;
   createdAt: string;
 }
+
+export type NotificationType =
+  | "NEW_EVENT_FROM_FOLLOWED"
+  | "EVENT_UPDATED"
+  | "EVENT_CANCELLED"
+  | "EVENT_REMINDER"
+  | "NEW_FOLLOWER"
+  | "EVENT_INVITE";
+
+export interface Notification {
+  id: string;
+  userId: string;
+  type: NotificationType;
+  message: string;
+  eventId: string | null;
+  isRead: boolean;
+  createdAt: string;
+}

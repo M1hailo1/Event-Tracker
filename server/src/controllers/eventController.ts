@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { z } from "zod";
 import prisma from "../prisma";
 import { getNextDate } from "../utils/recurrence";
+import { createNotification } from "../utils/createNotification";
 
 const baseEventSchema = z.object({
   name: z.string().min(2),
@@ -64,6 +65,23 @@ export async function createEvent(req: Request, res: Response) {
       status: "CONFIRMED",
     },
   });
+
+  const creator = await prisma.user.findUnique({ where: { id: req.userId! } });
+  const followers = await prisma.follow.findMany({
+    where: { followingId: req.userId! },
+    select: { followerId: true },
+  });
+
+  await Promise.all(
+    followers.map((f) =>
+      createNotification(
+        f.followerId,
+        "NEW_EVENT_FROM_FOLLOWED",
+        `${creator?.name} created a new event: ${event.name}`,
+        event.id,
+      ),
+    ),
+  );
 
   res.status(201).json(event);
 }
