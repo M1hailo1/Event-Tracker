@@ -200,6 +200,26 @@ export async function updateEvent(req: Request, res: Response) {
     },
   });
 
+  const registeredUsers = await prisma.registration.findMany({
+    where: {
+      eventId: id,
+      status: "CONFIRMED",
+      userId: { not: req.userId! },
+    },
+    select: { userId: true },
+  });
+
+  await Promise.all(
+    registeredUsers.map((r) =>
+      createNotification(
+        r.userId,
+        "EVENT_UPDATED",
+        `The event "${updatedEvent.name}" you're registered for has been updated`,
+        updatedEvent.id,
+      ),
+    ),
+  );
+
   res.status(200).json(updatedEvent);
 }
 
@@ -226,10 +246,29 @@ export async function deleteEvent(req: Request, res: Response) {
       .json({ error: "You can't delete events that finished" });
   }
 
+  const registeredUsers = await prisma.registration.findMany({
+    where: {
+      eventId: id,
+      status: "CONFIRMED",
+      userId: { not: req.userId! },
+    },
+    select: { userId: true },
+  });
+
   await prisma.$transaction([
     prisma.registration.deleteMany({ where: { eventId: id } }),
     prisma.event.delete({ where: { id } }),
   ]);
+
+  await Promise.all(
+    registeredUsers.map((r) =>
+      createNotification(
+        r.userId,
+        "EVENT_CANCELLED",
+        `The event "${existingEvent.name}" you were registered for has been cancelled`,
+      ),
+    ),
+  );
 
   res.status(200).json({ message: "Event successfully deleted" });
 }
