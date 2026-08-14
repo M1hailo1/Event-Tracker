@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, Navigate } from "react-router-dom";
+import { useParams, Navigate, Link } from "react-router-dom";
 import { getUserById } from "../api/userApi";
 import {
   followUser,
@@ -112,8 +112,13 @@ export default function UserProfilePage() {
           <p className="text-sm text-gray-500 mb-3">Followers</p>
           <ul className="space-y-1">
             {followers.map((f) => (
-              <li key={f.id} className="text-sm text-gray-700">
-                {f.name}
+              <li key={f.id}>
+                <Link
+                  to={`/users/${f.id}`}
+                  className="text-sm text-gray-700 hover:text-indigo-600"
+                >
+                  {f.name}
+                </Link>
               </li>
             ))}
           </ul>
@@ -124,8 +129,13 @@ export default function UserProfilePage() {
           <p className="text-sm text-gray-500 mb-3">Following</p>
           <ul className="space-y-1">
             {following.map((f) => (
-              <li key={f.id} className="text-sm text-gray-700">
-                {f.name}
+              <li key={f.id}>
+                <Link
+                  to={`/users/${f.id}`}
+                  className="text-sm text-gray-700 hover:text-indigo-600"
+                >
+                  {f.name}
+                </Link>
               </li>
             ))}
           </ul>

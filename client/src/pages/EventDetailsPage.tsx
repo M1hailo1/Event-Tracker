@@ -231,11 +231,19 @@ export default function EventDetailsPage() {
             </h3>
             <ul className="flex flex-wrap gap-2">
               {event.registrations.map((r) => (
-                <li
-                  key={r.id}
-                  className="text-xs bg-gray-100 text-gray-700 px-3 py-1 rounded-full"
-                >
-                  {r.user?.name}
+                <li key={r.id}>
+                  {r.user ? (
+                    <Link
+                      to={`/users/${r.user.id}`}
+                      className="text-xs bg-gray-100 text-gray-700 px-3 py-1 rounded-full hover:bg-indigo-50 hover:text-indigo-600 transition-colors"
+                    >
+                      {r.user.name}
+                    </Link>
+                  ) : (
+                    <span className="text-xs bg-gray-100 text-gray-700 px-3 py-1 rounded-full">
+                      Unknown user
+                    </span>
+                  )}
                 </li>
               ))}
             </ul>

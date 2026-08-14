@@ -10,7 +10,7 @@ import {
 } from "../api/notificationsApi";
 import { formatRelativeTime } from "../utils/formatDate";
 
-const POLL_INTERVAL_MS = 30000;
+const POLL_INTERVAL_MS = 120000;
 
 export default function NotificationBell() {
   const [isOpen, setIsOpen] = useState(false);
@@ -33,8 +33,37 @@ export default function NotificationBell() {
     }
     fetchInitialCount();
 
-    const interval = setInterval(refreshUnreadCount, POLL_INTERVAL_MS);
-    return () => clearInterval(interval);
+    let interval: ReturnType<typeof setInterval> | null = null;
+
+    function startPolling() {
+      if (interval) return;
+      interval = setInterval(refreshUnreadCount, POLL_INTERVAL_MS);
+    }
+
+    function stopPolling() {
+      if (!interval) return;
+      clearInterval(interval);
+      interval = null;
+    }
+
+    function handleVisibilityChange() {
+      if (document.hidden) {
+        stopPolling();
+      } else {
+        refreshUnreadCount();
+        startPolling();
+      }
+    }
+
+    if (!document.hidden) {
+      startPolling();
+    }
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      stopPolling();
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, []);
 
   useEffect(() => {
