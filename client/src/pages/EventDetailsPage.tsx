@@ -23,6 +23,18 @@ export default function EventDetailsPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
+  function handleBack() {
+    const canGoBack =
+      typeof window.history.state?.idx === "number" &&
+      window.history.state.idx > 0;
+
+    if (canGoBack) {
+      navigate(-1);
+    } else {
+      navigate("/");
+    }
+  }
+
   async function handleDelete() {
     if (!id) return;
     const confirmed = window.confirm(
@@ -106,12 +118,12 @@ export default function EventDetailsPage() {
 
   return (
     <div className="max-w-3xl mx-auto">
-      <Link
-        to="/"
+      <button
+        onClick={handleBack}
         className="text-sm text-indigo-600 hover:text-indigo-700 mb-4 inline-block"
       >
-        &larr; Back to list
-      </Link>
+        &larr; Back
+      </button>
 
       <div className="bg-white rounded-xl border border-gray-200 p-6">
         <div className="flex items-start justify-between mb-4">

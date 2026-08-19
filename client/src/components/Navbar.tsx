@@ -36,6 +36,12 @@ export default function Navbar() {
             <>
               <NotificationBell />
               <Link
+                to="/dashboard"
+                className="text-sm font-medium text-gray-700 hover:text-indigo-600"
+              >
+                Dashboard
+              </Link>
+              <Link
                 to="/events/new"
                 className="text-sm font-medium text-gray-700 hover:text-indigo-600"
               >
@@ -88,6 +94,13 @@ export default function Navbar() {
         <div className="md:hidden max-w-5xl mx-auto mt-4 flex flex-col gap-3 pb-2">
           {user ? (
             <>
+              <Link
+                to="/dashboard"
+                onClick={handleLinkClick}
+                className="text-sm font-medium text-gray-700 hover:text-indigo-600"
+              >
+                Dashboard
+              </Link>
               <Link
                 to="/events/new"
                 onClick={handleLinkClick}

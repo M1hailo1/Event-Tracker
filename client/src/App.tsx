@@ -6,6 +6,7 @@ import EventDetailsPage from "./pages/EventDetailsPage";
 import CreateEventPage from "./pages/CreateEventPage";
 import EditEventPage from "./pages/EditEventPage";
 import ProfilePage from "./pages/ProfilePage";
+import DashboardPage from "./pages/DashboardPage";
 import Navbar from "./components/Navbar";
 import UserProfilePage from "./pages/UserProfilePage";
 
@@ -16,6 +17,7 @@ function App() {
       <div className="max-w-5xl mx-auto px-6 py-8">
         <Routes>
           <Route path="/" element={<EventsListPage />} />
+          <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/events/:id" element={<EventDetailsPage />} />

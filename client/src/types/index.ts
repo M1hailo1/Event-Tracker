@@ -70,6 +70,12 @@ export interface UserStats {
   topCategory: CategoryCount | null;
 }
 
+export interface DashboardData {
+  myUpcomingEvents: Event[];
+  registeredUpcomingEvents: Event[];
+  followingUpcomingEvents: Event[];
+}
+
 export interface FollowUser {
   id: string;
   name: string;
