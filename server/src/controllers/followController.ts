@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import prisma from "../prisma";
+import { createNotification } from "../utils/createNotification";
 
 export async function followUser(req: Request, res: Response) {
   const targetUserId = req.params.userId;
@@ -33,6 +34,14 @@ export async function followUser(req: Request, res: Response) {
   const follow = await prisma.follow.create({
     data: { followerId, followingId: targetUserId },
   });
+
+  const follower = await prisma.user.findUnique({ where: { id: followerId } });
+
+  await createNotification(
+    targetUserId,
+    "NEW_FOLLOWER",
+    `${follower?.name} started following you`,
+  );
 
   res.status(201).json(follow);
 }
