@@ -1,5 +1,5 @@
 import axiosInstance from "./axiosInstance";
-import type { Event } from "../types";
+import type { Event, EventVisibility, FollowUser } from "../types";
 
 export async function getAllEvents(includePast = false): Promise<Event[]> {
   const response = await axiosInstance.get<Event[]>("/events", {
@@ -24,7 +24,7 @@ export interface CreateEventPayload {
   maxCapacity?: number;
   isRecurring?: boolean;
   recurrencePattern?: string;
-  isInviteOnly?: boolean;
+  visibility?: EventVisibility;
 }
 
 export async function createEvent(payload: CreateEventPayload): Promise<Event> {
@@ -49,5 +49,19 @@ export async function updateEvent(
   payload: Partial<CreateEventPayload>,
 ): Promise<Event> {
   const response = await axiosInstance.put<Event>(`/events/${id}`, payload);
+  return response.data;
+}
+
+export async function inviteUserToEvent(
+  eventId: string,
+  userId: string,
+): Promise<void> {
+  await axiosInstance.post(`/events/${eventId}/invites`, { userId });
+}
+
+export async function getEventInvites(eventId: string): Promise<FollowUser[]> {
+  const response = await axiosInstance.get<FollowUser[]>(
+    `/events/${eventId}/invites`,
+  );
   return response.data;
 }

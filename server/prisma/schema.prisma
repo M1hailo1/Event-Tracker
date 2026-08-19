@@ -28,6 +28,7 @@ model User {
   followers Follow[] @relation("Followers")
 
   notifications Notification[]
+  eventInvites  EventInvite[]
 }
 
 model Category {
@@ -53,6 +54,12 @@ enum RegistrationStatus {
   CANCELLED
 }
 
+enum EventVisibility {
+  PUBLIC
+  FOLLOWERS_ONLY
+  INVITE_ONLY
+}
+
 model Event {
   id                String             @id @default(uuid())
   name              String
@@ -65,7 +72,7 @@ model Event {
   maxCapacity       Int?
   isRecurring       Boolean            @default(false)
   recurrencePattern RecurrencePattern?
-  isInviteOnly      Boolean            @default(false)
+  visibility        EventVisibility    @default(PUBLIC)
   createdAt         DateTime           @default(now())
 
   categoryId String
@@ -75,10 +82,22 @@ model Event {
   createdBy       User   @relation("EventCreator", fields: [createdByUserId], references: [id])
 
   registrations Registration[]
+  invites       EventInvite[]
 
   parentEventId String?
   parentEvent   Event?  @relation("EventSeries", fields: [parentEventId], references: [id])
   nextInstances Event[] @relation("EventSeries")
+}
+
+model EventInvite {
+  id            String   @id @default(uuid())
+  eventId       String
+  event         Event    @relation(fields: [eventId], references: [id])
+  invitedUserId String
+  invitedUser   User     @relation(fields: [invitedUserId], references: [id])
+  invitedAt     DateTime @default(now())
+
+  @@unique([eventId, invitedUserId])
 }
 
 model Registration {

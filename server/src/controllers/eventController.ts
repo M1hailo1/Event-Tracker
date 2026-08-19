@@ -18,7 +18,10 @@ const baseEventSchema = z.object({
   recurrencePattern: z
     .enum(["DAILY", "WEEKLY", "MONTHLY", "YEARLY"])
     .optional(),
-  isInviteOnly: z.boolean().optional().default(false),
+  visibility: z
+    .enum(["PUBLIC", "FOLLOWERS_ONLY", "INVITE_ONLY"])
+    .optional()
+    .default("PUBLIC"),
 });
 
 const createEventSchema = baseEventSchema
@@ -53,7 +56,7 @@ export async function createEvent(req: Request, res: Response) {
       maxCapacity: data.maxCapacity ?? null,
       isRecurring: data.isRecurring,
       recurrencePattern: data.recurrencePattern ?? null,
-      isInviteOnly: data.isInviteOnly,
+      visibility: data.visibility,
       createdByUserId: req.userId!,
     },
   });
@@ -90,11 +93,31 @@ export async function getAllEvents(req: Request, res: Response) {
   await generateMissingRecurringInstances();
 
   const showPast = req.query.includePast === "true";
+  const userId = req.userId;
+
+  const dateFilter = showPast
+    ? { date: { lt: new Date() } }
+    : { date: { gte: new Date() } };
+
+  const visibilityFilter = userId
+    ? {
+        OR: [
+          { visibility: "PUBLIC" as const },
+          { createdByUserId: userId },
+          {
+            visibility: "FOLLOWERS_ONLY" as const,
+            createdBy: { followers: { some: { followerId: userId } } },
+          },
+          {
+            visibility: "INVITE_ONLY" as const,
+            invites: { some: { invitedUserId: userId } },
+          },
+        ],
+      }
+    : { visibility: "PUBLIC" as const };
 
   const events = await prisma.event.findMany({
-    where: showPast
-      ? { date: { lt: new Date() } }
-      : { date: { gte: new Date() } },
+    where: { AND: [dateFilter, visibilityFilter] },
     include: {
       category: true,
       createdBy: { select: { id: true, name: true } },
@@ -136,7 +159,46 @@ export async function getEventById(req: Request, res: Response) {
     return res.status(404).json({ error: "Event not found" });
   }
 
+  const canView = await userCanViewEvent(event, req.userId);
+  if (!canView) {
+    return res
+      .status(403)
+      .json({ error: "You don't have access to this event" });
+  }
+
   res.status(200).json(event);
+}
+
+async function userCanViewEvent(
+  event: { visibility: string; createdByUserId: string; id: string },
+  userId: string | undefined,
+): Promise<boolean> {
+  if (event.visibility === "PUBLIC") return true;
+  if (!userId) return false;
+  if (event.createdByUserId === userId) return true;
+
+  if (event.visibility === "FOLLOWERS_ONLY") {
+    const follow = await prisma.follow.findUnique({
+      where: {
+        followerId_followingId: {
+          followerId: userId,
+          followingId: event.createdByUserId,
+        },
+      },
+    });
+    return !!follow;
+  }
+
+  if (event.visibility === "INVITE_ONLY") {
+    const invite = await prisma.eventInvite.findUnique({
+      where: {
+        eventId_invitedUserId: { eventId: event.id, invitedUserId: userId },
+      },
+    });
+    return !!invite;
+  }
+
+  return false;
 }
 
 const updateEventSchema = baseEventSchema
@@ -194,8 +256,8 @@ export async function updateEvent(req: Request, res: Response) {
       ...(data.recurrencePattern !== undefined && {
         recurrencePattern: data.recurrencePattern,
       }),
-      ...(data.isInviteOnly !== undefined && {
-        isInviteOnly: data.isInviteOnly,
+      ...(data.visibility !== undefined && {
+        visibility: data.visibility,
       }),
     },
   });
@@ -303,7 +365,7 @@ async function generateMissingRecurringInstances() {
         maxCapacity: event.maxCapacity,
         isRecurring: event.isRecurring,
         recurrencePattern: event.recurrencePattern,
-        isInviteOnly: event.isInviteOnly,
+        visibility: event.visibility,
         createdByUserId: event.createdByUserId,
         parentEventId: event.id,
       },

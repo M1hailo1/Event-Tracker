@@ -5,7 +5,7 @@ import {
   createCategory,
   getCategoryById,
 } from "../api/categoriesApi";
-import type { Category, RecurrencePattern } from "../types";
+import type { Category, RecurrencePattern, EventVisibility } from "../types";
 import LocationPicker from "./LocationPicker";
 
 export interface EventFormValues {
@@ -20,7 +20,7 @@ export interface EventFormValues {
   maxCapacity?: number;
   isRecurring?: boolean;
   recurrencePattern?: RecurrencePattern;
-  isInviteOnly?: boolean;
+  visibility?: EventVisibility;
 }
 
 interface EventFormProps {
@@ -36,7 +36,7 @@ interface EventFormProps {
     maxCapacity: number | null;
     isRecurring: boolean;
     recurrencePattern: RecurrencePattern | null;
-    isInviteOnly: boolean;
+    visibility: EventVisibility;
   };
   onSubmit: (values: EventFormValues) => Promise<void>;
   onCancel: () => void;
@@ -82,14 +82,13 @@ export default function EventForm({
   const [maxCapacity, setMaxCapacity] = useState(
     initialData?.maxCapacity?.toString() ?? "",
   );
-  const [isRecurring, setIsRecurring] = useState(
-    initialData?.isRecurring ?? false,
+  const [frequency, setFrequency] = useState<RecurrencePattern | "NONE">(
+    initialData?.isRecurring && initialData.recurrencePattern
+      ? initialData.recurrencePattern
+      : "NONE",
   );
-  const [recurrencePattern, setRecurrencePattern] = useState<RecurrencePattern>(
-    initialData?.recurrencePattern ?? "YEARLY",
-  );
-  const [isInviteOnly, setIsInviteOnly] = useState(
-    initialData?.isInviteOnly ?? false,
+  const [visibility, setVisibility] = useState<EventVisibility>(
+    initialData?.visibility ?? "PUBLIC",
   );
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -147,9 +146,9 @@ export default function EventForm({
         latitude,
         longitude,
         maxCapacity: maxCapacity ? parseInt(maxCapacity) : undefined,
-        isRecurring,
-        recurrencePattern: isRecurring ? recurrencePattern : undefined,
-        isInviteOnly,
+        isRecurring: frequency !== "NONE",
+        recurrencePattern: frequency !== "NONE" ? frequency : undefined,
+        visibility,
       });
     } catch (err) {
       setError("Failed to create/edit event");
@@ -272,7 +271,7 @@ export default function EventForm({
         )}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div>
           <label className={labelClass}>Capacity (optional)</label>
           <input
@@ -284,45 +283,39 @@ export default function EventForm({
           />
         </div>
 
-        {isRecurring && (
-          <div>
-            <label className={labelClass}>Frequency</label>
-            <select
-              value={recurrencePattern}
-              onChange={(e) =>
-                setRecurrencePattern(e.target.value as RecurrencePattern)
-              }
-              className={inputClass}
-            >
-              <option value="DAILY">Every day</option>
-              <option value="WEEKLY">Every week</option>
-              <option value="MONTHLY">Every month</option>
-              <option value="YEARLY">Every year</option>
-            </select>
-          </div>
-        )}
-      </div>
+        <div>
+          <label className={labelClass}>Frequency</label>
+          <select
+            value={frequency}
+            onChange={(e) =>
+              setFrequency(e.target.value as RecurrencePattern | "NONE")
+            }
+            className={inputClass}
+          >
+            <option value="NONE">Not recurring</option>
+            <option value="DAILY">Every day</option>
+            <option value="WEEKLY">Every week</option>
+            <option value="MONTHLY">Every month</option>
+            <option value="YEARLY">Every year</option>
+          </select>
+        </div>
 
-      <div className="flex gap-6">
-        <label className="flex items-center gap-2 text-sm text-gray-700">
-          <input
-            type="checkbox"
-            checked={isRecurring}
-            onChange={(e) => setIsRecurring(e.target.checked)}
-            className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-          />
-          Recurring event
-        </label>
-
-        <label className="flex items-center gap-2 text-sm text-gray-700">
-          <input
-            type="checkbox"
-            checked={isInviteOnly}
-            onChange={(e) => setIsInviteOnly(e.target.checked)}
-            className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-          />
-          Invite only
-        </label>
+        <div>
+          <label className={labelClass}>Who can see this event?</label>
+          <select
+            value={visibility}
+            onChange={(e) => setVisibility(e.target.value as EventVisibility)}
+            className={inputClass}
+          >
+            <option value="PUBLIC">Public - anyone can see it</option>
+            <option value="FOLLOWERS_ONLY">
+              Followers only - only people who follow me
+            </option>
+            <option value="INVITE_ONLY">
+              Invite only - only people I invite
+            </option>
+          </select>
+        </div>
       </div>
 
       {error && <p className="text-red-600 text-sm">{error}</p>}

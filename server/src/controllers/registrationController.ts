@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { Prisma } from "@prisma/client";
 import prisma from "../prisma";
 
 export async function registerForEvent(req: Request, res: Response) {
@@ -26,6 +27,11 @@ export async function registerForEvent(req: Request, res: Response) {
 
       if (event.date < new Date()) {
         throw new Error("EVENT_ENDED");
+      }
+
+      const canView = await userCanAccessEvent(tx, event, userId);
+      if (!canView) {
+        throw new Error("NO_ACCESS");
       }
 
       const existing = await tx.registration.findUnique({
@@ -69,10 +75,47 @@ export async function registerForEvent(req: Request, res: Response) {
       if (err.message === "EVENT_ENDED") {
         return res.status(403).json({ error: "Event already finished" });
       }
+      if (err.message === "NO_ACCESS") {
+        return res
+          .status(403)
+          .json({ error: "You don't have access to this event" });
+      }
     }
     console.error(err);
     res.status(500).json({ error: "Server error" });
   }
+}
+
+async function userCanAccessEvent(
+  tx: Prisma.TransactionClient,
+  event: { visibility: string; createdByUserId: string; id: string },
+  userId: string,
+): Promise<boolean> {
+  if (event.visibility === "PUBLIC") return true;
+  if (event.createdByUserId === userId) return true;
+
+  if (event.visibility === "FOLLOWERS_ONLY") {
+    const follow = await tx.follow.findUnique({
+      where: {
+        followerId_followingId: {
+          followerId: userId,
+          followingId: event.createdByUserId,
+        },
+      },
+    });
+    return !!follow;
+  }
+
+  if (event.visibility === "INVITE_ONLY") {
+    const invite = await tx.eventInvite.findUnique({
+      where: {
+        eventId_invitedUserId: { eventId: event.id, invitedUserId: userId },
+      },
+    });
+    return !!invite;
+  }
+
+  return false;
 }
 
 export async function unregisterFromEvent(req: Request, res: Response) {

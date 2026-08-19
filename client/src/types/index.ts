@@ -13,6 +13,8 @@ export interface Category {
 
 export type RecurrencePattern = "DAILY" | "WEEKLY" | "MONTHLY" | "YEARLY";
 
+export type EventVisibility = "PUBLIC" | "FOLLOWERS_ONLY" | "INVITE_ONLY";
+
 export interface Event {
   id: string;
   name: string;
@@ -25,7 +27,7 @@ export interface Event {
   maxCapacity: number | null;
   isRecurring: boolean;
   recurrencePattern: RecurrencePattern | null;
-  isInviteOnly: boolean;
+  visibility: EventVisibility;
   createdAt: string;
   categoryId: string;
   createdByUserId: string;

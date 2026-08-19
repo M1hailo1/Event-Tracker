@@ -3,12 +3,14 @@ import { Link } from "react-router-dom";
 import { getAllEvents } from "../api/eventsApi";
 import type { Event } from "../types";
 import { formatEventDateRange } from "../utils/formatDate";
+import { useAuth } from "../context/AuthContext";
 
 export default function EventsListPage() {
   const [events, setEvents] = useState<Event[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [showPast, setShowPast] = useState(false);
+  const { user } = useAuth();
 
   useEffect(() => {
     async function fetchEvents() {
@@ -24,7 +26,7 @@ export default function EventsListPage() {
       }
     }
     fetchEvents();
-  }, [showPast]);
+  }, [showPast, user?.id]);
 
   if (isLoading) {
     return <p className="text-gray-500">Loading...</p>;

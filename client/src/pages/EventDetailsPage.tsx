@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
+import { isAxiosError } from "axios";
 import {
   getEventById,
   registerForEvent,
@@ -9,6 +10,7 @@ import {
 import type { Event } from "../types";
 import { useAuth } from "../context/AuthContext";
 import LocationPicker from "../components/LocationPicker";
+import EventInviteManager from "../components/EventInviteManager";
 import { formatEventDate } from "../utils/formatDate";
 
 export default function EventDetailsPage() {
@@ -40,15 +42,21 @@ export default function EventDetailsPage() {
   useEffect(() => {
     if (!id) return;
     loadEvent(id);
-  }, [id]);
+  }, [id, user?.id]);
 
   async function loadEvent(eventId: string) {
     setIsLoading(true);
+    setError("");
     try {
       const data = await getEventById(eventId);
       setEvent(data);
     } catch (err) {
-      setError("Mistake while loading event");
+      if (isAxiosError(err) && err.response?.status === 403) {
+        setError("You don't have access to this event.");
+      } else {
+        setError("Mistake while loading event");
+      }
+      setEvent(null);
       console.error(err);
     } finally {
       setIsLoading(false);
@@ -108,11 +116,26 @@ export default function EventDetailsPage() {
       <div className="bg-white rounded-xl border border-gray-200 p-6">
         <div className="flex items-start justify-between mb-4">
           <h1 className="text-2xl font-bold text-gray-900">{event.name}</h1>
-          {event.category && (
-            <span className="text-xs font-medium bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full whitespace-nowrap ml-3">
-              {event.category.name}
+          <div className="flex flex-col items-end gap-2 ml-3">
+            {event.category && (
+              <span className="text-xs font-medium bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full whitespace-nowrap">
+                {event.category.name}
+              </span>
+            )}
+            <span
+              className={`text-xs font-medium px-3 py-1 rounded-full whitespace-nowrap ${
+                event.visibility === "PUBLIC"
+                  ? "bg-emerald-50 text-emerald-700"
+                  : "bg-amber-50 text-amber-700"
+              }`}
+            >
+              {event.visibility === "PUBLIC"
+                ? "Public"
+                : event.visibility === "FOLLOWERS_ONLY"
+                  ? "Followers only"
+                  : "Invite only"}
             </span>
-          )}
+          </div>
         </div>
 
         {event.description && (
@@ -223,6 +246,12 @@ export default function EventDetailsPage() {
             </button>
           </div>
         )}
+
+        {user &&
+          user.id === event.createdByUserId &&
+          event.visibility === "INVITE_ONLY" && (
+            <EventInviteManager eventId={event.id} creatorId={user.id} />
+          )}
 
         {event.registrations && event.registrations.length > 0 && (
           <div className="mt-6 pt-4 border-t border-gray-100">

@@ -55,7 +55,7 @@ export default function EditEventPage() {
           maxCapacity: event.maxCapacity,
           isRecurring: event.isRecurring,
           recurrencePattern: event.recurrencePattern,
-          isInviteOnly: event.isInviteOnly,
+          visibility: event.visibility,
         }}
         onSubmit={handleUpdate}
         onCancel={() => navigate(`/events/${id}`)}
