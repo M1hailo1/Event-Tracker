@@ -110,6 +110,7 @@ model Registration {
   id            String             @id @default(uuid())
   status        RegistrationStatus @default(PENDING)
   registeredAt  DateTime           @default(now())
+  reminderSent  Boolean            @default(false)
 
   userId  String
   user    User   @relation(fields: [userId], references: [id])

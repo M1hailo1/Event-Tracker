@@ -11,6 +11,7 @@ import rateLimit from "express-rate-limit";
 import followRoutes from "./routes/followRoutes";
 import notificationRoutes from "./routes/notificationRoutes";
 import adminRoutes from "./routes/adminRoutes";
+import { sendDueEventReminders } from "./utils/eventReminders";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -48,4 +49,17 @@ app.get("/", async (req, res) => {
   res.send(`User count is: ${userCount}`);
 });
 
-app.listen(PORT, () => console.log("Server is running on PORT:", PORT));
+const REMINDER_CHECK_INTERVAL_MS = 15 * 60 * 1000;
+
+app.listen(PORT, () => {
+  console.log("Server is running on PORT:", PORT);
+
+  sendDueEventReminders().catch((err) =>
+    console.error("Event reminder check failed:", err),
+  );
+  setInterval(() => {
+    sendDueEventReminders().catch((err) =>
+      console.error("Event reminder check failed:", err),
+    );
+  }, REMINDER_CHECK_INTERVAL_MS);
+});
