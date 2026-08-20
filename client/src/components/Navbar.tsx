@@ -53,6 +53,14 @@ export default function Navbar() {
               >
                 My profile
               </Link>
+              {user.role === "ADMIN" && (
+                <Link
+                  to="/admin"
+                  className="text-sm font-medium text-gray-700 hover:text-indigo-600"
+                >
+                  Admin
+                </Link>
+              )}
               <button
                 onClick={handleLogout}
                 className="text-sm font-medium text-red-600 hover:text-red-700"
@@ -115,6 +123,15 @@ export default function Navbar() {
               >
                 My profile
               </Link>
+              {user.role === "ADMIN" && (
+                <Link
+                  to="/admin"
+                  onClick={handleLinkClick}
+                  className="text-sm font-medium text-gray-700 hover:text-indigo-600"
+                >
+                  Admin
+                </Link>
+              )}
               <button
                 onClick={handleLogout}
                 className="text-sm font-medium text-red-600 hover:text-red-700 text-left"

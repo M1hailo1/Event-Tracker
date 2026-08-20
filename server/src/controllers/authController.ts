@@ -44,7 +44,7 @@ export async function register(req: Request, res: Response) {
   const token = generateToken(user.id);
 
   res.status(201).json({
-    user: { id: user.id, email: user.email, name: user.name },
+    user: { id: user.id, email: user.email, name: user.name, role: user.role },
     token,
   });
 }
@@ -96,7 +96,12 @@ export async function googleAuth(req: Request, res: Response) {
     const token = generateToken(user.id);
 
     res.status(200).json({
-      user: { id: user.id, email: user.email, name: user.name },
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+      },
       token,
     });
   } catch (err) {
@@ -138,7 +143,7 @@ export async function login(req: Request, res: Response) {
   const token = generateToken(user.id);
 
   res.status(200).json({
-    user: { id: user.id, email: user.email, name: user.name },
+    user: { id: user.id, email: user.email, name: user.name, role: user.role },
     token,
   });
 }

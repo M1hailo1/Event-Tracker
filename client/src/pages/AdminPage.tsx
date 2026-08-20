@@ -1,0 +1,280 @@
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import {
+  getAdminStats,
+  getAllUsersAdmin,
+  deleteUserAdmin,
+  getAllEventsAdmin,
+  deleteEventAdmin,
+} from "../api/adminApi";
+import type { AdminStats, AdminUser, Event } from "../types";
+import { formatEventDate } from "../utils/formatDate";
+
+type Tab = "overview" | "users" | "events";
+
+function StatCard({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="bg-white border border-gray-200 rounded-xl px-5 py-4">
+      <p className="text-sm text-gray-500">{label}</p>
+      <p className="text-2xl font-bold text-gray-900">{value}</p>
+    </div>
+  );
+}
+
+function OverviewTab() {
+  const [stats, setStats] = useState<AdminStats | null>(null);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    getAdminStats()
+      .then(setStats)
+      .catch((err) => {
+        setError("Failed to load stats");
+        console.error(err);
+      });
+  }, []);
+
+  if (error) return <p className="text-red-600">{error}</p>;
+  if (!stats) return <p className="text-gray-500">Loading...</p>;
+
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+      <StatCard label="Users" value={stats.userCount} />
+      <StatCard label="Events" value={stats.eventCount} />
+      <StatCard label="Upcoming events" value={stats.upcomingEventCount} />
+      <StatCard label="Confirmed registrations" value={stats.registrationCount} />
+      <StatCard label="Categories" value={stats.categoryCount} />
+    </div>
+  );
+}
+
+function UsersTab() {
+  const { user: currentUser } = useAuth();
+  const [users, setUsers] = useState<AdminUser[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  function loadUsers() {
+    setIsLoading(true);
+    getAllUsersAdmin()
+      .then(setUsers)
+      .catch((err) => {
+        setError("Failed to load users");
+        console.error(err);
+      })
+      .finally(() => setIsLoading(false));
+  }
+
+  useEffect(loadUsers, []);
+
+  async function handleDelete(id: string, name: string) {
+    if (!confirm(`Delete ${name}? This also deletes their events.`)) return;
+
+    try {
+      await deleteUserAdmin(id);
+      setUsers((prev) => prev.filter((u) => u.id !== id));
+    } catch (err) {
+      alert("Failed to delete user");
+      console.error(err);
+    }
+  }
+
+  if (isLoading) return <p className="text-gray-500">Loading...</p>;
+  if (error) return <p className="text-red-600">{error}</p>;
+
+  return (
+    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+      <table className="w-full text-sm">
+        <thead className="bg-gray-50 text-left text-gray-500">
+          <tr>
+            <th className="px-4 py-3 font-medium">Name</th>
+            <th className="px-4 py-3 font-medium">Email</th>
+            <th className="px-4 py-3 font-medium">Role</th>
+            <th className="px-4 py-3 font-medium">Events</th>
+            <th className="px-4 py-3 font-medium">Registrations</th>
+            <th className="px-4 py-3 font-medium">Joined</th>
+            <th className="px-4 py-3"></th>
+          </tr>
+        </thead>
+        <tbody>
+          {users.map((u) => (
+            <tr key={u.id} className="border-t border-gray-100">
+              <td className="px-4 py-3">
+                <Link
+                  to={`/users/${u.id}`}
+                  className="text-indigo-600 hover:underline"
+                >
+                  {u.name}
+                </Link>
+              </td>
+              <td className="px-4 py-3 text-gray-600">{u.email}</td>
+              <td className="px-4 py-3">
+                {u.role === "ADMIN" ? (
+                  <span className="text-xs font-medium bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full">
+                    Admin
+                  </span>
+                ) : (
+                  <span className="text-xs text-gray-500">User</span>
+                )}
+              </td>
+              <td className="px-4 py-3 text-gray-600">{u._count.events}</td>
+              <td className="px-4 py-3 text-gray-600">
+                {u._count.registrations}
+              </td>
+              <td className="px-4 py-3 text-gray-500">
+                {new Date(u.createdAt).toLocaleDateString("en-GB")}
+              </td>
+              <td className="px-4 py-3 text-right">
+                {u.id !== currentUser?.id && (
+                  <button
+                    onClick={() => handleDelete(u.id, u.name)}
+                    className="text-sm text-red-600 hover:underline"
+                  >
+                    Delete
+                  </button>
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function EventsTab() {
+  const [events, setEvents] = useState<Event[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  function loadEvents() {
+    setIsLoading(true);
+    getAllEventsAdmin()
+      .then(setEvents)
+      .catch((err) => {
+        setError("Failed to load events");
+        console.error(err);
+      })
+      .finally(() => setIsLoading(false));
+  }
+
+  useEffect(loadEvents, []);
+
+  async function handleDelete(id: string, name: string) {
+    if (!confirm(`Delete "${name}"? This can't be undone.`)) return;
+
+    try {
+      await deleteEventAdmin(id);
+      setEvents((prev) => prev.filter((e) => e.id !== id));
+    } catch (err) {
+      alert("Failed to delete event");
+      console.error(err);
+    }
+  }
+
+  if (isLoading) return <p className="text-gray-500">Loading...</p>;
+  if (error) return <p className="text-red-600">{error}</p>;
+
+  return (
+    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+      <table className="w-full text-sm">
+        <thead className="bg-gray-50 text-left text-gray-500">
+          <tr>
+            <th className="px-4 py-3 font-medium">Name</th>
+            <th className="px-4 py-3 font-medium">Organizer</th>
+            <th className="px-4 py-3 font-medium">Category</th>
+            <th className="px-4 py-3 font-medium">Date</th>
+            <th className="px-4 py-3 font-medium">Registrations</th>
+            <th className="px-4 py-3"></th>
+          </tr>
+        </thead>
+        <tbody>
+          {events.map((e) => (
+            <tr key={e.id} className="border-t border-gray-100">
+              <td className="px-4 py-3">
+                <Link
+                  to={`/events/${e.id}`}
+                  className="text-indigo-600 hover:underline"
+                >
+                  {e.name}
+                </Link>
+              </td>
+              <td className="px-4 py-3 text-gray-600">
+                {e.createdBy?.name ?? "—"}
+              </td>
+              <td className="px-4 py-3 text-gray-600">
+                {e.category?.name ?? "—"}
+              </td>
+              <td className="px-4 py-3 text-gray-500">
+                {formatEventDate(e.date)}
+              </td>
+              <td className="px-4 py-3 text-gray-600">
+                {e._count?.registrations ?? 0}
+              </td>
+              <td className="px-4 py-3 text-right space-x-3">
+                <Link
+                  to={`/events/${e.id}/edit`}
+                  className="text-sm text-indigo-600 hover:underline"
+                >
+                  Edit
+                </Link>
+                <button
+                  onClick={() => handleDelete(e.id, e.name)}
+                  className="text-sm text-red-600 hover:underline"
+                >
+                  Delete
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+export default function AdminPage() {
+  const { user } = useAuth();
+  const [tab, setTab] = useState<Tab>("overview");
+
+  if (!user) {
+    return <p className="text-gray-500">You must be logged in.</p>;
+  }
+
+  if (user.role !== "ADMIN") {
+    return <p className="text-gray-500">You don't have access to this page.</p>;
+  }
+
+  const tabs: { key: Tab; label: string }[] = [
+    { key: "overview", label: "Overview" },
+    { key: "users", label: "Users" },
+    { key: "events", label: "Events" },
+  ];
+
+  return (
+    <div>
+      <h1 className="text-3xl font-bold text-gray-900 mb-6">Admin</h1>
+
+      <div className="flex gap-2 mb-6 border-b border-gray-200">
+        {tabs.map((t) => (
+          <button
+            key={t.key}
+            onClick={() => setTab(t.key)}
+            className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px ${
+              tab === t.key
+                ? "border-indigo-600 text-indigo-600"
+                : "border-transparent text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {tab === "overview" && <OverviewTab />}
+      {tab === "users" && <UsersTab />}
+      {tab === "events" && <EventsTab />}
+    </div>
+  );
+}

@@ -9,6 +9,7 @@ import ProfilePage from "./pages/ProfilePage";
 import DashboardPage from "./pages/DashboardPage";
 import Navbar from "./components/Navbar";
 import UserProfilePage from "./pages/UserProfilePage";
+import AdminPage from "./pages/AdminPage";
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
           <Route path="/events/:id/edit" element={<EditEventPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/users/:id" element={<UserProfilePage />} />
+          <Route path="/admin" element={<AdminPage />} />
         </Routes>
       </div>
     </BrowserRouter>

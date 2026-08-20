@@ -1,7 +1,10 @@
+export type Role = "USER" | "ADMIN";
+
 export interface User {
   id: string;
   email: string;
   name: string;
+  role: Role;
 }
 
 export interface Category {
@@ -103,4 +106,21 @@ export interface Notification {
   eventId: string | null;
   isRead: boolean;
   createdAt: string;
+}
+
+export interface AdminStats {
+  userCount: number;
+  eventCount: number;
+  upcomingEventCount: number;
+  registrationCount: number;
+  categoryCount: number;
+}
+
+export interface AdminUser {
+  id: string;
+  name: string;
+  email: string;
+  role: Role;
+  createdAt: string;
+  _count: { events: number; registrations: number };
 }

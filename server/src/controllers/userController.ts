@@ -6,7 +6,7 @@ export async function getMyProfile(req: Request, res: Response) {
 
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { id: true, email: true, name: true, createdAt: true },
+    select: { id: true, email: true, name: true, role: true, createdAt: true },
   });
 
   if (!user) {

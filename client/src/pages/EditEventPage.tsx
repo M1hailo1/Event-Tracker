@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getEventById, updateEvent } from "../api/eventsApi";
 import type { CreateEventPayload } from "../api/eventsApi";
+import { updateEventAdmin } from "../api/adminApi";
 import type { Event } from "../types";
 import EventForm from "../components/EventForm";
 import { useAuth } from "../context/AuthContext";
@@ -29,19 +30,31 @@ export default function EditEventPage() {
   if (error) return <p style={{ color: "red" }}>{error}</p>;
   if (!event) return <p>Event not found</p>;
 
-  if (!user || user.id !== event.createdByUserId) {
+  const isOwner = user?.id === event.createdByUserId;
+  const isAdmin = user?.role === "ADMIN";
+
+  if (!user || (!isOwner && !isAdmin)) {
     return <p>You don't have permission to edit this event.</p>;
   }
 
   async function handleUpdate(values: CreateEventPayload) {
     if (!id) return;
-    await updateEvent(id, values);
+    if (isOwner) {
+      await updateEvent(id, values);
+    } else {
+      await updateEventAdmin(id, values);
+    }
     navigate(`/events/${id}`);
   }
 
   return (
     <div>
       <h1>Edit event</h1>
+      {!isOwner && (
+        <p className="text-sm text-amber-600 mb-4">
+          You're editing this event as an admin, not as its organizer.
+        </p>
+      )}
       <EventForm
         initialData={{
           name: event.name,

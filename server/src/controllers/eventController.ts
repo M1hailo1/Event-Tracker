@@ -4,7 +4,7 @@ import prisma from "../prisma";
 import { getNextDate } from "../utils/recurrence";
 import { createNotification } from "../utils/createNotification";
 
-const baseEventSchema = z.object({
+export const baseEventSchema = z.object({
   name: z.string().min(2),
   description: z.string().optional(),
   categoryId: z.string().uuid(),
@@ -177,6 +177,12 @@ async function userCanViewEvent(
   if (!userId) return false;
   if (event.createdByUserId === userId) return true;
 
+  const requestingUser = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { role: true },
+  });
+  if (requestingUser?.role === "ADMIN") return true;
+
   if (event.visibility === "FOLLOWERS_ONLY") {
     const follow = await prisma.follow.findUnique({
       where: {
@@ -201,7 +207,7 @@ async function userCanViewEvent(
   return false;
 }
 
-const updateEventSchema = baseEventSchema
+export const updateEventSchema = baseEventSchema
   .partial()
   .refine((data) => !data.date || new Date(data.date) > new Date(), {
     message: "Event date must be in the future",
