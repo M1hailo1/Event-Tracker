@@ -1,4 +1,15 @@
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+html {
+  background-color: #f9fafb;
+}
+html.dark {
+  background-color: #111827;
+}
+body {
+  background-color: inherit;
+}
 
 .leaflet-container {
   isolation: isolate;

@@ -50,8 +50,9 @@ function toDatetimeLocalValue(isoDate: string): string {
 }
 
 const inputClass =
-  "w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500";
-const labelClass = "block text-sm font-medium text-gray-700 mb-1";
+  "w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500";
+const labelClass =
+  "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1";
 
 export default function EventForm({
   initialData,
@@ -161,7 +162,7 @@ export default function EventForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="bg-white rounded-xl border border-gray-200 p-6 space-y-5"
+      className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 space-y-5"
     >
       <div>
         <label className={labelClass}>Title</label>
@@ -253,7 +254,7 @@ export default function EventForm({
 
       <div>
         <label className={labelClass}>Choose location on map</label>
-        <div className="rounded-lg overflow-hidden border border-gray-200">
+        <div className="rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
           <LocationPicker
             latitude={latitude}
             longitude={longitude}
@@ -265,7 +266,7 @@ export default function EventForm({
           />
         </div>
         {latitude !== null && longitude !== null && (
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
             Selected: {latitude.toFixed(5)}, {longitude.toFixed(5)}
           </p>
         )}
@@ -318,7 +319,9 @@ export default function EventForm({
         </div>
       </div>
 
-      {error && <p className="text-red-600 text-sm">{error}</p>}
+      {error && (
+        <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
+      )}
 
       <div className="flex items-center gap-4">
         <button
@@ -331,7 +334,7 @@ export default function EventForm({
         <button
           type="button"
           onClick={onCancel}
-          className="text-sm font-medium text-gray-500 hover:text-gray-700"
+          className="text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
         >
           Cancel
         </button>

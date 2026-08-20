@@ -28,29 +28,31 @@ export default function EventsListPage() {
   }, [showPast, user?.id]);
 
   if (isLoading) {
-    return <p className="text-gray-500">Loading...</p>;
+    return <p className="text-gray-500 dark:text-gray-400">Loading...</p>;
   }
 
   if (error) {
-    return <p className="text-red-600">{error}</p>;
+    return <p className="text-red-600 dark:text-red-400">{error}</p>;
   }
 
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
           {showPast ? "Event history" : "Events"}
         </h1>
         <button
           onClick={() => setShowPast(!showPast)}
-          className="text-sm font-medium text-indigo-600 hover:text-indigo-700"
+          className="text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300"
         >
           {showPast ? "Show future events" : "Show history"}
         </button>
       </div>
 
       {events.length === 0 && (
-        <p className="text-gray-500">There are no events currently.</p>
+        <p className="text-gray-500 dark:text-gray-400">
+          There are no events currently.
+        </p>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

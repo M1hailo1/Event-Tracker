@@ -20,11 +20,11 @@ export default function Navbar() {
   }
 
   return (
-    <nav className="bg-white border-b border-gray-200 px-6 py-4">
+    <nav className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
       <div className="max-w-5xl mx-auto flex items-center justify-between">
         <Link
           to="/"
-          className="flex items-center gap-2 text-xl font-bold text-indigo-600"
+          className="flex items-center gap-2 text-xl font-bold text-indigo-600 dark:text-indigo-400"
           onClick={handleLinkClick}
         >
           <CalendarDays size={30} />
@@ -36,33 +36,33 @@ export default function Navbar() {
             <>
               <Link
                 to="/dashboard"
-                className="text-sm font-medium text-gray-700 hover:text-indigo-600"
+                className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400"
               >
                 Dashboard
               </Link>
               <Link
                 to="/events/new"
-                className="text-sm font-medium text-gray-700 hover:text-indigo-600"
+                className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400"
               >
                 Create event
               </Link>
               <Link
                 to="/profile"
-                className="text-sm font-medium text-gray-700 hover:text-indigo-600"
+                className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400"
               >
                 My profile
               </Link>
               {user.role === "ADMIN" && (
                 <Link
                   to="/admin"
-                  className="text-sm font-medium text-gray-700 hover:text-indigo-600"
+                  className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400"
                 >
                   Admin
                 </Link>
               )}
               <button
                 onClick={handleLogout}
-                className="text-sm font-medium text-red-600 hover:text-red-700"
+                className="text-sm font-medium text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-400"
               >
                 Sign out
               </button>
@@ -72,7 +72,7 @@ export default function Navbar() {
             <>
               <Link
                 to="/login"
-                className="text-sm font-medium text-gray-700 hover:text-indigo-600"
+                className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400"
               >
                 Sign in
               </Link>
@@ -89,7 +89,7 @@ export default function Navbar() {
         <div className="md:hidden flex items-center gap-4">
           {user && <NotificationBell />}
           <button
-            className="text-gray-700"
+            className="text-gray-700 dark:text-gray-300"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             aria-label="Toggle menu"
           >
@@ -105,21 +105,21 @@ export default function Navbar() {
               <Link
                 to="/dashboard"
                 onClick={handleLinkClick}
-                className="text-sm font-medium text-gray-700 hover:text-indigo-600"
+                className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400"
               >
                 Dashboard
               </Link>
               <Link
                 to="/events/new"
                 onClick={handleLinkClick}
-                className="text-sm font-medium text-gray-700 hover:text-indigo-600"
+                className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400"
               >
                 Create event
               </Link>
               <Link
                 to="/profile"
                 onClick={handleLinkClick}
-                className="text-sm font-medium text-gray-700 hover:text-indigo-600"
+                className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400"
               >
                 My profile
               </Link>
@@ -127,14 +127,14 @@ export default function Navbar() {
                 <Link
                   to="/admin"
                   onClick={handleLinkClick}
-                  className="text-sm font-medium text-gray-700 hover:text-indigo-600"
+                  className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400"
                 >
                   Admin
                 </Link>
               )}
               <button
                 onClick={handleLogout}
-                className="text-sm font-medium text-red-600 hover:text-red-700 text-left"
+                className="text-sm font-medium text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-400 text-left"
               >
                 Sign out
               </button>
@@ -144,7 +144,7 @@ export default function Navbar() {
               <Link
                 to="/login"
                 onClick={handleLinkClick}
-                className="text-sm font-medium text-gray-700 hover:text-indigo-600"
+                className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400"
               >
                 Sign in
               </Link>

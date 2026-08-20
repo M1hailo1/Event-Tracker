@@ -9,7 +9,11 @@ export default function CreateEventPage() {
   const navigate = useNavigate();
 
   if (!user) {
-    return <p>You must be logged in to create events.</p>;
+    return (
+      <p className="text-gray-500 dark:text-gray-400">
+        You must be logged in to create events.
+      </p>
+    );
   }
 
   async function handleCreate(values: CreateEventPayload) {
@@ -19,7 +23,9 @@ export default function CreateEventPage() {
 
   return (
     <div>
-      <h1>Create event</h1>
+      <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-6">
+        Create event
+      </h1>
       <EventForm
         onSubmit={handleCreate}
         onCancel={() => navigate("/")}

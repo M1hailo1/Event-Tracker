@@ -15,9 +15,11 @@ type Tab = "overview" | "users" | "events";
 
 function StatCard({ label, value }: { label: string; value: number }) {
   return (
-    <div className="bg-white border border-gray-200 rounded-xl px-5 py-4">
-      <p className="text-sm text-gray-500">{label}</p>
-      <p className="text-2xl font-bold text-gray-900">{value}</p>
+    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-5 py-4">
+      <p className="text-sm text-gray-500 dark:text-gray-400">{label}</p>
+      <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+        {value}
+      </p>
     </div>
   );
 }
@@ -35,15 +37,19 @@ function OverviewTab() {
       });
   }, []);
 
-  if (error) return <p className="text-red-600">{error}</p>;
-  if (!stats) return <p className="text-gray-500">Loading...</p>;
+  if (error) return <p className="text-red-600 dark:text-red-400">{error}</p>;
+  if (!stats)
+    return <p className="text-gray-500 dark:text-gray-400">Loading...</p>;
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
       <StatCard label="Users" value={stats.userCount} />
       <StatCard label="Events" value={stats.eventCount} />
       <StatCard label="Upcoming events" value={stats.upcomingEventCount} />
-      <StatCard label="Confirmed registrations" value={stats.registrationCount} />
+      <StatCard
+        label="Confirmed registrations"
+        value={stats.registrationCount}
+      />
       <StatCard label="Categories" value={stats.categoryCount} />
     </div>
   );
@@ -80,13 +86,14 @@ function UsersTab() {
     }
   }
 
-  if (isLoading) return <p className="text-gray-500">Loading...</p>;
-  if (error) return <p className="text-red-600">{error}</p>;
+  if (isLoading)
+    return <p className="text-gray-500 dark:text-gray-400">Loading...</p>;
+  if (error) return <p className="text-red-600 dark:text-red-400">{error}</p>;
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
       <table className="w-full text-sm">
-        <thead className="bg-gray-50 text-left text-gray-500">
+        <thead className="bg-gray-50 dark:bg-gray-800 text-left text-gray-500 dark:text-gray-400">
           <tr>
             <th className="px-4 py-3 font-medium">Name</th>
             <th className="px-4 py-3 font-medium">Email</th>
@@ -99,37 +106,46 @@ function UsersTab() {
         </thead>
         <tbody>
           {users.map((u) => (
-            <tr key={u.id} className="border-t border-gray-100">
+            <tr
+              key={u.id}
+              className="border-t border-gray-100 dark:border-gray-800"
+            >
               <td className="px-4 py-3">
                 <Link
                   to={`/users/${u.id}`}
-                  className="text-indigo-600 hover:underline"
+                  className="text-indigo-600 dark:text-indigo-400 hover:underline"
                 >
                   {u.name}
                 </Link>
               </td>
-              <td className="px-4 py-3 text-gray-600">{u.email}</td>
+              <td className="px-4 py-3 text-gray-600 dark:text-gray-400">
+                {u.email}
+              </td>
               <td className="px-4 py-3">
                 {u.role === "ADMIN" ? (
-                  <span className="text-xs font-medium bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full">
+                  <span className="text-xs font-medium bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 px-2 py-1 rounded-full">
                     Admin
                   </span>
                 ) : (
-                  <span className="text-xs text-gray-500">User</span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                    User
+                  </span>
                 )}
               </td>
-              <td className="px-4 py-3 text-gray-600">{u._count.events}</td>
-              <td className="px-4 py-3 text-gray-600">
+              <td className="px-4 py-3 text-gray-600 dark:text-gray-400">
+                {u._count.events}
+              </td>
+              <td className="px-4 py-3 text-gray-600 dark:text-gray-400">
                 {u._count.registrations}
               </td>
-              <td className="px-4 py-3 text-gray-500">
+              <td className="px-4 py-3 text-gray-500 dark:text-gray-400">
                 {new Date(u.createdAt).toLocaleDateString("en-GB")}
               </td>
               <td className="px-4 py-3 text-right">
                 {u.id !== currentUser?.id && (
                   <button
                     onClick={() => handleDelete(u.id, u.name)}
-                    className="text-sm text-red-600 hover:underline"
+                    className="text-sm text-red-600 dark:text-red-400 hover:underline"
                   >
                     Delete
                   </button>
@@ -173,13 +189,14 @@ function EventsTab() {
     }
   }
 
-  if (isLoading) return <p className="text-gray-500">Loading...</p>;
-  if (error) return <p className="text-red-600">{error}</p>;
+  if (isLoading)
+    return <p className="text-gray-500 dark:text-gray-400">Loading...</p>;
+  if (error) return <p className="text-red-600 dark:text-red-400">{error}</p>;
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
       <table className="w-full text-sm">
-        <thead className="bg-gray-50 text-left text-gray-500">
+        <thead className="bg-gray-50 dark:bg-gray-800 text-left text-gray-500 dark:text-gray-400">
           <tr>
             <th className="px-4 py-3 font-medium">Name</th>
             <th className="px-4 py-3 font-medium">Organizer</th>
@@ -191,37 +208,40 @@ function EventsTab() {
         </thead>
         <tbody>
           {events.map((e) => (
-            <tr key={e.id} className="border-t border-gray-100">
+            <tr
+              key={e.id}
+              className="border-t border-gray-100 dark:border-gray-800"
+            >
               <td className="px-4 py-3">
                 <Link
                   to={`/events/${e.id}`}
-                  className="text-indigo-600 hover:underline"
+                  className="text-indigo-600 dark:text-indigo-400 hover:underline"
                 >
                   {e.name}
                 </Link>
               </td>
-              <td className="px-4 py-3 text-gray-600">
+              <td className="px-4 py-3 text-gray-600 dark:text-gray-400">
                 {e.createdBy?.name ?? "—"}
               </td>
-              <td className="px-4 py-3 text-gray-600">
+              <td className="px-4 py-3 text-gray-600 dark:text-gray-400">
                 {e.category?.name ?? "—"}
               </td>
-              <td className="px-4 py-3 text-gray-500">
+              <td className="px-4 py-3 text-gray-500 dark:text-gray-400">
                 {formatEventDate(e.date)}
               </td>
-              <td className="px-4 py-3 text-gray-600">
+              <td className="px-4 py-3 text-gray-600 dark:text-gray-400">
                 {e._count?.registrations ?? 0}
               </td>
               <td className="px-4 py-3 text-right space-x-3">
                 <Link
                   to={`/events/${e.id}/edit`}
-                  className="text-sm text-indigo-600 hover:underline"
+                  className="text-sm text-indigo-600 dark:text-indigo-400 hover:underline"
                 >
                   Edit
                 </Link>
                 <button
                   onClick={() => handleDelete(e.id, e.name)}
-                  className="text-sm text-red-600 hover:underline"
+                  className="text-sm text-red-600 dark:text-red-400 hover:underline"
                 >
                   Delete
                 </button>
@@ -239,11 +259,17 @@ export default function AdminPage() {
   const [tab, setTab] = useState<Tab>("overview");
 
   if (!user) {
-    return <p className="text-gray-500">You must be logged in.</p>;
+    return (
+      <p className="text-gray-500 dark:text-gray-400">You must be logged in.</p>
+    );
   }
 
   if (user.role !== "ADMIN") {
-    return <p className="text-gray-500">You don't have access to this page.</p>;
+    return (
+      <p className="text-gray-500 dark:text-gray-400">
+        You don't have access to this page.
+      </p>
+    );
   }
 
   const tabs: { key: Tab; label: string }[] = [
@@ -254,17 +280,19 @@ export default function AdminPage() {
 
   return (
     <div>
-      <h1 className="text-3xl font-bold text-gray-900 mb-6">Admin</h1>
+      <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-6">
+        Admin
+      </h1>
 
-      <div className="flex gap-2 mb-6 border-b border-gray-200">
+      <div className="flex gap-2 mb-6 border-b border-gray-200 dark:border-gray-700">
         {tabs.map((t) => (
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
             className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px ${
               tab === t.key
-                ? "border-indigo-600 text-indigo-600"
-                : "border-transparent text-gray-500 hover:text-gray-700"
+                ? "border-indigo-600 dark:border-indigo-400 text-indigo-600 dark:text-indigo-400"
+                : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
             }`}
           >
             {t.label}

@@ -21,12 +21,14 @@ function DashboardSection({
   return (
     <section className="mb-10">
       <div className="mb-4">
-        <h2 className="text-xl font-bold text-gray-900">{title}</h2>
-        <p className="text-sm text-gray-500">{subtitle}</p>
+        <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+          {title}
+        </h2>
+        <p className="text-sm text-gray-500 dark:text-gray-400">{subtitle}</p>
       </div>
 
       {events.length === 0 ? (
-        <p className="text-sm text-gray-500 bg-white border border-gray-200 rounded-xl px-5 py-6">
+        <p className="text-sm text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-5 py-6">
           {emptyText}
         </p>
       ) : (
@@ -67,20 +69,23 @@ export default function DashboardPage() {
 
   if (!user) {
     return (
-      <p className="text-gray-500">
+      <p className="text-gray-500 dark:text-gray-400">
         You must be logged in to view your dashboard.
       </p>
     );
   }
 
-  if (isLoading) return <p className="text-gray-500">Loading...</p>;
-  if (error) return <p className="text-red-600">{error}</p>;
+  if (isLoading)
+    return <p className="text-gray-500 dark:text-gray-400">Loading...</p>;
+  if (error) return <p className="text-red-600 dark:text-red-400">{error}</p>;
   if (!data) return null;
 
   return (
     <div>
       <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+          Dashboard
+        </h1>
         <Link
           to="/events/new"
           className="text-sm font-medium bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700"

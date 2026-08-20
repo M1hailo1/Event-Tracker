@@ -26,15 +26,21 @@ export default function EditEventPage() {
       .finally(() => setIsLoading(false));
   }, [id]);
 
-  if (isLoading) return <p>Loading...</p>;
-  if (error) return <p style={{ color: "red" }}>{error}</p>;
-  if (!event) return <p>Event not found</p>;
+  if (isLoading)
+    return <p className="text-gray-500 dark:text-gray-400">Loading...</p>;
+  if (error) return <p className="text-red-600 dark:text-red-400">{error}</p>;
+  if (!event)
+    return <p className="text-gray-500 dark:text-gray-400">Event not found</p>;
 
   const isOwner = user?.id === event.createdByUserId;
   const isAdmin = user?.role === "ADMIN";
 
   if (!user || (!isOwner && !isAdmin)) {
-    return <p>You don't have permission to edit this event.</p>;
+    return (
+      <p className="text-gray-500 dark:text-gray-400">
+        You don't have permission to edit this event.
+      </p>
+    );
   }
 
   async function handleUpdate(values: CreateEventPayload) {
@@ -49,9 +55,11 @@ export default function EditEventPage() {
 
   return (
     <div>
-      <h1>Edit event</h1>
+      <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-6">
+        Edit event
+      </h1>
       {!isOwner && (
-        <p className="text-sm text-amber-600 mb-4">
+        <p className="text-sm text-amber-600 dark:text-amber-400 mb-4">
           You're editing this event as an admin, not as its organizer.
         </p>
       )}

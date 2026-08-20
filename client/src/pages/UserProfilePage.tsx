@@ -63,9 +63,11 @@ export default function UserProfilePage() {
     }
   }
 
-  if (isLoading) return <p className="text-gray-500">Loading...</p>;
-  if (error) return <p className="text-red-600">{error}</p>;
-  if (!profile) return <p className="text-gray-500">User not found</p>;
+  if (isLoading)
+    return <p className="text-gray-500 dark:text-gray-400">Loading...</p>;
+  if (error) return <p className="text-red-600 dark:text-red-400">{error}</p>;
+  if (!profile)
+    return <p className="text-gray-500 dark:text-gray-400">User not found</p>;
 
   if (currentUser && currentUser.id === profile.id) {
     return <Navigate to="/profile" replace />;
@@ -73,17 +75,17 @@ export default function UserProfilePage() {
 
   return (
     <div className="max-w-2xl mx-auto">
-      <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
+      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 mb-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xl font-bold">
+            <div className="w-14 h-14 rounded-full bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-xl font-bold">
               {profile.name.charAt(0).toUpperCase()}
             </div>
             <div>
-              <h1 className="text-xl font-bold text-gray-900">
+              <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
                 {profile.name}
               </h1>
-              <p className="text-xs text-gray-400">
+              <p className="text-xs text-gray-400 dark:text-gray-500">
                 Member since{" "}
                 {new Date(profile.createdAt).toLocaleDateString("en-GB")}
               </p>
@@ -96,7 +98,7 @@ export default function UserProfilePage() {
               disabled={isFollowActionLoading}
               className={
                 isFollowing
-                  ? "bg-gray-100 text-gray-700 font-medium px-4 py-2 rounded-lg hover:bg-gray-200 disabled:opacity-50"
+                  ? "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium px-4 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50"
                   : "bg-indigo-600 text-white font-medium px-4 py-2 rounded-lg hover:bg-indigo-700 disabled:opacity-50"
               }
             >
@@ -107,15 +109,19 @@ export default function UserProfilePage() {
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        <div className="bg-white rounded-xl border border-gray-200 p-4">
-          <p className="text-2xl font-bold text-gray-900">{followers.length}</p>
-          <p className="text-sm text-gray-500 mb-3">Followers</p>
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+          <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            {followers.length}
+          </p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+            Followers
+          </p>
           <ul className="space-y-1">
             {followers.map((f) => (
               <li key={f.id}>
                 <Link
                   to={`/users/${f.id}`}
-                  className="text-sm text-gray-700 hover:text-indigo-600"
+                  className="text-sm text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400"
                 >
                   {f.name}
                 </Link>
@@ -124,15 +130,19 @@ export default function UserProfilePage() {
           </ul>
         </div>
 
-        <div className="bg-white rounded-xl border border-gray-200 p-4">
-          <p className="text-2xl font-bold text-gray-900">{following.length}</p>
-          <p className="text-sm text-gray-500 mb-3">Following</p>
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+          <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            {following.length}
+          </p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+            Following
+          </p>
           <ul className="space-y-1">
             {following.map((f) => (
               <li key={f.id}>
                 <Link
                   to={`/users/${f.id}`}
-                  className="text-sm text-gray-700 hover:text-indigo-600"
+                  className="text-sm text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400"
                 >
                   {f.name}
                 </Link>

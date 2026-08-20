@@ -107,9 +107,11 @@ export default function EventDetailsPage() {
     }
   }
 
-  if (isLoading) return <p className="text-gray-500">Loading...</p>;
-  if (error) return <p className="text-red-600">{error}</p>;
-  if (!event) return <p className="text-gray-500">Event not found</p>;
+  if (isLoading)
+    return <p className="text-gray-500 dark:text-gray-400">Loading...</p>;
+  if (error) return <p className="text-red-600 dark:text-red-400">{error}</p>;
+  if (!event)
+    return <p className="text-gray-500 dark:text-gray-400">Event not found</p>;
 
   const isFull =
     event.maxCapacity !== null &&
@@ -120,25 +122,27 @@ export default function EventDetailsPage() {
     <div className="max-w-3xl mx-auto">
       <button
         onClick={handleBack}
-        className="text-sm text-indigo-600 hover:text-indigo-700 mb-4 inline-block"
+        className="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 mb-4 inline-block"
       >
         &larr; Back
       </button>
 
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
+      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
         <div className="flex items-start justify-between mb-4">
-          <h1 className="text-2xl font-bold text-gray-900">{event.name}</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            {event.name}
+          </h1>
           <div className="flex flex-col items-end gap-2 ml-3">
             {event.category && (
-              <span className="text-xs font-medium bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full whitespace-nowrap">
+              <span className="text-xs font-medium bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 px-3 py-1 rounded-full whitespace-nowrap">
                 {event.category.name}
               </span>
             )}
             <span
               className={`text-xs font-medium px-3 py-1 rounded-full whitespace-nowrap ${
                 event.visibility === "PUBLIC"
-                  ? "bg-emerald-50 text-emerald-700"
-                  : "bg-amber-50 text-amber-700"
+                  ? "bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400"
+                  : "bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-400"
               }`}
             >
               {event.visibility === "PUBLIC"
@@ -151,28 +155,32 @@ export default function EventDetailsPage() {
         </div>
 
         {event.description && (
-          <p className="text-gray-600 mb-4">{event.description}</p>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">
+            {event.description}
+          </p>
         )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm mb-4">
           <div>
-            <span className="text-gray-400">Date</span>
-            <p className="font-medium text-gray-800">
+            <span className="text-gray-400 dark:text-gray-500">Date</span>
+            <p className="font-medium text-gray-800 dark:text-gray-200">
               {formatEventDate(event.date)}
               {event.endDate && ` — ${formatEventDate(event.endDate)}`}
             </p>
           </div>
           <div>
-            <span className="text-gray-400">Location</span>
-            <p className="font-medium text-gray-800">{event.location}</p>
+            <span className="text-gray-400 dark:text-gray-500">Location</span>
+            <p className="font-medium text-gray-800 dark:text-gray-200">
+              {event.location}
+            </p>
           </div>
           <div>
-            <span className="text-gray-400">Creator</span>
-            <p className="font-medium text-gray-800">
+            <span className="text-gray-400 dark:text-gray-500">Creator</span>
+            <p className="font-medium text-gray-800 dark:text-gray-200">
               {event.createdBy && (
                 <Link
                   to={`/users/${event.createdBy.id}`}
-                  className="text-indigo-600 hover:text-indigo-700"
+                  className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300"
                 >
                   {event.createdBy.name}
                 </Link>
@@ -180,8 +188,8 @@ export default function EventDetailsPage() {
             </p>
           </div>
           <div>
-            <span className="text-gray-400">Attendees</span>
-            <p className="font-medium text-gray-800">
+            <span className="text-gray-400 dark:text-gray-500">Attendees</span>
+            <p className="font-medium text-gray-800 dark:text-gray-200">
               {event._count?.registrations ?? 0}
               {event.maxCapacity
                 ? ` / ${event.maxCapacity}`
@@ -191,7 +199,7 @@ export default function EventDetailsPage() {
         </div>
 
         {event.isRecurring && (
-          <p className="text-xs text-gray-500 mb-4">
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
             Takes place: {event.recurrencePattern}
           </p>
         )}
@@ -205,11 +213,13 @@ export default function EventDetailsPage() {
         </div>
 
         {actionError && (
-          <p className="text-red-600 text-sm mb-3">{actionError}</p>
+          <p className="text-red-600 dark:text-red-400 text-sm mb-3">
+            {actionError}
+          </p>
         )}
 
         {isPastEvent ? (
-          <p className="text-sm text-gray-500 italic">
+          <p className="text-sm text-gray-500 dark:text-gray-400 italic">
             This event already finished.
           </p>
         ) : user ? (
@@ -217,7 +227,7 @@ export default function EventDetailsPage() {
             <button
               onClick={handleUnregister}
               disabled={isActionLoading}
-              className="bg-gray-100 text-gray-700 font-medium px-4 py-2 rounded-lg hover:bg-gray-200 disabled:opacity-50"
+              className="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium px-4 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50"
             >
               Leave event
             </button>
@@ -231,10 +241,10 @@ export default function EventDetailsPage() {
             </button>
           )
         ) : (
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-gray-600 dark:text-gray-400">
             <Link
               to="/login"
-              className="text-indigo-600 hover:text-indigo-700 font-medium"
+              className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium"
             >
               Sign in
             </Link>{" "}
@@ -243,16 +253,16 @@ export default function EventDetailsPage() {
         )}
 
         {user && user.id === event.createdByUserId && !isPastEvent && (
-          <div className="flex gap-3 mt-4 pt-4 border-t border-gray-100">
+          <div className="flex gap-3 mt-4 pt-4 border-t border-gray-100 dark:border-gray-800">
             <button
               onClick={() => navigate(`/events/${event.id}/edit`)}
-              className="text-sm font-medium text-gray-700 hover:text-indigo-600"
+              className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400"
             >
               Edit event
             </button>
             <button
               onClick={handleDelete}
-              className="text-sm font-medium text-red-600 hover:text-red-700"
+              className="text-sm font-medium text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-400"
             >
               Delete event
             </button>
@@ -266,8 +276,8 @@ export default function EventDetailsPage() {
           )}
 
         {event.registrations && event.registrations.length > 0 && (
-          <div className="mt-6 pt-4 border-t border-gray-100">
-            <h3 className="text-sm font-semibold text-gray-700 mb-2">
+          <div className="mt-6 pt-4 border-t border-gray-100 dark:border-gray-800">
+            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
               List of Attendees
             </h3>
             <ul className="flex flex-wrap gap-2">
@@ -276,12 +286,12 @@ export default function EventDetailsPage() {
                   {r.user ? (
                     <Link
                       to={`/users/${r.user.id}`}
-                      className="text-xs bg-gray-100 text-gray-700 px-3 py-1 rounded-full hover:bg-indigo-50 hover:text-indigo-600 transition-colors"
+                      className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-3 py-1 rounded-full hover:bg-indigo-50 dark:hover:bg-indigo-900 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
                     >
                       {r.user.name}
                     </Link>
                   ) : (
-                    <span className="text-xs bg-gray-100 text-gray-700 px-3 py-1 rounded-full">
+                    <span className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-3 py-1 rounded-full">
                       Unknown user
                     </span>
                   )}

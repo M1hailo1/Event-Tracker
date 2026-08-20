@@ -127,7 +127,7 @@ export default function NotificationBell() {
     <div className="relative" ref={containerRef}>
       <button
         onClick={handleToggle}
-        className="relative text-gray-700 hover:text-indigo-600"
+        className="relative text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400"
         aria-label="Notifications"
       >
         <Bell size={22} />
@@ -139,15 +139,15 @@ export default function NotificationBell() {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-3 w-80 max-h-96 overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-            <span className="text-sm font-semibold text-gray-900">
+        <div className="absolute right-0 mt-3 w-80 max-h-96 overflow-y-auto bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-800">
+            <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">
               Notifications
             </span>
             {unreadCount > 0 && (
               <button
                 onClick={handleMarkAllAsRead}
-                className="text-xs font-medium text-indigo-600 hover:text-indigo-700"
+                className="text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300"
               >
                 Mark all as read
               </button>
@@ -155,33 +155,37 @@ export default function NotificationBell() {
           </div>
 
           {isLoading ? (
-            <div className="px-4 py-6 text-sm text-gray-500 text-center">
+            <div className="px-4 py-6 text-sm text-gray-500 dark:text-gray-400 text-center">
               Loading...
             </div>
           ) : notifications.length === 0 ? (
-            <div className="px-4 py-6 text-sm text-gray-500 text-center">
+            <div className="px-4 py-6 text-sm text-gray-500 dark:text-gray-400 text-center">
               No notifications yet
             </div>
           ) : (
-            <ul className="divide-y divide-gray-100">
+            <ul className="divide-y divide-gray-100 dark:divide-gray-700">
               {notifications.map((notification) => (
                 <li key={notification.id}>
                   <button
                     onClick={() => handleNotificationClick(notification)}
-                    className={`w-full text-left px-4 py-3 text-sm hover:bg-gray-50 flex gap-2 ${
-                      notification.isRead ? "bg-white" : "bg-indigo-50"
+                    className={`w-full text-left px-4 py-3 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 flex gap-2 ${
+                      notification.isRead
+                        ? "bg-white dark:bg-gray-800"
+                        : "bg-indigo-50 dark:bg-indigo-950"
                     }`}
                   >
                     <span
                       className={`mt-1.5 h-2 w-2 rounded-full flex-shrink-0 ${
-                        notification.isRead ? "bg-transparent" : "bg-indigo-600"
+                        notification.isRead
+                          ? "bg-transparent"
+                          : "bg-indigo-600 dark:bg-indigo-400"
                       }`}
                     />
                     <span className="flex-1">
-                      <span className="block text-gray-800">
+                      <span className="block text-gray-800 dark:text-gray-200">
                         {notification.message}
                       </span>
-                      <span className="block text-xs text-gray-400 mt-0.5">
+                      <span className="block text-xs text-gray-400 dark:text-gray-500 mt-0.5">
                         {formatRelativeTime(notification.createdAt)}
                       </span>
                     </span>
