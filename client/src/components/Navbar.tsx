@@ -34,7 +34,6 @@ export default function Navbar() {
         <div className="hidden md:flex items-center gap-4">
           {user ? (
             <>
-              <NotificationBell />
               <Link
                 to="/dashboard"
                 className="text-sm font-medium text-gray-700 hover:text-indigo-600"
@@ -67,6 +66,7 @@ export default function Navbar() {
               >
                 Sign out
               </button>
+              <NotificationBell />
             </>
           ) : (
             <>
