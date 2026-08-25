@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
+import { Map, LayoutGrid } from "lucide-react";
 import { getAllEvents } from "../api/eventsApi";
 import type { EventSortOption } from "../api/eventsApi";
 import { getAllCategories } from "../api/categoriesApi";
 import type { Event, Category } from "../types";
 import { useAuth } from "../context/AuthContext";
 import EventCard from "../components/EventCard";
+import EventsMap from "../components/EventsMap";
 
 const inputClass =
   "w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500";
@@ -27,6 +29,7 @@ export default function EventsListPage() {
   const [city, setCity] = useState("");
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState<EventSortOption>("date_asc");
+  const [view, setView] = useState<"list" | "map">("list");
 
   const { user } = useAuth();
 
@@ -77,12 +80,38 @@ export default function EventsListPage() {
         <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
           {showPast ? "Event history" : "Events"}
         </h1>
-        <button
-          onClick={() => setShowPast(!showPast)}
-          className="text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300"
-        >
-          {showPast ? "Show future events" : "Show history"}
-        </button>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+            <button
+              onClick={() => setView("list")}
+              aria-label="List view"
+              className={`p-1.5 rounded-md ${
+                view === "list"
+                  ? "bg-white dark:bg-gray-800 text-indigo-600 dark:text-indigo-400 shadow-sm"
+                  : "text-gray-500 dark:text-gray-400"
+              }`}
+            >
+              <LayoutGrid size={18} />
+            </button>
+            <button
+              onClick={() => setView("map")}
+              aria-label="Map view"
+              className={`p-1.5 rounded-md ${
+                view === "map"
+                  ? "bg-white dark:bg-gray-800 text-indigo-600 dark:text-indigo-400 shadow-sm"
+                  : "text-gray-500 dark:text-gray-400"
+              }`}
+            >
+              <Map size={18} />
+            </button>
+          </div>
+          <button
+            onClick={() => setShowPast(!showPast)}
+            className="text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300"
+          >
+            {showPast ? "Show future events" : "Show history"}
+          </button>
+        </div>
       </div>
 
       <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 mb-6">
@@ -169,11 +198,22 @@ export default function EventsListPage() {
         </p>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {events.map((event) => (
-          <EventCard key={event.id} event={event} />
-        ))}
-      </div>
+      {view === "map" ? (
+        events.length > 0 && (
+          <div>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+              Hover a pin to see the event name, click it to open the event.
+            </p>
+            <EventsMap events={events} />
+          </div>
+        )
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {events.map((event) => (
+            <EventCard key={event.id} event={event} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
