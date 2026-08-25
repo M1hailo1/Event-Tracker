@@ -1,10 +1,31 @@
 import axiosInstance from "./axiosInstance";
 import type { Event, EventVisibility, FollowUser } from "../types";
 
-export async function getAllEvents(includePast = false): Promise<Event[]> {
-  const response = await axiosInstance.get<Event[]>("/events", {
-    params: includePast ? { includePast: "true" } : {},
-  });
+export type EventSortOption =
+  | "date_asc"
+  | "date_desc"
+  | "name_asc"
+  | "name_desc";
+
+export interface EventFilters {
+  includePast?: boolean;
+  categoryId?: string;
+  city?: string;
+  search?: string;
+  sortBy?: EventSortOption;
+}
+
+export async function getAllEvents(
+  filters: EventFilters = {},
+): Promise<Event[]> {
+  const params: Record<string, string> = {};
+  if (filters.includePast) params.includePast = "true";
+  if (filters.categoryId) params.categoryId = filters.categoryId;
+  if (filters.city) params.city = filters.city;
+  if (filters.search) params.search = filters.search;
+  if (filters.sortBy) params.sortBy = filters.sortBy;
+
+  const response = await axiosInstance.get<Event[]>("/events", { params });
   return response.data;
 }
 

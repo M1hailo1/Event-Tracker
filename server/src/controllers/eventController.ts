@@ -95,6 +95,20 @@ export async function getAllEvents(req: Request, res: Response) {
   const showPast = req.query.includePast === "true";
   const userId = req.userId;
 
+  const categoryId =
+    typeof req.query.categoryId === "string" && req.query.categoryId
+      ? req.query.categoryId
+      : undefined;
+  const city =
+    typeof req.query.city === "string" && req.query.city.trim()
+      ? req.query.city.trim()
+      : undefined;
+  const search =
+    typeof req.query.search === "string" && req.query.search.trim()
+      ? req.query.search.trim()
+      : undefined;
+  const sortBy = typeof req.query.sortBy === "string" ? req.query.sortBy : "";
+
   const dateFilter = showPast
     ? { date: { lt: new Date() } }
     : { date: { gte: new Date() } };
@@ -116,14 +130,34 @@ export async function getAllEvents(req: Request, res: Response) {
       }
     : { visibility: "PUBLIC" as const };
 
+  const filters: any[] = [dateFilter, visibilityFilter];
+
+  if (categoryId) {
+    filters.push({ categoryId });
+  }
+  if (city) {
+    filters.push({ location: { contains: city, mode: "insensitive" } });
+  }
+  if (search) {
+    filters.push({ name: { contains: search, mode: "insensitive" } });
+  }
+
+  let orderBy: { date: "asc" | "desc" } | { name: "asc" | "desc" } = {
+    date: showPast ? "desc" : "asc",
+  };
+  if (sortBy === "date_asc") orderBy = { date: "asc" };
+  else if (sortBy === "date_desc") orderBy = { date: "desc" };
+  else if (sortBy === "name_asc") orderBy = { name: "asc" };
+  else if (sortBy === "name_desc") orderBy = { name: "desc" };
+
   const events = await prisma.event.findMany({
-    where: { AND: [dateFilter, visibilityFilter] },
+    where: { AND: filters },
     include: {
       category: true,
       createdBy: { select: { id: true, name: true } },
       _count: { select: { registrations: true } },
     },
-    orderBy: { date: showPast ? "desc" : "asc" },
+    orderBy,
   });
 
   res.status(200).json(events);
