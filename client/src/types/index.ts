@@ -88,6 +88,7 @@ export interface PublicUser {
   id: string;
   name: string;
   createdAt: string;
+  bannedUntil?: string | null;
 }
 
 export type NotificationType =
@@ -121,7 +122,9 @@ export interface AdminUser {
   name: string;
   email: string;
   role: Role;
-  isBanned: boolean;
+  bannedUntil: string | null;
   createdAt: string;
   _count: { events: number; registrations: number };
 }
+
+export type BanDuration = "1h" | "1w" | "1m" | "forever";

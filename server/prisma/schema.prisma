@@ -18,14 +18,14 @@ enum Role {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  password  String?
-  googleId  String?  @unique
-  name      String
-  role      Role     @default(USER)
-  isBanned  Boolean  @default(false)
-  createdAt DateTime @default(now())
+  id          String    @id @default(uuid())
+  email       String    @unique
+  password    String?
+  googleId    String?   @unique
+  name        String
+  role        Role      @default(USER)
+  bannedUntil DateTime?
+  createdAt   DateTime  @default(now())
 
   events        Event[]        @relation("EventCreator")
   registrations Registration[]

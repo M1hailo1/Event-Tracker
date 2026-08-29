@@ -4,6 +4,7 @@ import { getMyDashboard } from "../api/userApi";
 import type { DashboardData } from "../types";
 import EventCard from "../components/EventCard";
 import { useAuth } from "../context/AuthContext";
+import LoadingBlock from "../components/LoadingBlock";
 
 interface SectionProps {
   title: string;
@@ -21,9 +22,7 @@ function DashboardSection({
   return (
     <section className="mb-10">
       <div className="mb-4">
-        <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
-          {title}
-        </h2>
+        <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">{title}</h2>
         <p className="text-sm text-gray-500 dark:text-gray-400">{subtitle}</p>
       </div>
 
@@ -75,17 +74,14 @@ export default function DashboardPage() {
     );
   }
 
-  if (isLoading)
-    return <p className="text-gray-500 dark:text-gray-400">Loading...</p>;
+  if (isLoading) return <LoadingBlock label="Loading dashboard..." />;
   if (error) return <p className="text-red-600 dark:text-red-400">{error}</p>;
   if (!data) return null;
 
   return (
     <div>
       <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-          Dashboard
-        </h1>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Dashboard</h1>
         <Link
           to="/events/new"
           className="text-sm font-medium bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700"

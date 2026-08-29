@@ -133,7 +133,15 @@ export async function getAllEvents(req: Request, res: Response) {
       }
     : { visibility: "PUBLIC" as const };
 
-  const filters: any[] = [dateFilter, visibilityFilter];
+  const filters: any[] = [
+    dateFilter,
+    visibilityFilter,
+    {
+      createdBy: {
+        OR: [{ bannedUntil: null }, { bannedUntil: { lte: new Date() } }],
+      },
+    },
+  ];
 
   if (categoryId) {
     filters.push({ categoryId });

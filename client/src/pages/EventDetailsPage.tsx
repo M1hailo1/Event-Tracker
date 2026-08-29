@@ -12,6 +12,7 @@ import { useAuth } from "../context/AuthContext";
 import LocationPicker from "../components/LocationPicker";
 import EventInviteManager from "../components/EventInviteManager";
 import { formatEventDate } from "../utils/formatDate";
+import LoadingBlock from "../components/LoadingBlock";
 
 export default function EventDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -107,11 +108,9 @@ export default function EventDetailsPage() {
     }
   }
 
-  if (isLoading)
-    return <p className="text-gray-500 dark:text-gray-400">Loading...</p>;
+  if (isLoading) return <LoadingBlock label="Loading event..." />;
   if (error) return <p className="text-red-600 dark:text-red-400">{error}</p>;
-  if (!event)
-    return <p className="text-gray-500 dark:text-gray-400">Event not found</p>;
+  if (!event) return <p className="text-gray-500 dark:text-gray-400">Event not found</p>;
 
   const isFull =
     event.maxCapacity !== null &&
@@ -129,9 +128,7 @@ export default function EventDetailsPage() {
 
       <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
         <div className="flex items-start justify-between mb-4">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-            {event.name}
-          </h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{event.name}</h1>
           <div className="flex flex-col items-end gap-2 ml-3">
             {event.category && (
               <span className="text-xs font-medium bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 px-3 py-1 rounded-full whitespace-nowrap">
@@ -155,9 +152,7 @@ export default function EventDetailsPage() {
         </div>
 
         {event.description && (
-          <p className="text-gray-600 dark:text-gray-400 mb-4">
-            {event.description}
-          </p>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">{event.description}</p>
         )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm mb-4">
@@ -170,9 +165,7 @@ export default function EventDetailsPage() {
           </div>
           <div>
             <span className="text-gray-400 dark:text-gray-500">Location</span>
-            <p className="font-medium text-gray-800 dark:text-gray-200">
-              {event.location}
-            </p>
+            <p className="font-medium text-gray-800 dark:text-gray-200">{event.location}</p>
           </div>
           <div>
             <span className="text-gray-400 dark:text-gray-500">Creator</span>
@@ -213,9 +206,7 @@ export default function EventDetailsPage() {
         </div>
 
         {actionError && (
-          <p className="text-red-600 dark:text-red-400 text-sm mb-3">
-            {actionError}
-          </p>
+          <p className="text-red-600 dark:text-red-400 text-sm mb-3">{actionError}</p>
         )}
 
         {isPastEvent ? (

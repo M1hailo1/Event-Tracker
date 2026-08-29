@@ -2,6 +2,9 @@ import { Request, Response } from "express";
 import prisma from "../prisma";
 import { updateEventSchema } from "./eventController";
 import { createNotification } from "../utils/createNotification";
+import { computeBannedUntil, type BanDuration } from "../utils/banDuration";
+
+const VALID_DURATIONS: BanDuration[] = ["1h", "1w", "1m", "forever"];
 
 export async function getAdminStats(req: Request, res: Response) {
   const [userCount, eventCount, upcomingEventCount, registrationCount, categoryCount] =
@@ -29,7 +32,7 @@ export async function getAllUsersAdmin(req: Request, res: Response) {
       name: true,
       email: true,
       role: true,
-      isBanned: true,
+      bannedUntil: true,
       createdAt: true,
       _count: {
         select: { events: true, registrations: true },
@@ -51,15 +54,24 @@ export async function banUserAdmin(req: Request, res: Response) {
     return res.status(400).json({ error: "You can't ban your own admin account" });
   }
 
+  const duration = req.body.duration;
+  if (!VALID_DURATIONS.includes(duration)) {
+    return res.status(400).json({
+      error: "duration must be one of: 1h, 1w, 1m, forever",
+    });
+  }
+
   const user = await prisma.user.findUnique({ where: { id } });
   if (!user) {
     return res.status(404).json({ error: "User not found" });
   }
 
+  const bannedUntil = computeBannedUntil(duration);
+
   const updatedUser = await prisma.user.update({
     where: { id },
-    data: { isBanned: true },
-    select: { id: true, name: true, email: true, role: true, isBanned: true },
+    data: { bannedUntil },
+    select: { id: true, name: true, email: true, role: true, bannedUntil: true },
   });
 
   res.status(200).json(updatedUser);
@@ -78,8 +90,8 @@ export async function unbanUserAdmin(req: Request, res: Response) {
 
   const updatedUser = await prisma.user.update({
     where: { id },
-    data: { isBanned: false },
-    select: { id: true, name: true, email: true, role: true, isBanned: true },
+    data: { bannedUntil: null },
+    select: { id: true, name: true, email: true, role: true, bannedUntil: true },
   });
 
   res.status(200).json(updatedUser);

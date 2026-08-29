@@ -4,6 +4,7 @@ import { z } from "zod";
 import prisma from "../prisma";
 import { generateToken } from "../utils/jwt";
 import { OAuth2Client } from "google-auth-library";
+import { isCurrentlyBanned, formatBanMessage } from "../utils/banDuration";
 
 const registerSchema = z.object({
   email: z.string().email(),
@@ -93,10 +94,8 @@ export async function googleAuth(req: Request, res: Response) {
       }
     }
 
-    if (user.isBanned) {
-      return res
-        .status(403)
-        .json({ error: "Your account has been banned" });
+    if (isCurrentlyBanned(user.bannedUntil)) {
+      return res.status(403).json({ error: formatBanMessage(user.bannedUntil) });
     }
 
     const token = generateToken(user.id);
@@ -141,10 +140,8 @@ export async function login(req: Request, res: Response) {
     return res.status(401).json({ error: "Wrong email/password" });
   }
 
-  if (user.isBanned) {
-    return res
-      .status(403)
-      .json({ error: "Your account has been banned" });
+  if (isCurrentlyBanned(user.bannedUntil)) {
+    return res.status(403).json({ error: formatBanMessage(user.bannedUntil) });
   }
 
   const token = generateToken(user.id);

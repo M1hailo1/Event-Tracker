@@ -7,6 +7,7 @@ import type { Event, Category } from "../types";
 import { useAuth } from "../context/AuthContext";
 import EventCard from "../components/EventCard";
 import EventsMap from "../components/EventsMap";
+import Spinner from "../components/Spinner";
 
 const inputClass =
   "w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500";
@@ -32,6 +33,17 @@ export default function EventsListPage() {
   const [view, setView] = useState<"list" | "map">("list");
 
   const { user } = useAuth();
+
+  const [showSlowHint, setShowSlowHint] = useState(false);
+
+  useEffect(() => {
+    if (!isLoading) {
+      setShowSlowHint(false);
+      return;
+    }
+    const timer = setTimeout(() => setShowSlowHint(true), 4000);
+    return () => clearTimeout(timer);
+  }, [isLoading]);
 
   useEffect(() => {
     getAllCategories()
@@ -190,6 +202,21 @@ export default function EventsListPage() {
 
       {error && <p className="text-red-600 dark:text-red-400 mb-4">{error}</p>}
 
+      {isLoading && events.length === 0 && (
+        <div className="flex flex-col items-center justify-center py-16 gap-3">
+          <Spinner />
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            Loading events...
+          </p>
+          {showSlowHint && (
+            <p className="text-xs text-gray-400 dark:text-gray-500 max-w-xs text-center">
+              The server may be waking up from sleep, this can take up to a
+              minute on the first request.
+            </p>
+          )}
+        </div>
+      )}
+
       {!isLoading && events.length === 0 && (
         <p className="text-gray-500 dark:text-gray-400">
           {hasActiveFilters
@@ -198,22 +225,21 @@ export default function EventsListPage() {
         </p>
       )}
 
-      {view === "map" ? (
-        events.length > 0 && (
+      {events.length > 0 &&
+        (view === "map" ? (
           <div>
             <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
               Hover a pin to see the event name, click it to open the event.
             </p>
             <EventsMap events={events} />
           </div>
-        )
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {events.map((event) => (
-            <EventCard key={event.id} event={event} />
-          ))}
-        </div>
-      )}
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {events.map((event) => (
+              <EventCard key={event.id} event={event} />
+            ))}
+          </div>
+        ))}
     </div>
   );
 }

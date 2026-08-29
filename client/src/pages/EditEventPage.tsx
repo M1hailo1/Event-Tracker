@@ -6,6 +6,7 @@ import { updateEventAdmin } from "../api/adminApi";
 import type { Event } from "../types";
 import EventForm from "../components/EventForm";
 import { useAuth } from "../context/AuthContext";
+import LoadingBlock from "../components/LoadingBlock";
 
 export default function EditEventPage() {
   const { id } = useParams<{ id: string }>();
@@ -26,11 +27,9 @@ export default function EditEventPage() {
       .finally(() => setIsLoading(false));
   }, [id]);
 
-  if (isLoading)
-    return <p className="text-gray-500 dark:text-gray-400">Loading...</p>;
+  if (isLoading) return <LoadingBlock label="Loading event..." />;
   if (error) return <p className="text-red-600 dark:text-red-400">{error}</p>;
-  if (!event)
-    return <p className="text-gray-500 dark:text-gray-400">Event not found</p>;
+  if (!event) return <p className="text-gray-500 dark:text-gray-400">Event not found</p>;
 
   const isOwner = user?.id === event.createdByUserId;
   const isAdmin = user?.role === "ADMIN";

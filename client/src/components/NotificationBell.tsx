@@ -9,6 +9,7 @@ import {
   markAllAsRead,
 } from "../api/notificationsApi";
 import { formatRelativeTime } from "../utils/formatDate";
+import LoadingBlock from "./LoadingBlock";
 
 const POLL_INTERVAL_MS = 120000;
 
@@ -155,9 +156,7 @@ export default function NotificationBell() {
           </div>
 
           {isLoading ? (
-            <div className="px-4 py-6 text-sm text-gray-500 dark:text-gray-400 text-center">
-              Loading...
-            </div>
+            <LoadingBlock label="Loading..." size={20} compact />
           ) : notifications.length === 0 ? (
             <div className="px-4 py-6 text-sm text-gray-500 dark:text-gray-400 text-center">
               No notifications yet

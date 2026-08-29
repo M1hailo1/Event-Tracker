@@ -1,5 +1,5 @@
 import axiosInstance from "./axiosInstance";
-import type { AdminStats, AdminUser, Event } from "../types";
+import type { AdminStats, AdminUser, Event, BanDuration } from "../types";
 import type { CreateEventPayload } from "./eventsApi";
 
 export async function getAdminStats(): Promise<AdminStats> {
@@ -16,9 +16,13 @@ export async function deleteUserAdmin(id: string): Promise<void> {
   await axiosInstance.delete(`/admin/users/${id}`);
 }
 
-export async function banUserAdmin(id: string): Promise<AdminUser> {
+export async function banUserAdmin(
+  id: string,
+  duration: BanDuration,
+): Promise<AdminUser> {
   const response = await axiosInstance.patch<AdminUser>(
     `/admin/users/${id}/ban`,
+    { duration },
   );
   return response.data;
 }

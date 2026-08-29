@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { verifyToken } from "../utils/jwt";
 import prisma from "../prisma";
+import { isCurrentlyBanned, formatBanMessage } from "../utils/banDuration";
 
 export async function requireAuth(
   req: Request,
@@ -24,15 +25,17 @@ export async function requireAuth(
 
     const user = await prisma.user.findUnique({
       where: { id: payload.userId },
-      select: { isBanned: true },
+      select: { bannedUntil: true },
     });
 
     if (!user) {
       return res.status(401).json({ error: "Invalid or expired token" });
     }
 
-    if (user.isBanned) {
-      return res.status(403).json({ error: "Your account has been banned" });
+    if (isCurrentlyBanned(user.bannedUntil)) {
+      return res
+        .status(403)
+        .json({ error: formatBanMessage(user.bannedUntil) });
     }
 
     req.userId = payload.userId;

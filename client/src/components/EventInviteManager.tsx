@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { getFollowers } from "../api/followApi";
 import { inviteUserToEvent, getEventInvites } from "../api/eventsApi";
 import type { FollowUser } from "../types";
+import LoadingBlock from "./LoadingBlock";
 
 interface EventInviteManagerProps {
   eventId: string;
@@ -59,11 +60,7 @@ export default function EventInviteManager({
   const invitableFollowers = followers.filter((f) => !invitedIds.has(f.id));
 
   if (isLoading) {
-    return (
-      <p className="text-sm text-gray-500 dark:text-gray-400">
-        Loading followers...
-      </p>
-    );
+    return <LoadingBlock label="Loading followers..." size={20} compact />;
   }
 
   return (
@@ -75,9 +72,7 @@ export default function EventInviteManager({
         This event is invite-only. You can invite people who follow you.
       </p>
 
-      {error && (
-        <p className="text-red-600 dark:text-red-400 text-sm mb-2">{error}</p>
-      )}
+      {error && <p className="text-red-600 dark:text-red-400 text-sm mb-2">{error}</p>}
 
       {followers.length === 0 ? (
         <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -92,9 +87,7 @@ export default function EventInviteManager({
                   key={f.id}
                   className="flex items-center justify-between text-sm"
                 >
-                  <span className="text-gray-800 dark:text-gray-200">
-                    {f.name}
-                  </span>
+                  <span className="text-gray-800 dark:text-gray-200">{f.name}</span>
                   <button
                     onClick={() => handleInvite(f.id)}
                     disabled={invitingId === f.id}
@@ -109,9 +102,7 @@ export default function EventInviteManager({
 
           {invited.length > 0 && (
             <div>
-              <p className="text-xs text-gray-400 dark:text-gray-500 mb-1">
-                Already invited
-              </p>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mb-1">Already invited</p>
               <ul className="flex flex-wrap gap-2">
                 {invited.map((u) => (
                   <li
