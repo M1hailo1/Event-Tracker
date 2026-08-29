@@ -3,6 +3,8 @@ import {
   getAdminStats,
   getAllUsersAdmin,
   deleteUserAdmin,
+  banUserAdmin,
+  unbanUserAdmin,
   getAllEventsAdmin,
   updateEventAdmin,
   deleteEventAdmin,
@@ -17,6 +19,8 @@ router.get("/stats", getAdminStats);
 
 router.get("/users", getAllUsersAdmin);
 router.delete("/users/:id", deleteUserAdmin);
+router.patch("/users/:id/ban", banUserAdmin);
+router.patch("/users/:id/unban", unbanUserAdmin);
 
 router.get("/events", getAllEventsAdmin);
 router.put("/events/:id", updateEventAdmin);

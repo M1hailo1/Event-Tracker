@@ -4,19 +4,14 @@ import { updateEventSchema } from "./eventController";
 import { createNotification } from "../utils/createNotification";
 
 export async function getAdminStats(req: Request, res: Response) {
-  const [
-    userCount,
-    eventCount,
-    upcomingEventCount,
-    registrationCount,
-    categoryCount,
-  ] = await Promise.all([
-    prisma.user.count(),
-    prisma.event.count(),
-    prisma.event.count({ where: { date: { gte: new Date() } } }),
-    prisma.registration.count({ where: { status: "CONFIRMED" } }),
-    prisma.category.count(),
-  ]);
+  const [userCount, eventCount, upcomingEventCount, registrationCount, categoryCount] =
+    await Promise.all([
+      prisma.user.count(),
+      prisma.event.count(),
+      prisma.event.count({ where: { date: { gte: new Date() } } }),
+      prisma.registration.count({ where: { status: "CONFIRMED" } }),
+      prisma.category.count(),
+    ]);
 
   res.status(200).json({
     userCount,
@@ -34,6 +29,7 @@ export async function getAllUsersAdmin(req: Request, res: Response) {
       name: true,
       email: true,
       role: true,
+      isBanned: true,
       createdAt: true,
       _count: {
         select: { events: true, registrations: true },
@@ -43,6 +39,50 @@ export async function getAllUsersAdmin(req: Request, res: Response) {
   });
 
   res.status(200).json(users);
+}
+
+export async function banUserAdmin(req: Request, res: Response) {
+  const id = req.params.id;
+  if (!id || typeof id !== "string") {
+    return res.status(400).json({ error: "Invalid ID" });
+  }
+
+  if (id === req.userId) {
+    return res.status(400).json({ error: "You can't ban your own admin account" });
+  }
+
+  const user = await prisma.user.findUnique({ where: { id } });
+  if (!user) {
+    return res.status(404).json({ error: "User not found" });
+  }
+
+  const updatedUser = await prisma.user.update({
+    where: { id },
+    data: { isBanned: true },
+    select: { id: true, name: true, email: true, role: true, isBanned: true },
+  });
+
+  res.status(200).json(updatedUser);
+}
+
+export async function unbanUserAdmin(req: Request, res: Response) {
+  const id = req.params.id;
+  if (!id || typeof id !== "string") {
+    return res.status(400).json({ error: "Invalid ID" });
+  }
+
+  const user = await prisma.user.findUnique({ where: { id } });
+  if (!user) {
+    return res.status(404).json({ error: "User not found" });
+  }
+
+  const updatedUser = await prisma.user.update({
+    where: { id },
+    data: { isBanned: false },
+    select: { id: true, name: true, email: true, role: true, isBanned: true },
+  });
+
+  res.status(200).json(updatedUser);
 }
 
 export async function deleteUserAdmin(req: Request, res: Response) {

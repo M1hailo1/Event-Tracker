@@ -16,6 +16,20 @@ export async function deleteUserAdmin(id: string): Promise<void> {
   await axiosInstance.delete(`/admin/users/${id}`);
 }
 
+export async function banUserAdmin(id: string): Promise<AdminUser> {
+  const response = await axiosInstance.patch<AdminUser>(
+    `/admin/users/${id}/ban`,
+  );
+  return response.data;
+}
+
+export async function unbanUserAdmin(id: string): Promise<AdminUser> {
+  const response = await axiosInstance.patch<AdminUser>(
+    `/admin/users/${id}/unban`,
+  );
+  return response.data;
+}
+
 export async function getAllEventsAdmin(): Promise<Event[]> {
   const response = await axiosInstance.get<Event[]>("/admin/events");
   return response.data;

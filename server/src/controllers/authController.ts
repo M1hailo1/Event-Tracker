@@ -93,15 +93,16 @@ export async function googleAuth(req: Request, res: Response) {
       }
     }
 
+    if (user.isBanned) {
+      return res
+        .status(403)
+        .json({ error: "Your account has been banned" });
+    }
+
     const token = generateToken(user.id);
 
     res.status(200).json({
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role,
-      },
+      user: { id: user.id, email: user.email, name: user.name, role: user.role },
       token,
     });
   } catch (err) {
@@ -138,6 +139,12 @@ export async function login(req: Request, res: Response) {
   const isPasswordValid = await bcrypt.compare(password, user.password);
   if (!isPasswordValid) {
     return res.status(401).json({ error: "Wrong email/password" });
+  }
+
+  if (user.isBanned) {
+    return res
+      .status(403)
+      .json({ error: "Your account has been banned" });
   }
 
   const token = generateToken(user.id);

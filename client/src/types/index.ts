@@ -121,6 +121,7 @@ export interface AdminUser {
   name: string;
   email: string;
   role: Role;
+  isBanned: boolean;
   createdAt: string;
   _count: { events: number; registrations: number };
 }
