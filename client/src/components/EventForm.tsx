@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import type { FormEvent } from "react";
+import { isAxiosError } from "axios";
 import {
   getAllCategories,
   createCategory,
@@ -51,8 +52,26 @@ function toDatetimeLocalValue(isoDate: string): string {
 
 const inputClass =
   "w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500";
-const labelClass =
-  "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1";
+const labelClass = "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1";
+
+function extractErrorMessage(err: unknown): string {
+  if (isAxiosError(err)) {
+    const backendError = err.response?.data?.error;
+
+    if (typeof backendError === "string") {
+      return backendError;
+    }
+
+    if (backendError?.fieldErrors) {
+      const firstFieldError = Object.values(
+        backendError.fieldErrors as Record<string, string[]>,
+      ).flat()[0];
+      if (firstFieldError) return firstFieldError;
+    }
+  }
+
+  return "Failed to create/edit event";
+}
 
 export default function EventForm({
   initialData,
@@ -152,7 +171,7 @@ export default function EventForm({
         visibility,
       });
     } catch (err) {
-      setError("Failed to create/edit event");
+      setError(extractErrorMessage(err));
       console.error(err);
     } finally {
       setIsSubmitting(false);
@@ -319,9 +338,7 @@ export default function EventForm({
         </div>
       </div>
 
-      {error && (
-        <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
-      )}
+      {error && <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>}
 
       <div className="flex items-center gap-4">
         <button

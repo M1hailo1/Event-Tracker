@@ -13,6 +13,7 @@ export interface EventFilters {
   city?: string;
   search?: string;
   sortBy?: EventSortOption;
+  attendedOnly?: boolean;
 }
 
 export async function getAllEvents(
@@ -24,6 +25,7 @@ export async function getAllEvents(
   if (filters.city) params.city = filters.city;
   if (filters.search) params.search = filters.search;
   if (filters.sortBy) params.sortBy = filters.sortBy;
+  if (filters.attendedOnly) params.attendedOnly = "true";
 
   const response = await axiosInstance.get<Event[]>("/events", { params });
   return response.data;

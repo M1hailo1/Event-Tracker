@@ -88,12 +88,11 @@ export default function LoginPage() {
         </button>
       </form>
 
-      <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800">
+      <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800 flex justify-center">
         <GoogleLogin
           onSuccess={handleGoogleSuccess}
           onError={() => setError("Google sign in failed")}
           theme={theme === "dark" ? "filled_black" : "outline"}
-          width="100%"
         />
       </div>
 

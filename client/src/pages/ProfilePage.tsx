@@ -51,8 +51,19 @@ export default function ProfilePage() {
             {profile.name.charAt(0).toUpperCase()}
           </div>
           <div>
-            <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">{profile.name}</h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400">{profile.email}</p>
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                {profile.name}
+              </h1>
+              {profile.role === "ADMIN" && (
+                <span className="text-xs font-medium bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 px-2 py-1 rounded-full whitespace-nowrap">
+                  Admin
+                </span>
+              )}
+            </div>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              {profile.email}
+            </p>
           </div>
         </div>
 
@@ -76,7 +87,9 @@ export default function ProfilePage() {
           <p className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-1">
             {stats.totalEvents}
           </p>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">attended events</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">
+            attended events
+          </p>
 
           {stats.categoryCounts.length > 0 && (
             <ul className="space-y-2">
@@ -85,8 +98,12 @@ export default function ProfilePage() {
                   key={c.categoryId}
                   className="flex items-center justify-between text-sm"
                 >
-                  <span className="text-gray-700 dark:text-gray-300">{c.name}</span>
-                  <span className="font-medium text-gray-900 dark:text-gray-100">{c.count}</span>
+                  <span className="text-gray-700 dark:text-gray-300">
+                    {c.name}
+                  </span>
+                  <span className="font-medium text-gray-900 dark:text-gray-100">
+                    {c.count}
+                  </span>
                 </li>
               ))}
             </ul>
@@ -96,8 +113,12 @@ export default function ProfilePage() {
 
       <div className="grid grid-cols-2 gap-4 mt-6">
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
-          <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{followers.length}</p>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">Followers</p>
+          <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            {followers.length}
+          </p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+            Followers
+          </p>
           <ul className="space-y-1">
             {followers.map((f) => (
               <li key={f.id}>
@@ -113,8 +134,12 @@ export default function ProfilePage() {
         </div>
 
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
-          <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{following.length}</p>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">Following</p>
+          <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            {following.length}
+          </p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+            Following
+          </p>
           <ul className="space-y-1">
             {following.map((f) => (
               <li key={f.id}>

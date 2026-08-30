@@ -58,6 +58,7 @@ export interface UserProfile {
   id: string;
   email: string;
   name: string;
+  role: Role;
   createdAt: string;
 }
 
@@ -87,6 +88,7 @@ export interface FollowUser {
 export interface PublicUser {
   id: string;
   name: string;
+  role: Role;
   createdAt: string;
   bannedUntil?: string | null;
 }

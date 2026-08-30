@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Map, LayoutGrid } from "lucide-react";
+import { Map, LayoutGrid, Calendar as CalendarIcon } from "lucide-react";
 import { getAllEvents } from "../api/eventsApi";
 import type { EventSortOption } from "../api/eventsApi";
 import { getAllCategories } from "../api/categoriesApi";
@@ -7,6 +7,7 @@ import type { Event, Category } from "../types";
 import { useAuth } from "../context/AuthContext";
 import EventCard from "../components/EventCard";
 import EventsMap from "../components/EventsMap";
+import EventsCalendar from "../components/EventsCalendar";
 import Spinner from "../components/Spinner";
 
 const inputClass =
@@ -30,7 +31,8 @@ export default function EventsListPage() {
   const [city, setCity] = useState("");
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState<EventSortOption>("date_asc");
-  const [view, setView] = useState<"list" | "map">("list");
+  const [view, setView] = useState<"list" | "map" | "calendar">("list");
+  const [historyScope, setHistoryScope] = useState<"all" | "mine">("all");
 
   const { user } = useAuth();
 
@@ -62,6 +64,7 @@ export default function EventsListPage() {
             city: city || undefined,
             search: search || undefined,
             sortBy,
+            attendedOnly: showPast && historyScope === "mine",
           });
           setEvents(data);
         } catch (err) {
@@ -75,7 +78,7 @@ export default function EventsListPage() {
     }, 300);
 
     return () => clearTimeout(timeoutId);
-  }, [showPast, categoryId, city, search, sortBy, user?.id]);
+  }, [showPast, categoryId, city, search, sortBy, historyScope, user?.id]);
 
   function handleResetFilters() {
     setCategoryId("");
@@ -116,6 +119,17 @@ export default function EventsListPage() {
             >
               <Map size={18} />
             </button>
+            <button
+              onClick={() => setView("calendar")}
+              aria-label="Calendar view"
+              className={`p-1.5 rounded-md ${
+                view === "calendar"
+                  ? "bg-white dark:bg-gray-800 text-indigo-600 dark:text-indigo-400 shadow-sm"
+                  : "text-gray-500 dark:text-gray-400"
+              }`}
+            >
+              <CalendarIcon size={18} />
+            </button>
           </div>
           <button
             onClick={() => setShowPast(!showPast)}
@@ -125,6 +139,31 @@ export default function EventsListPage() {
           </button>
         </div>
       </div>
+
+      {showPast && (
+        <div className="flex items-center bg-gray-100 dark:bg-gray-700 rounded-lg p-1 w-fit mb-4">
+          <button
+            onClick={() => setHistoryScope("all")}
+            className={`px-3 py-1.5 rounded-md text-sm font-medium ${
+              historyScope === "all"
+                ? "bg-white dark:bg-gray-800 text-indigo-600 dark:text-indigo-400 shadow-sm"
+                : "text-gray-500 dark:text-gray-400"
+            }`}
+          >
+            All history
+          </button>
+          <button
+            onClick={() => setHistoryScope("mine")}
+            className={`px-3 py-1.5 rounded-md text-sm font-medium ${
+              historyScope === "mine"
+                ? "bg-white dark:bg-gray-800 text-indigo-600 dark:text-indigo-400 shadow-sm"
+                : "text-gray-500 dark:text-gray-400"
+            }`}
+          >
+            Events I attended
+          </button>
+        </div>
+      )}
 
       <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 mb-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -210,7 +249,7 @@ export default function EventsListPage() {
           </p>
           {showSlowHint && (
             <p className="text-xs text-gray-400 dark:text-gray-500 max-w-xs text-center">
-              The server may be waking up from sleep, this can take up to a
+              The server may be waking up from sleep — this can take up to a
               minute on the first request.
             </p>
           )}
@@ -233,6 +272,8 @@ export default function EventsListPage() {
             </p>
             <EventsMap events={events} />
           </div>
+        ) : view === "calendar" ? (
+          <EventsCalendar events={events} />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {events.map((event) => (

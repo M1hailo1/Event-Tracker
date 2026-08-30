@@ -77,7 +77,8 @@ export default function UserProfilePage() {
 
   if (isLoading) return <LoadingBlock label="Loading profile..." />;
   if (error) return <p className="text-red-600 dark:text-red-400">{error}</p>;
-  if (!profile) return <p className="text-gray-500 dark:text-gray-400">User not found</p>;
+  if (!profile)
+    return <p className="text-gray-500 dark:text-gray-400">User not found</p>;
 
   if (currentUser && currentUser.id === profile.id) {
     return <Navigate to="/profile" replace />;
@@ -96,6 +97,11 @@ export default function UserProfilePage() {
                 <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
                   {profile.name}
                 </h1>
+                {profile.role === "ADMIN" && (
+                  <span className="text-xs font-medium bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 px-2 py-1 rounded-full whitespace-nowrap">
+                    Admin
+                  </span>
+                )}
                 {isActivelyBanned(profile.bannedUntil) && (
                   <span className="text-xs font-medium bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-400 px-2 py-1 rounded-full whitespace-nowrap">
                     {formatBanStatus(profile.bannedUntil!)}
@@ -127,8 +133,12 @@ export default function UserProfilePage() {
 
       <div className="grid grid-cols-2 gap-4">
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
-          <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{followers.length}</p>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">Followers</p>
+          <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            {followers.length}
+          </p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+            Followers
+          </p>
           <ul className="space-y-1">
             {followers.map((f) => (
               <li key={f.id}>
@@ -144,8 +154,12 @@ export default function UserProfilePage() {
         </div>
 
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
-          <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{following.length}</p>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">Following</p>
+          <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            {following.length}
+          </p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+            Following
+          </p>
           <ul className="space-y-1">
             {following.map((f) => (
               <li key={f.id}>

@@ -111,6 +111,11 @@ export async function getAllEvents(req: Request, res: Response) {
       ? req.query.search.trim()
       : undefined;
   const sortBy = typeof req.query.sortBy === "string" ? req.query.sortBy : "";
+  const attendedOnly = req.query.attendedOnly === "true";
+
+  if (attendedOnly && !userId) {
+    return res.status(200).json([]);
+  }
 
   const dateFilter = showPast
     ? { date: { lt: new Date() } }
@@ -151,6 +156,11 @@ export async function getAllEvents(req: Request, res: Response) {
   }
   if (search) {
     filters.push({ name: { contains: search, mode: "insensitive" } });
+  }
+  if (attendedOnly) {
+    filters.push({
+      registrations: { some: { userId: userId!, status: "CONFIRMED" } },
+    });
   }
 
   let orderBy: { date: "asc" | "desc" } | { name: "asc" | "desc" } = {
@@ -370,6 +380,7 @@ export async function deleteEvent(req: Request, res: Response) {
 
   await prisma.$transaction([
     prisma.registration.deleteMany({ where: { eventId: id } }),
+    prisma.eventInvite.deleteMany({ where: { eventId: id } }),
     prisma.event.delete({ where: { id } }),
   ]);
 
