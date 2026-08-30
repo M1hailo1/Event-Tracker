@@ -93,6 +93,7 @@ export default function LoginPage() {
           onSuccess={handleGoogleSuccess}
           onError={() => setError("Google sign in failed")}
           theme={theme === "dark" ? "filled_black" : "outline"}
+          width="100%"
         />
       </div>
 

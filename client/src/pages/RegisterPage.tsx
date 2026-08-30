@@ -125,6 +125,7 @@ export default function RegisterPage() {
           onSuccess={handleGoogleSuccess}
           onError={() => setError("Google registration failed")}
           theme={theme === "dark" ? "filled_black" : "outline"}
+          width="100%"
         />
       </div>
 
