@@ -18,9 +18,19 @@ export async function getMyProfile(req: Request, res: Response) {
 
 export async function getMyStats(req: Request, res: Response) {
   const userId = req.userId!;
+  const now = new Date();
 
   const registrations = await prisma.registration.findMany({
-    where: { userId, status: "CONFIRMED" },
+    where: {
+      userId,
+      status: "CONFIRMED",
+      event: {
+        OR: [
+          { endDate: { lte: now } },
+          { endDate: null, date: { lte: now } },
+        ],
+      },
+    },
     include: { event: { include: { category: true } } },
   });
 

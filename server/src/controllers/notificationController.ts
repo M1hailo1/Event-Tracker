@@ -54,3 +54,17 @@ export async function markAllAsRead(req: Request, res: Response) {
 
   res.status(200).json({ message: "All notifications marked as read" });
 }
+
+export async function markEventAsRead(req: Request, res: Response) {
+  const eventId = req.params.eventId;
+  if (!eventId || typeof eventId !== "string") {
+    return res.status(400).json({ error: "Invalid event ID" });
+  }
+
+  await prisma.notification.updateMany({
+    where: { userId: req.userId!, eventId, isRead: false },
+    data: { isRead: true },
+  });
+
+  res.status(200).json({ message: "Event notifications marked as read" });
+}

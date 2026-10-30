@@ -7,6 +7,7 @@ import {
   getUnreadCount,
   markAsRead,
   markAllAsRead,
+  EVENT_NOTIFICATIONS_READ,
 } from "../api/notificationsApi";
 import { formatRelativeTime } from "../utils/formatDate";
 import LoadingBlock from "./LoadingBlock";
@@ -65,6 +66,18 @@ export default function NotificationBell() {
       stopPolling();
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
+  }, []);
+
+  useEffect(() => {
+    function handleEventRead(event: Event) {
+      const eventId = (event as CustomEvent<string>).detail;
+      setNotifications((prev) =>
+        prev.map((n) => n.eventId === eventId ? { ...n, isRead: true } : n),
+      );
+      void refreshUnreadCount();
+    }
+    window.addEventListener(EVENT_NOTIFICATIONS_READ, handleEventRead);
+    return () => window.removeEventListener(EVENT_NOTIFICATIONS_READ, handleEventRead);
   }, []);
 
   useEffect(() => {

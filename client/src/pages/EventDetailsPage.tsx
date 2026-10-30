@@ -13,6 +13,7 @@ import LocationPicker from "../components/LocationPicker";
 import EventInviteManager from "../components/EventInviteManager";
 import { formatEventDate } from "../utils/formatDate";
 import LoadingBlock from "../components/LoadingBlock";
+import { markEventAsRead } from "../api/notificationsApi";
 
 export default function EventDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -63,6 +64,11 @@ export default function EventDetailsPage() {
     try {
       const data = await getEventById(eventId);
       setEvent(data);
+      if (user) {
+        markEventAsRead(eventId).catch((err) =>
+          console.error("Failed to mark event notifications as read", err),
+        );
+      }
     } catch (err) {
       if (isAxiosError(err) && err.response?.status === 403) {
         setError("You don't have access to this event.");
