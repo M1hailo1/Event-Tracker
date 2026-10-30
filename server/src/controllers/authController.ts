@@ -96,7 +96,7 @@ export async function googleAuth(req: Request, res: Response) {
     }
 
     if (isCurrentlyBanned(user.bannedUntil)) {
-      return res.status(403).json({ error: formatBanMessage(user.bannedUntil) });
+      return res.status(403).json({ error: formatBanMessage(user.bannedUntil, user.banReason) });
     }
 
     const token = generateToken(user.id);
@@ -142,7 +142,7 @@ export async function login(req: Request, res: Response) {
   }
 
   if (isCurrentlyBanned(user.bannedUntil)) {
-    return res.status(403).json({ error: formatBanMessage(user.bannedUntil) });
+    return res.status(403).json({ error: formatBanMessage(user.bannedUntil, user.banReason) });
   }
 
   const token = generateToken(user.id);

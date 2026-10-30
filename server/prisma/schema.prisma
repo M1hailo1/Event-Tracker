@@ -25,6 +25,7 @@ model User {
   name        String
   role        Role      @default(USER)
   bannedUntil DateTime?
+  banReason   String?
   createdAt   DateTime  @default(now())
 
   events        Event[]        @relation("EventCreator")

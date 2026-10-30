@@ -125,6 +125,7 @@ export interface AdminUser {
   email: string;
   role: Role;
   bannedUntil: string | null;
+  banReason: string | null;
   createdAt: string;
   _count: { events: number; registrations: number };
 }

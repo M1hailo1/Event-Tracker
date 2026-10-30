@@ -19,10 +19,11 @@ export async function deleteUserAdmin(id: string): Promise<void> {
 export async function banUserAdmin(
   id: string,
   duration: BanDuration,
+  reason?: string,
 ): Promise<AdminUser> {
   const response = await axiosInstance.patch<AdminUser>(
     `/admin/users/${id}/ban`,
-    { duration },
+    { duration, reason },
   );
   return response.data;
 }

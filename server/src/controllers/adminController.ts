@@ -33,6 +33,7 @@ export async function getAllUsersAdmin(req: Request, res: Response) {
       email: true,
       role: true,
       bannedUntil: true,
+      banReason: true,
       createdAt: true,
       _count: {
         select: { events: true, registrations: true },
@@ -61,6 +62,11 @@ export async function banUserAdmin(req: Request, res: Response) {
     });
   }
 
+  const reason = req.body.reason;
+  if (reason !== undefined && (typeof reason !== "string" || reason.trim().length > 500)) {
+    return res.status(400).json({ error: "Ban reason must be text with at most 500 characters" });
+  }
+
   const user = await prisma.user.findUnique({ where: { id } });
   if (!user) {
     return res.status(404).json({ error: "User not found" });
@@ -70,8 +76,8 @@ export async function banUserAdmin(req: Request, res: Response) {
 
   const updatedUser = await prisma.user.update({
     where: { id },
-    data: { bannedUntil },
-    select: { id: true, name: true, email: true, role: true, bannedUntil: true },
+    data: { bannedUntil, banReason: reason?.trim() || null },
+    select: { id: true, name: true, email: true, role: true, bannedUntil: true, banReason: true },
   });
 
   res.status(200).json(updatedUser);
@@ -90,8 +96,8 @@ export async function unbanUserAdmin(req: Request, res: Response) {
 
   const updatedUser = await prisma.user.update({
     where: { id },
-    data: { bannedUntil: null },
-    select: { id: true, name: true, email: true, role: true, bannedUntil: true },
+    data: { bannedUntil: null, banReason: null },
+    select: { id: true, name: true, email: true, role: true, bannedUntil: true, banReason: true },
   });
 
   res.status(200).json(updatedUser);

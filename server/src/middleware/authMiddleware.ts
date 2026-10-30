@@ -25,7 +25,7 @@ export async function requireAuth(
 
     const user = await prisma.user.findUnique({
       where: { id: payload.userId },
-      select: { bannedUntil: true },
+      select: { bannedUntil: true, banReason: true },
     });
 
     if (!user) {
@@ -35,7 +35,7 @@ export async function requireAuth(
     if (isCurrentlyBanned(user.bannedUntil)) {
       return res
         .status(403)
-        .json({ error: formatBanMessage(user.bannedUntil) });
+        .json({ error: formatBanMessage(user.bannedUntil, user.banReason) });
     }
 
     req.userId = payload.userId;

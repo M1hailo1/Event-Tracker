@@ -134,12 +134,12 @@ function UsersTab() {
 
   useEffect(loadUsers, []);
 
-  async function handleBanConfirm(duration: BanDuration) {
+  async function handleBanConfirm(duration: BanDuration, reason: string) {
     if (!banningUser) return;
     const target = banningUser;
     setBanningUser(null);
     try {
-      const updated = await banUserAdmin(target.id, duration);
+      const updated = await banUserAdmin(target.id, duration, reason);
       setUsers((prev) =>
         prev.map((u) => (u.id === updated.id ? { ...u, ...updated } : u)),
       );
@@ -275,6 +275,9 @@ function UsersTab() {
                 </td>
                 <td className="px-4 py-3">
                   <BanStatusBadge bannedUntil={u.bannedUntil} />
+                  {isActivelyBanned(u.bannedUntil) && u.banReason && (
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 break-words">Reason: {u.banReason}</p>
+                  )}
                 </td>
                 <td className="px-4 py-3 text-gray-600 dark:text-gray-400">
                   {u._count.events}
@@ -328,6 +331,9 @@ function UsersTab() {
 
             <div className="mb-3">
               <BanStatusBadge bannedUntil={u.bannedUntil} />
+              {isActivelyBanned(u.bannedUntil) && u.banReason && (
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 break-words">Reason: {u.banReason}</p>
+              )}
             </div>
 
             <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-3">

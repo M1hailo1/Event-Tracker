@@ -28,9 +28,9 @@ export function isPermanentBan(bannedUntil: Date | null): boolean {
   return !!bannedUntil && bannedUntil.getFullYear() >= 9999;
 }
 
-export function formatBanMessage(bannedUntil: Date | null): string {
-  if (isPermanentBan(bannedUntil)) {
-    return "Your account has been permanently banned";
-  }
-  return `Your account has been banned until ${bannedUntil!.toLocaleString()}`;
+export function formatBanMessage(bannedUntil: Date | null, reason?: string | null): string {
+  const message = isPermanentBan(bannedUntil)
+    ? "Your account has been permanently banned."
+    : `Your account has been banned until ${bannedUntil!.toLocaleString("en-GB", { timeZone: "UTC" })} UTC.`;
+  return reason ? `${message} Reason: ${reason}` : message;
 }
