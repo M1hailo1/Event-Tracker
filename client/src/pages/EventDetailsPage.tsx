@@ -1,8 +1,11 @@
+import { Star } from "lucide-react";
+import RatingDisplay from "../components/RatingDisplay";
 import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { isAxiosError } from "axios";
 import {
   getEventById,
+  rateEvent,
   registerForEvent,
   unregisterFromEvent,
   deleteEvent,
@@ -18,6 +21,10 @@ import { markEventAsRead } from "../api/notificationsApi";
 export default function EventDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const [event, setEvent] = useState<Event | null>(null);
+  const [hoveredRating, setHoveredRating] = useState(0);
+  const [selectedRating, setSelectedRating] = useState(0);
+  const [ratingMessage, setRatingMessage] = useState("");
+  const [isRatingLoading, setIsRatingLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [actionError, setActionError] = useState("");
@@ -64,6 +71,8 @@ export default function EventDetailsPage() {
     try {
       const data = await getEventById(eventId);
       setEvent(data);
+      setSelectedRating(data.myRating ?? 0);
+      setHoveredRating(0);
       if (user) {
         markEventAsRead(eventId).catch((err) =>
           console.error("Failed to mark event notifications as read", err),
@@ -83,6 +92,22 @@ export default function EventDetailsPage() {
   }
 
   const isRegistered = event?.registrations?.some((r) => r.userId === user?.id);
+
+  async function handleRating() {
+    if (!id || !selectedRating) return;
+    setIsRatingLoading(true);
+    setRatingMessage("");
+    try {
+      await rateEvent(id, selectedRating);
+      const updated = await getEventById(id);
+      setEvent(updated);
+      setRatingMessage("Your rating has been saved.");
+    } catch (err) {
+      setRatingMessage(isAxiosError(err) ? err.response?.data?.error ?? "Failed to save rating" : "Failed to save rating");
+    } finally {
+      setIsRatingLoading(false);
+    }
+  }
 
   async function handleRegister() {
     if (!id) return;
@@ -196,6 +221,40 @@ export default function EventDetailsPage() {
             </p>
           </div>
         </div>
+
+        {new Date(event.endDate ?? event.date) <= new Date() && (
+        <div className="mb-5 space-y-3">
+          <RatingDisplay rating={event.rating} label="Event rating" />
+          {user && user.id !== event.createdByUserId && isRegistered &&
+            new Date(event.endDate ?? event.date) <= new Date() && (
+            <div>
+              <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">{event.myRating ? "Update your rating" : "Rate this event"}</p>
+              <div className="flex flex-wrap items-center gap-2">
+                <div role="group" aria-label="Choose a rating from 1 to 5 stars" className="flex gap-1" onMouseLeave={() => setHoveredRating(0)}>
+                  {[1, 2, 3, 4, 5].map(score => (
+                    <button key={score} type="button" aria-label={`${score} ${score === 1 ? "star" : "stars"}`}
+                      aria-pressed={selectedRating === score} disabled={isRatingLoading}
+                      onClick={() => setSelectedRating(score)}
+                      onMouseEnter={() => setHoveredRating(score)}
+                      onFocus={() => setHoveredRating(score)}
+                      onBlur={() => setHoveredRating(0)}
+                      className="rounded p-1 text-amber-500 transition-transform hover:scale-110 focus-visible:outline-2 focus-visible:outline-indigo-500 disabled:opacity-50">
+                      <Star size={28} strokeWidth={1.7} aria-hidden="true" className={`transition-colors ${score <= (hoveredRating || selectedRating) ? "fill-amber-400" : "fill-transparent"}`} />
+                    </button>
+                  ))}
+                </div>
+                <button type="button" onClick={handleRating} disabled={!selectedRating || isRatingLoading}
+                  className="bg-indigo-600 text-white px-3 py-2 rounded-lg text-sm disabled:opacity-50">
+                  {isRatingLoading ? "Saving..." : "Save rating"}
+                </button>
+              </div>
+            </div>
+          )}
+          {ratingMessage && <p role="status" className="text-sm text-gray-600 dark:text-gray-400">{ratingMessage}</p>}
+          <p className="text-xs text-gray-500 dark:text-gray-400">Confirmed attendees can rate after the event ends. Organizers cannot rate their own events.</p>
+        </div>
+
+        )}
 
         {event.isRecurring && (
           <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">

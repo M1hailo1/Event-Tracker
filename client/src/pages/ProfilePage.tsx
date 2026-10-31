@@ -1,3 +1,4 @@
+import RatingDisplay from "../components/RatingDisplay";
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Sun, Moon } from "lucide-react";
@@ -64,6 +65,7 @@ export default function ProfilePage() {
             <p className="text-sm text-gray-500 dark:text-gray-400">
               {profile.email}
             </p>
+            <div className="mt-2"><RatingDisplay rating={profile.organizerRating} label="Organizer rating" /></div>
           </div>
         </div>
 

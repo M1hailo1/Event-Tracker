@@ -1,3 +1,4 @@
+import { withEventRatings } from "../utils/ratings";
 import { Request, Response } from "express";
 import prisma from "../prisma";
 
@@ -59,9 +60,13 @@ export async function getMyDashboard(req: Request, res: Response) {
           take: UPCOMING_LIMIT,
         });
 
+  const ratedEvents = await withEventRatings([
+    ...myUpcomingEvents, ...registeredUpcomingEvents, ...followingUpcomingEvents,
+  ]);
+  const byId = new Map(ratedEvents.map(event => [event.id, event]));
   res.status(200).json({
-    myUpcomingEvents,
-    registeredUpcomingEvents,
-    followingUpcomingEvents,
+    myUpcomingEvents: myUpcomingEvents.map(event => byId.get(event.id)),
+    registeredUpcomingEvents: registeredUpcomingEvents.map(event => byId.get(event.id)),
+    followingUpcomingEvents: followingUpcomingEvents.map(event => byId.get(event.id)),
   });
 }

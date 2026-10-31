@@ -88,3 +88,7 @@ export async function getEventInvites(eventId: string): Promise<FollowUser[]> {
   );
   return response.data;
 }
+
+export async function rateEvent(id: string, score: number): Promise<void> {
+  await axiosInstance.put(`/events/${id}/rating`, { score });
+}

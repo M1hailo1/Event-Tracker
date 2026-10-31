@@ -1,3 +1,5 @@
+export interface RatingSummary { average: number | null; count: number; }
+
 export type Role = "USER" | "ADMIN";
 
 export interface User {
@@ -19,6 +21,8 @@ export type RecurrencePattern = "DAILY" | "WEEKLY" | "MONTHLY" | "YEARLY";
 export type EventVisibility = "PUBLIC" | "FOLLOWERS_ONLY" | "INVITE_ONLY";
 
 export interface Event {
+  rating?: RatingSummary;
+  myRating?: number | null;
   id: string;
   name: string;
   description: string | null;
@@ -55,6 +59,7 @@ export interface AuthResponse {
 }
 
 export interface UserProfile {
+  organizerRating?: RatingSummary;
   id: string;
   email: string;
   name: string;
@@ -86,6 +91,7 @@ export interface FollowUser {
 }
 
 export interface PublicUser {
+  organizerRating?: RatingSummary;
   id: string;
   name: string;
   role: Role;

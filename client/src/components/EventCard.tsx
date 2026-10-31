@@ -1,3 +1,4 @@
+import RatingDisplay from "./RatingDisplay";
 import { Link } from "react-router-dom";
 import type { Event } from "../types";
 import { formatEventDateRange } from "../utils/formatDate";
@@ -29,6 +30,10 @@ export default function EventCard({ event }: EventCardProps) {
       <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
         {event.location}
       </p>
+
+      {new Date(event.endDate ?? event.date) <= new Date() && (
+        <div className="mb-3"><RatingDisplay rating={event.rating} label="Event rating" /></div>
+      )}
 
       <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
         Attendees: {event._count?.registrations ?? 0}

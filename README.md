@@ -11,6 +11,7 @@ Built as a diploma (thesis) project.
 ## Features
 
 **Events**
+
 - Create, edit and delete events with name, description, category, date range, capacity and location
 - Pick the event location on an interactive map (Leaflet + OpenStreetMap) with automatic reverse geocoding of the address
 - Map display of events, so you can browse what is happening and where
@@ -20,22 +21,26 @@ Built as a diploma (thesis) project.
 - Upcoming and past events views, plus an attended-events history filter
 
 **Dashboard and calendar**
+
 - Events you are attending
 - Events you are organizing
 - Upcoming events from people you follow that you have not registered for yet
 - Calendar view of events
 
 **Visibility and invitations**
+
 - Three visibility levels per event: `PUBLIC`, `FOLLOWERS_ONLY` and `INVITE_ONLY`
 - Visibility is enforced on the server for the event list, event details and registration
 - Event creators can invite their followers to invite-only events
 
 **Social**
+
 - Follow / unfollow other users
 - Clickable followers, following and attendee lists leading to user profiles
 - Profile statistics: total events attended, most visited categories and a fun "title" based on your favourite category
 
 **Notifications**
+
 - In-app notification bell with unread counter and a "mark all as read" action
 - Notifications for: new event from someone you follow, event updated, event cancelled, new follower, event invitations and event reminders
 - **24-hour reminders** - a background job on the server runs every 15 minutes and notifies registered users whose event starts within 24 hours; a `reminderSent` flag on each registration guarantees a reminder is never sent twice
@@ -43,6 +48,7 @@ Built as a diploma (thesis) project.
 - Client polling pauses when the browser tab is hidden to save backend resources
 
 **Admin panel**
+
 - Role-based access (`USER` / `ADMIN`) enforced by server-side middleware
 - Overview with platform statistics (users, events, upcoming events, registrations, categories)
 - User management: search by name or email, filter by role and status
@@ -51,25 +57,27 @@ Built as a diploma (thesis) project.
 - Admin badge shown next to admin users
 
 **UI**
+
 - Dark mode
 - Responsive layout (desktop and mobile navigation)
 - Loading states for data-heavy pages
 
 **Authentication and security**
+
 - Email + password registration and login (bcrypt password hashing, JWT sessions)
 - Sign in with Google
 - Request validation with Zod, secure headers with Helmet, CORS allow-list, and rate limiting (stricter on auth routes)
 
 ## Tech Stack
 
-| Layer      | Technology |
-|------------|------------|
+| Layer      | Technology                                                                                             |
+| ---------- | ------------------------------------------------------------------------------------------------------ |
 | Frontend   | React 19, TypeScript, Vite, React Router, Tailwind CSS 4, Axios, Leaflet / React-Leaflet, Lucide icons |
-| Backend    | Node.js, Express 5, TypeScript |
-| Database   | PostgreSQL with Prisma ORM |
-| Auth       | JWT, bcrypt, Google OAuth (`@react-oauth/google`, `google-auth-library`) |
-| Validation | Zod |
-| Hosting    | Vercel (client), Render (server), Neon (PostgreSQL) |
+| Backend    | Node.js, Express 5, TypeScript                                                                         |
+| Database   | PostgreSQL with Prisma ORM                                                                             |
+| Auth       | JWT, bcrypt, Google OAuth (`@react-oauth/google`, `google-auth-library`)                               |
+| Validation | Zod                                                                                                    |
+| Hosting    | Vercel (client), Render (server), Neon (PostgreSQL)                                                    |
 
 ## Project Structure
 
@@ -112,67 +120,67 @@ Routes marked with 🔒 require an `Authorization: Bearer <token>` header. Route
 
 **Auth**
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/auth/register` | Register with email and password |
-| POST | `/auth/login` | Log in |
-| POST | `/auth/google` | Sign in with Google |
+| Method | Endpoint         | Description                      |
+| ------ | ---------------- | -------------------------------- |
+| POST   | `/auth/register` | Register with email and password |
+| POST   | `/auth/login`    | Log in                           |
+| POST   | `/auth/google`   | Sign in with Google              |
 
 **Events**
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/events` | List events visible to the requester (`?includePast=true` for past events) |
-| GET | `/events/:id` | Event details (visibility enforced) |
-| POST | `/events` 🔒 | Create an event |
-| PUT | `/events/:id` 🔒 | Update an event (creator only) |
-| DELETE | `/events/:id` 🔒 | Delete an event (creator only) |
-| POST | `/events/:id/register` 🔒 | Register for an event |
-| DELETE | `/events/:id/register` 🔒 | Cancel registration |
-| POST | `/events/:id/invites` 🔒 | Invite a follower to an invite-only event |
-| GET | `/events/:id/invites` 🔒 | List invited users (creator only) |
+| Method | Endpoint                  | Description                                                                |
+| ------ | ------------------------- | -------------------------------------------------------------------------- |
+| GET    | `/events`                 | List events visible to the requester (`?includePast=true` for past events) |
+| GET    | `/events/:id`             | Event details (visibility enforced)                                        |
+| POST   | `/events` 🔒              | Create an event                                                            |
+| PUT    | `/events/:id` 🔒          | Update an event (creator only)                                             |
+| DELETE | `/events/:id` 🔒          | Delete an event (creator only)                                             |
+| POST   | `/events/:id/register` 🔒 | Register for an event                                                      |
+| DELETE | `/events/:id/register` 🔒 | Cancel registration                                                        |
+| POST   | `/events/:id/invites` 🔒  | Invite a follower to an invite-only event                                  |
+| GET    | `/events/:id/invites` 🔒  | List invited users (creator only)                                          |
 
 **Categories**
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/categories` | List predefined categories |
-| GET | `/categories/:id` | Get a category |
-| POST | `/categories` 🔒 | Create a custom category |
+| Method | Endpoint          | Description                |
+| ------ | ----------------- | -------------------------- |
+| GET    | `/categories`     | List predefined categories |
+| GET    | `/categories/:id` | Get a category             |
+| POST   | `/categories` 🔒  | Create a custom category   |
 
 **Users and social**
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/users/me` 🔒 | Current user profile |
-| GET | `/users/me/stats` 🔒 | Attendance statistics |
-| GET | `/users/me/dashboard` 🔒 | Dashboard data |
-| GET | `/users/:id` | Public user profile |
-| POST | `/users/:userId/follow` 🔒 | Follow a user |
-| DELETE | `/users/:userId/follow` 🔒 | Unfollow a user |
-| GET | `/users/:userId/followers` | List followers |
-| GET | `/users/:userId/following` | List followed users |
+| Method | Endpoint                   | Description           |
+| ------ | -------------------------- | --------------------- |
+| GET    | `/users/me` 🔒             | Current user profile  |
+| GET    | `/users/me/stats` 🔒       | Attendance statistics |
+| GET    | `/users/me/dashboard` 🔒   | Dashboard data        |
+| GET    | `/users/:id`               | Public user profile   |
+| POST   | `/users/:userId/follow` 🔒 | Follow a user         |
+| DELETE | `/users/:userId/follow` 🔒 | Unfollow a user       |
+| GET    | `/users/:userId/followers` | List followers        |
+| GET    | `/users/:userId/following` | List followed users   |
 
 **Notifications**
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/notifications` 🔒 | Latest notifications |
-| GET | `/notifications/unread-count` 🔒 | Number of unread notifications |
-| PATCH | `/notifications/:id/read` 🔒 | Mark one as read |
-| PATCH | `/notifications/read-all` 🔒 | Mark all as read |
+| Method | Endpoint                         | Description                    |
+| ------ | -------------------------------- | ------------------------------ |
+| GET    | `/notifications` 🔒              | Latest notifications           |
+| GET    | `/notifications/unread-count` 🔒 | Number of unread notifications |
+| PATCH  | `/notifications/:id/read` 🔒     | Mark one as read               |
+| PATCH  | `/notifications/read-all` 🔒     | Mark all as read               |
 
 **Admin**
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/admin/stats` 🛡️ | Platform statistics |
-| GET | `/admin/users` 🛡️ | List all users |
-| PATCH | `/admin/users/:id/ban` 🛡️ | Ban a user |
-| PATCH | `/admin/users/:id/unban` 🛡️ | Unban a user |
-| GET | `/admin/events` 🛡️ | List all events |
-| PUT | `/admin/events/:id` 🛡️ | Edit any event |
-| DELETE | `/admin/events/:id` 🛡️ | Delete any event |
+| Method | Endpoint                    | Description         |
+| ------ | --------------------------- | ------------------- |
+| GET    | `/admin/stats` 🛡️           | Platform statistics |
+| GET    | `/admin/users` 🛡️           | List all users      |
+| PATCH  | `/admin/users/:id/ban` 🛡️   | Ban a user          |
+| PATCH  | `/admin/users/:id/unban` 🛡️ | Unban a user        |
+| GET    | `/admin/events` 🛡️          | List all events     |
+| PUT    | `/admin/events/:id` 🛡️      | Edit any event      |
+| DELETE | `/admin/events/:id` 🛡️      | Delete any event    |
 
 ## Getting Started
 
@@ -251,20 +259,20 @@ The app runs on `http://localhost:5173`.
 
 **Server** (`/server`)
 
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start the API with hot reload (`tsx watch`) |
-| `npm run build` | Compile TypeScript to `dist/` |
-| `npm start` | Run the compiled server |
+| Command         | Description                                 |
+| --------------- | ------------------------------------------- |
+| `npm run dev`   | Start the API with hot reload (`tsx watch`) |
+| `npm run build` | Compile TypeScript to `dist/`               |
+| `npm start`     | Run the compiled server                     |
 
 **Client** (`/client`)
 
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start the Vite dev server |
-| `npm run build` | Type-check and build for production |
-| `npm run lint` | Run ESLint |
-| `npm run preview` | Preview the production build |
+| Command           | Description                         |
+| ----------------- | ----------------------------------- |
+| `npm run dev`     | Start the Vite dev server           |
+| `npm run build`   | Type-check and build for production |
+| `npm run lint`    | Run ESLint                          |
+| `npm run preview` | Preview the production build        |
 
 ## Deployment
 

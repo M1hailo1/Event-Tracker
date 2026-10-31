@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { getRatingSummary, withEventRatings } from "../utils/ratings";
 import { z } from "zod";
 import prisma from "../prisma";
 import { getNextDate } from "../utils/recurrence";
@@ -181,7 +182,7 @@ export async function getAllEvents(req: Request, res: Response) {
     orderBy,
   });
 
-  res.status(200).json(events);
+  res.status(200).json(await withEventRatings(events));
 }
 
 export async function getEventById(req: Request, res: Response) {
@@ -221,10 +222,17 @@ export async function getEventById(req: Request, res: Response) {
       .json({ error: "You don't have access to this event" });
   }
 
-  res.status(200).json(event);
+  const [rating, myRating] = await Promise.all([
+    getRatingSummary({ eventId: id }),
+    req.userId ? prisma.eventRating.findUnique({
+      where: { userId_eventId: { userId: req.userId, eventId: id } },
+      select: { score: true },
+    }) : null,
+  ]);
+  res.status(200).json({ ...event, rating, myRating: myRating?.score ?? null });
 }
 
-async function userCanViewEvent(
+export async function userCanViewEvent(
   event: { visibility: string; createdByUserId: string; id: string },
   userId: string | undefined,
 ): Promise<boolean> {

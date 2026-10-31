@@ -37,6 +37,7 @@ model User {
 
   notifications Notification[]
   eventInvites  EventInvite[]
+  ratings       EventRating[]
 }
 
 model Category {
@@ -91,6 +92,7 @@ model Event {
 
   registrations Registration[]
   invites       EventInvite[]
+  ratings       EventRating[]
 
   parentEventId String?
   parentEvent   Event?  @relation("EventSeries", fields: [parentEventId], references: [id])
@@ -152,4 +154,17 @@ model Notification {
   eventId   String?
   isRead    Boolean          @default(false)
   createdAt DateTime         @default(now())
+}
+model EventRating {
+  id        String   @id @default(uuid())
+  score     Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  eventId   String
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, eventId])
+  @@index([eventId])
 }

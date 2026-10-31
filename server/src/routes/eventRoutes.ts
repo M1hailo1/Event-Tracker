@@ -14,7 +14,10 @@ import { requireAuth, optionalAuth } from "../middleware/authMiddleware";
 import registrationRoutes from "./registrationRoutes";
 import { eventWriteLimiter, inviteLimiter } from "../middleware/rateLimiters";
 
+import { rateEvent } from "../controllers/ratingController";
+
 const router = Router();
+router.put("/:id/rating", requireAuth, eventWriteLimiter, rateEvent);
 
 router.get("/", optionalAuth, getAllEvents);
 router.get("/:id", optionalAuth, getEventById);

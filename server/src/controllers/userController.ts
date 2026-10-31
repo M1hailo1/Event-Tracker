@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { getRatingSummary } from "../utils/ratings";
 import prisma from "../prisma";
 
 export async function getMyProfile(req: Request, res: Response) {
@@ -13,7 +14,8 @@ export async function getMyProfile(req: Request, res: Response) {
     return res.status(404).json({ error: "User not found" });
   }
 
-  res.status(200).json(user);
+  const organizerRating = await getRatingSummary({ event: { createdByUserId: user.id } });
+  res.status(200).json({ ...user, organizerRating });
 }
 
 export async function getMyStats(req: Request, res: Response) {
@@ -77,5 +79,6 @@ export async function getUserById(req: Request, res: Response) {
     return res.status(404).json({ error: "User not found" });
   }
 
-  res.status(200).json(user);
+  const organizerRating = await getRatingSummary({ event: { createdByUserId: user.id } });
+  res.status(200).json({ ...user, organizerRating });
 }

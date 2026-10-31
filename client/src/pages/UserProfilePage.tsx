@@ -1,3 +1,4 @@
+import RatingDisplay from "../components/RatingDisplay";
 import { useState, useEffect } from "react";
 import { useParams, Navigate, Link } from "react-router-dom";
 import { getUserById } from "../api/userApi";
@@ -112,6 +113,7 @@ export default function UserProfilePage() {
                 Member since{" "}
                 {new Date(profile.createdAt).toLocaleDateString("en-GB")}
               </p>
+              <div className="mt-2"><RatingDisplay rating={profile.organizerRating} label="Organizer rating" /></div>
             </div>
           </div>
 
