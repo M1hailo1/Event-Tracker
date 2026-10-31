@@ -13,17 +13,24 @@ import adminRoutes from "./routes/adminRoutes";
 
 const app = express();
 
+if (process.env.RENDER === "true") app.set("trust proxy", 1);
+
 const isTestEnv = process.env.NODE_ENV === "test";
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: isTestEnv ? 100000 : 20,
   message: { error: "Too many attempts. Try again later." },
+  standardHeaders: "draft-8",
+  legacyHeaders: false,
 });
 
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: isTestEnv ? 100000 : 300,
+  standardHeaders: "draft-8",
+  legacyHeaders: false,
+  message: { error: "Too many requests. Please try again later." },
 });
 
 const allowedOrigins = [
@@ -33,6 +40,7 @@ const allowedOrigins = [
 
 app.use(cors({ origin: allowedOrigins }));
 app.use(helmet());
+app.use(globalLimiter);
 app.use(express.json());
 app.use("/auth", authLimiter, authRoutes);
 app.use("/events", eventRoutes);
@@ -41,7 +49,6 @@ app.use("/users", userRoutes);
 app.use("/users", followRoutes);
 app.use("/notifications", notificationRoutes);
 app.use("/admin", adminRoutes);
-app.use(globalLimiter);
 
 app.get("/", async (req, res) => {
   const userCount = await prisma.user.count();
