@@ -1,9 +1,12 @@
+import ModeratorRoleModal from "../components/ModeratorRoleModal";
+import { isStaff } from "../utils/roles";
 import CommentReportsTab from "../components/CommentReportsTab";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import {
   getAdminStats,
+  setModeratorRole,
   getAllUsersAdmin,
   banUserAdmin,
   unbanUserAdmin,
@@ -63,7 +66,9 @@ function OverviewTab() {
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-      <StatCard label="Users" value={stats.userCount} />
+      <StatCard label="Total users" value={stats.userCount} />
+      <StatCard label="Admins" value={stats.adminCount} />
+      <StatCard label="Moderators" value={stats.moderatorCount} />
       <StatCard label="Events" value={stats.eventCount} />
       <StatCard label="Upcoming events" value={stats.upcomingEventCount} />
       <StatCard
@@ -108,7 +113,7 @@ function BanStatusBadge({ bannedUntil }: { bannedUntil: string | null }) {
 
 // --- Users tab ---
 
-type RoleFilter = "all" | "USER" | "ADMIN";
+type RoleFilter = "all" | "USER" | "MODERATOR" | "ADMIN";
 type StatusFilter = "all" | "active" | "banned";
 
 function UsersTab() {
@@ -117,6 +122,8 @@ function UsersTab() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [banningUser, setBanningUser] = useState<AdminUser | null>(null);
+  const [changingRole, setChangingRole] = useState<string | null>(null);
+  const [roleTarget, setRoleTarget] = useState<AdminUser | null>(null);
 
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState<RoleFilter>("all");
@@ -182,19 +189,38 @@ function UsersTab() {
     return matchesSearch && matchesRole && matchesStatus;
   });
 
+  async function handleRoleChange(target: AdminUser) {
+    const role = target.role === "MODERATOR" ? "USER" : "MODERATOR";
+    setChangingRole(target.id);
+    try {
+      const updated = await setModeratorRole(target.id, role);
+      setUsers(previous => previous.map(item => item.id === updated.id ? { ...item, ...updated } : item));
+      setRoleTarget(null);
+    } finally {
+      setChangingRole(null);
+    }
+  }
+
+  function RoleAction({ targetUser }: { targetUser: AdminUser }) {
+    if (currentUser?.role !== "ADMIN" || targetUser.role === "ADMIN") return null;
+    return <button type="button" disabled={changingRole !== null} onClick={() => setRoleTarget(targetUser)} className="inline-flex min-h-9 w-full items-center justify-center rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-xs font-medium whitespace-nowrap text-indigo-700 hover:bg-indigo-100 focus-visible:outline-2 focus-visible:outline-indigo-500 disabled:opacity-50 dark:border-indigo-800 dark:bg-indigo-950 dark:text-indigo-300 dark:hover:bg-indigo-900">
+      {changingRole === targetUser.id ? "Saving..." : targetUser.role === "MODERATOR" ? "Remove moderator" : "Make moderator"}
+    </button>;
+  }
+
   function BanAction({ targetUser }: { targetUser: AdminUser }) {
-    if (targetUser.id === currentUser?.id) return null;
+    if (targetUser.id === currentUser?.id || (currentUser?.role === "MODERATOR" && targetUser.role === "ADMIN")) return null;
     return isActivelyBanned(targetUser.bannedUntil) ? (
       <button
         onClick={() => handleUnban(targetUser)}
-        className="text-sm text-emerald-600 dark:text-emerald-400 hover:underline whitespace-nowrap"
+        className="inline-flex min-h-9 w-full items-center justify-center rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-medium whitespace-nowrap text-emerald-700 hover:bg-emerald-100 focus-visible:outline-2 focus-visible:outline-emerald-500 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 dark:hover:bg-emerald-900"
       >
         Unban
       </button>
     ) : (
       <button
         onClick={() => setBanningUser(targetUser)}
-        className="text-sm text-red-600 dark:text-red-400 hover:underline whitespace-nowrap"
+        className="inline-flex min-h-9 w-full items-center justify-center rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-medium whitespace-nowrap text-red-700 hover:bg-red-100 focus-visible:outline-2 focus-visible:outline-red-500 dark:border-red-900 dark:bg-red-950 dark:text-red-300 dark:hover:bg-red-900"
       >
         Ban
       </button>
@@ -218,6 +244,7 @@ function UsersTab() {
         >
           <option value="all">All roles</option>
           <option value="USER">Users</option>
+          <option value="MODERATOR">Moderators</option>
           <option value="ADMIN">Admins</option>
         </select>
         <select
@@ -232,18 +259,16 @@ function UsersTab() {
       </div>
 
       {/* Desktop table */}
-      <div className="hidden md:block bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
-        <table className="w-full text-sm">
+      <div className="hidden md:block bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl overflow-x-auto">
+        <table className="w-full min-w-[850px] text-sm">
           <thead className="bg-gray-50 dark:bg-gray-800 text-left text-gray-500 dark:text-gray-400">
             <tr>
-              <th className="px-4 py-3 font-medium">Name</th>
-              <th className="px-4 py-3 font-medium">Email</th>
+              <th className="px-4 py-3 font-medium">User</th>
               <th className="px-4 py-3 font-medium">Role</th>
               <th className="px-4 py-3 font-medium">Status</th>
-              <th className="px-4 py-3 font-medium">Events</th>
-              <th className="px-4 py-3 font-medium">Registrations</th>
+              <th className="px-4 py-3 font-medium">Activity</th>
               <th className="px-4 py-3 font-medium">Joined</th>
-              <th className="px-4 py-3"></th>
+              <th className="w-48 px-4 py-3 font-medium">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -259,14 +284,12 @@ function UsersTab() {
                   >
                     {u.name}
                   </Link>
-                </td>
-                <td className="px-4 py-3 text-gray-600 dark:text-gray-400">
-                  {u.email}
+                  <p className="mt-1 max-w-56 break-words text-xs text-gray-500 dark:text-gray-400">{u.email}</p>
                 </td>
                 <td className="px-4 py-3">
-                  {u.role === "ADMIN" ? (
+                  {isStaff(u.role) ? (
                     <span className="text-xs font-medium bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 px-2 py-1 rounded-full whitespace-nowrap">
-                      Admin
+                      {u.role === "ADMIN" ? "Admin" : "Moderator"}
                     </span>
                   ) : (
                     <span className="text-xs text-gray-500 dark:text-gray-400">
@@ -281,16 +304,17 @@ function UsersTab() {
                   )}
                 </td>
                 <td className="px-4 py-3 text-gray-600 dark:text-gray-400">
-                  {u._count.events}
-                </td>
-                <td className="px-4 py-3 text-gray-600 dark:text-gray-400">
-                  {u._count.registrations}
+                  <p className="whitespace-nowrap">{u._count.events} events</p>
+                  <p className="mt-1 whitespace-nowrap text-xs text-gray-500 dark:text-gray-400">{u._count.registrations} registrations</p>
                 </td>
                 <td className="px-4 py-3 text-gray-500 dark:text-gray-400 whitespace-nowrap">
                   {new Date(u.createdAt).toLocaleDateString("en-GB")}
                 </td>
-                <td className="px-4 py-3 text-right">
-                  <BanAction targetUser={u} />
+                <td className="w-48 px-4 py-3">
+                  <div className="flex min-w-40 flex-col gap-2">
+                    <BanAction targetUser={u} />
+                    <RoleAction targetUser={u} />
+                  </div>
                 </td>
               </tr>
             ))}
@@ -312,20 +336,20 @@ function UsersTab() {
             className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4"
           >
             <div className="flex items-start justify-between gap-2 mb-2">
-              <div>
+              <div className="min-w-0">
                 <Link
                   to={`/users/${u.id}`}
                   className="font-medium text-indigo-600 dark:text-indigo-400 hover:underline"
                 >
                   {u.name}
                 </Link>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
+                <p className="break-words text-xs text-gray-500 dark:text-gray-400">
                   {u.email}
                 </p>
               </div>
-              {u.role === "ADMIN" && (
+              {isStaff(u.role) && (
                 <span className="text-xs font-medium bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 px-2 py-1 rounded-full whitespace-nowrap">
-                  Admin
+                  {u.role === "ADMIN" ? "Admin" : "Moderator"}
                 </span>
               )}
             </div>
@@ -345,8 +369,9 @@ function UsersTab() {
               </span>
             </div>
 
-            <div className="flex justify-end">
+            <div className="flex flex-wrap gap-2 border-t border-gray-100 pt-3 dark:border-gray-700 [&>button]:w-auto [&>button]:flex-1">
               <BanAction targetUser={u} />
+              <RoleAction targetUser={u} />
             </div>
           </div>
         ))}
@@ -358,6 +383,8 @@ function UsersTab() {
         )}
       </div>
 
+      {roleTarget && <ModeratorRoleModal userName={roleTarget.name} removing={roleTarget.role === "MODERATOR"}
+        onCancel={() => setRoleTarget(null)} onConfirm={() => handleRoleChange(roleTarget)} />}
       {banningUser && (
         <BanUserModal
           userName={banningUser.name}
@@ -469,7 +496,7 @@ function EventsTab() {
       </div>
 
       {/* Desktop table */}
-      <div className="hidden md:block bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
+      <div className="hidden md:block bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-gray-50 dark:bg-gray-800 text-left text-gray-500 dark:text-gray-400">
             <tr>
@@ -599,7 +626,7 @@ export default function AdminPage() {
     );
   }
 
-  if (user.role !== "ADMIN") {
+  if (!isStaff(user.role)) {
     return (
       <p className="text-gray-500 dark:text-gray-400">
         You don't have access to this page.
@@ -617,10 +644,10 @@ export default function AdminPage() {
   return (
     <div>
       <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-6">
-        Admin
+        {user.role === "ADMIN" ? "Admin" : "Moderator"}
       </h1>
 
-      <div className="flex gap-2 mb-6 border-b border-gray-200 dark:border-gray-700">
+      <div className="flex flex-wrap gap-2 mb-6 border-b border-gray-200 dark:border-gray-700">
         {tabs.map((t) => (
           <button
             key={t.key}

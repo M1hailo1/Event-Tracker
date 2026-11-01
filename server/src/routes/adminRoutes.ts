@@ -2,6 +2,7 @@ import { getCommentReports, reviewCommentReport } from "../controllers/commentRe
 import { Router } from "express";
 import {
   getAdminStats,
+  setModeratorRole,
   getAllUsersAdmin,
   deleteUserAdmin,
   banUserAdmin,
@@ -10,11 +11,13 @@ import {
   updateEventAdmin,
   deleteEventAdmin,
 } from "../controllers/adminController";
-import { requireAuth, requireAdmin } from "../middleware/authMiddleware";
+import { requireAuth, requireAdmin, requireStaff } from "../middleware/authMiddleware";
 
 const router = Router();
 
-router.use(requireAuth, requireAdmin);
+router.use(requireAuth, requireStaff);
+
+router.patch("/users/:id/role", requireAdmin, setModeratorRole);
 
 router.get("/stats", getAdminStats);
 router.get("/comment-reports", getCommentReports);

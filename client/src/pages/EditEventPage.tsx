@@ -1,3 +1,4 @@
+import { isStaff } from "../utils/roles";
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getEventById, updateEvent } from "../api/eventsApi";
@@ -32,7 +33,7 @@ export default function EditEventPage() {
   if (!event) return <p className="text-gray-500 dark:text-gray-400">Event not found</p>;
 
   const isOwner = user?.id === event.createdByUserId;
-  const isAdmin = user?.role === "ADMIN";
+  const isAdmin = isStaff(user?.role);
 
   if (!user || (!isOwner && !isAdmin)) {
     return (
@@ -59,7 +60,7 @@ export default function EditEventPage() {
       </h1>
       {!isOwner && (
         <p className="text-sm text-amber-600 dark:text-amber-400 mb-4">
-          You're editing this event as an admin, not as its organizer.
+          You are editing this event as a staff member.
         </p>
       )}
       <EventForm

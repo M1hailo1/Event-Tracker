@@ -1,3 +1,4 @@
+import { isStaff } from "../utils/roles";
 import { Request, Response, NextFunction } from "express";
 import { verifyToken } from "../utils/jwt";
 import prisma from "../prisma";
@@ -61,6 +62,27 @@ export async function requireAdmin(
 
   if (!user || user.role !== "ADMIN") {
     return res.status(403).json({ error: "Admin access required" });
+  }
+
+  next();
+}
+
+export async function requireStaff(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  if (!req.userId) {
+    return res.status(401).json({ error: "You are not logged in" });
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: req.userId },
+    select: { role: true },
+  });
+
+  if (!user || !isStaff(user.role)) {
+    return res.status(403).json({ error: "Admin or moderator access required" });
   }
 
   next();

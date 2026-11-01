@@ -1,6 +1,6 @@
 export interface RatingSummary { average: number | null; count: number; }
 
-export type Role = "USER" | "ADMIN";
+export type Role = "USER" | "MODERATOR" | "ADMIN";
 
 export interface User {
   id: string;
@@ -122,6 +122,8 @@ export interface Notification {
 }
 
 export interface AdminStats {
+  adminCount: number;
+  moderatorCount: number;
   userCount: number;
   eventCount: number;
   upcomingEventCount: number;

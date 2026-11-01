@@ -1,3 +1,4 @@
+import { isStaff } from "../utils/roles";
 import { notifyComment } from "../utils/notifyComment";
 import { Request, Response, NextFunction } from "express";
 import { z } from "zod";
@@ -156,7 +157,7 @@ export async function deleteComment(req: Request, res: Response) {
       id: req.params.commentId as string,
       eventId: req.params.id as string,
       deletedAt: null,
-      ...(user?.role === "ADMIN" ? {} : { userId: req.userId! }),
+      ...(isStaff(user?.role) ? {} : { userId: req.userId! }),
     },
     data: { body: "", deletedAt: new Date() },
   });

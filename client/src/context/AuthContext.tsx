@@ -1,3 +1,4 @@
+import { getMyProfile } from "../api/userApi";
 import { createContext, useContext, useState, useEffect } from "react";
 import type { ReactNode } from "react";
 import type { User } from "../types";
@@ -19,11 +20,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    let active = true;
+    async function refreshUser() {
+      const storedUser = localStorage.getItem("user");
+      const token = localStorage.getItem("token");
+      try {
+        if (!storedUser || !token) return;
+        const profile = await getMyProfile();
+        if (!active || token !== localStorage.getItem("token")) return;
+        const current = { id: profile.id, email: profile.email, name: profile.name, role: profile.role };
+        localStorage.setItem("user", JSON.stringify(current));
+        setUser(current);
+      } catch {
+        // Preserve the existing session during temporary connection failures.
+      } finally {
+        if (active) setIsLoading(false);
+      }
+    }
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
-      setUser(JSON.parse(storedUser));
+      try { setUser(JSON.parse(storedUser)); } catch { localStorage.removeItem("user"); }
     }
-    setIsLoading(false);
+    void refreshUser();
+    window.addEventListener("focus", refreshUser);
+    return () => { active = false; window.removeEventListener("focus", refreshUser); };
   }, []);
 
   async function login(email: string, password: string) {

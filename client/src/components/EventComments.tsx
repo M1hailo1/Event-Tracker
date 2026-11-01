@@ -1,3 +1,4 @@
+import { isStaff } from "../utils/roles";
 import CommentReportForm from "./CommentReportForm";
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
@@ -66,7 +67,7 @@ function CommentItem({ eventId, comment: initial, targetId, onDeleted }: { event
     <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
       {comment.user ? <>
         <Link to={`/users/${comment.user.id}`} className="font-semibold text-gray-800 hover:text-indigo-600 dark:text-gray-200">{comment.user.name}</Link>
-        {comment.user.role === "ADMIN" && <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-indigo-600 dark:bg-indigo-950 dark:text-indigo-400">Admin</span>}
+        {comment.user.role !== "USER" && <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-indigo-600 dark:bg-indigo-950 dark:text-indigo-400">{comment.user.role === "ADMIN" ? "Admin" : "Moderator"}</span>}
       </> : <span>Deleted comment</span>}
       <time dateTime={comment.createdAt}>{new Date(comment.createdAt).toLocaleString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}</time>
       {!comment.deletedAt && comment.updatedAt !== comment.createdAt && <span>(edited)</span>}
@@ -80,7 +81,7 @@ function CommentItem({ eventId, comment: initial, targetId, onDeleted }: { event
     <div className="mt-3 flex flex-wrap gap-4">
       {!comment.parentId && user && !comment.deletedAt && <button type="button" className={actionClass} onClick={() => setReplying(!replying)}><Reply size={14} />Reply</button>}
       {!comment.deletedAt && own && !editing && <button type="button" className={actionClass} onClick={() => setEditing(true)}><Pencil size={13} />Edit</button>}
-      {!comment.deletedAt && (own || user?.role === "ADMIN") && <button type="button" disabled={busy} className={actionClass} onClick={async () => {
+      {!comment.deletedAt && (own || isStaff(user?.role)) && <button type="button" disabled={busy} className={actionClass} onClick={async () => {
         if (!window.confirm("Delete this comment? Its replies will remain visible.")) return;
         setBusy(true); setError("");
         try { await deleteComment(eventId, comment.id); setComment({ ...comment, body: "", user: null, deletedAt: new Date().toISOString() }); setEditing(false); setReplying(false); onDeleted?.(); }

@@ -1,5 +1,5 @@
 import axiosInstance from "./axiosInstance";
-import type { AdminStats, AdminUser, Event, BanDuration } from "../types";
+import type { AdminStats, AdminUser, Event, BanDuration, Role } from "../types";
 import type { CreateEventPayload } from "./eventsApi";
 
 export async function getAdminStats(): Promise<AdminStats> {
@@ -60,7 +60,7 @@ export interface CommentReport {
   createdAt: string; reviewedAt: string | null;
   reporter: { id: string; name: string };
   comment: { id: string; body: string; deletedAt: string | null;
-    user: { id: string; name: string; role: "USER" | "ADMIN" };
+    user: { id: string; name: string; role: Role };
     event: { id: string; name: string } };
 }
 export async function getCommentReports(status: ReportStatus, cursor?: string): Promise<{ reports: CommentReport[]; nextCursor: string | null }> {
@@ -69,4 +69,9 @@ export async function getCommentReports(status: ReportStatus, cursor?: string): 
 }
 export async function reviewCommentReport(id: string, action: "DISMISS" | "REMOVE") {
   await axiosInstance.patch(`/admin/comment-reports/${id}`, { action });
+}
+
+export async function setModeratorRole(id: string, role: "USER" | "MODERATOR"): Promise<Pick<AdminUser, "id" | "role">> {
+  const { data } = await axiosInstance.patch(`/admin/users/${id}/role`, { role });
+  return data;
 }

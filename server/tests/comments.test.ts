@@ -47,7 +47,7 @@ it("scopes edits to the author and event", async () => {
   });
   expect(res.status).toHaveBeenCalledWith(403);
 });
-it.each(["USER", "ADMIN"])("limits deletion appropriately for %s", async role => {
+it.each(["USER", "ADMIN", "MODERATOR"])("limits deletion appropriately for %s", async role => {
   (prisma.user.findUnique as jest.Mock).mockResolvedValue({ role });
   (prisma.eventComment.updateMany as jest.Mock).mockResolvedValue({ count: 1 });
   await deleteComment(req, res);

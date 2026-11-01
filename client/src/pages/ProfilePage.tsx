@@ -56,9 +56,9 @@ export default function ProfilePage() {
               <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
                 {profile.name}
               </h1>
-              {profile.role === "ADMIN" && (
+              {profile.role !== "USER" && (
                 <span className="text-xs font-medium bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 px-2 py-1 rounded-full whitespace-nowrap">
-                  Admin
+                  {profile.role === "ADMIN" ? "Admin" : "Moderator"}
                 </span>
               )}
             </div>

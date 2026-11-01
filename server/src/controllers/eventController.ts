@@ -1,3 +1,4 @@
+import { isStaff } from "../utils/roles";
 import { Request, Response } from "express";
 import { getRatingSummary, withEventRatings } from "../utils/ratings";
 import { z } from "zod";
@@ -244,7 +245,7 @@ export async function userCanViewEvent(
     where: { id: userId },
     select: { role: true },
   });
-  if (requestingUser?.role === "ADMIN") return true;
+  if (isStaff(requestingUser?.role)) return true;
 
   if (event.visibility === "FOLLOWERS_ONLY") {
     const follow = await prisma.follow.findUnique({
@@ -271,6 +272,10 @@ export async function userCanViewEvent(
 }
 
 export const updateEventSchema = baseEventSchema
+  .extend({
+    visibility: z.enum(["PUBLIC", "FOLLOWERS_ONLY", "INVITE_ONLY"]).optional(),
+    isRecurring: z.boolean().optional(),
+  })
   .partial()
   .refine((data) => !data.date || new Date(data.date) > new Date(), {
     message: "Event date must be in the future",

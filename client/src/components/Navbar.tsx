@@ -1,3 +1,4 @@
+import { isStaff } from "../utils/roles";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { CalendarDays, Menu, X } from "lucide-react";
@@ -52,12 +53,12 @@ export default function Navbar() {
               >
                 My profile
               </Link>
-              {user.role === "ADMIN" && (
+              {isStaff(user.role) && (
                 <Link
                   to="/admin"
                   className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400"
                 >
-                  Admin
+                  {user.role === "ADMIN" ? "Admin" : "Moderator"}
                 </Link>
               )}
               <button
@@ -123,13 +124,13 @@ export default function Navbar() {
               >
                 My profile
               </Link>
-              {user.role === "ADMIN" && (
+              {isStaff(user.role) && (
                 <Link
                   to="/admin"
                   onClick={handleLinkClick}
                   className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400"
                 >
-                  Admin
+                  {user.role === "ADMIN" ? "Admin" : "Moderator"}
                 </Link>
               )}
               <button

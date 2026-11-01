@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { Request, Response } from "express";
 import prisma from "../prisma";
 import { updateEventSchema } from "./eventController";
@@ -6,14 +7,22 @@ import { computeBannedUntil, type BanDuration } from "../utils/banDuration";
 
 const VALID_DURATIONS: BanDuration[] = ["1h", "1w", "1m", "forever"];
 
+async function canManageAccount(actorId: string, targetRole: string) {
+  if (targetRole !== "ADMIN") return true;
+  const actor = await prisma.user.findUnique({ where: { id: actorId }, select: { role: true } });
+  return actor?.role === "ADMIN";
+}
+
 export async function getAdminStats(req: Request, res: Response) {
-  const [userCount, eventCount, upcomingEventCount, registrationCount, categoryCount] =
+  const [userCount, eventCount, upcomingEventCount, registrationCount, categoryCount, adminCount, moderatorCount] =
     await Promise.all([
       prisma.user.count(),
       prisma.event.count(),
       prisma.event.count({ where: { date: { gte: new Date() } } }),
       prisma.registration.count({ where: { status: "CONFIRMED" } }),
       prisma.category.count(),
+      prisma.user.count({ where: { role: "ADMIN" } }),
+      prisma.user.count({ where: { role: "MODERATOR" } }),
     ]);
 
   res.status(200).json({
@@ -22,6 +31,8 @@ export async function getAdminStats(req: Request, res: Response) {
     upcomingEventCount,
     registrationCount,
     categoryCount,
+    adminCount,
+    moderatorCount,
   });
 }
 
@@ -52,7 +63,7 @@ export async function banUserAdmin(req: Request, res: Response) {
   }
 
   if (id === req.userId) {
-    return res.status(400).json({ error: "You can't ban your own admin account" });
+    return res.status(400).json({ error: "You can't ban your own account" });
   }
 
   const duration = req.body.duration;
@@ -70,6 +81,9 @@ export async function banUserAdmin(req: Request, res: Response) {
   const user = await prisma.user.findUnique({ where: { id } });
   if (!user) {
     return res.status(404).json({ error: "User not found" });
+  }
+  if (!(await canManageAccount(req.userId!, user.role))) {
+    return res.status(403).json({ error: "Moderators cannot manage admin accounts" });
   }
 
   const bannedUntil = computeBannedUntil(duration);
@@ -93,6 +107,9 @@ export async function unbanUserAdmin(req: Request, res: Response) {
   if (!user) {
     return res.status(404).json({ error: "User not found" });
   }
+  if (!(await canManageAccount(req.userId!, user.role))) {
+    return res.status(403).json({ error: "Moderators cannot manage admin accounts" });
+  }
 
   const updatedUser = await prisma.user.update({
     where: { id },
@@ -112,12 +129,15 @@ export async function deleteUserAdmin(req: Request, res: Response) {
   if (id === req.userId) {
     return res
       .status(400)
-      .json({ error: "You can't delete your own admin account" });
+      .json({ error: "You can't delete your own account" });
   }
 
   const user = await prisma.user.findUnique({ where: { id } });
   if (!user) {
     return res.status(404).json({ error: "User not found" });
+  }
+  if (!(await canManageAccount(req.userId!, user.role))) {
+    return res.status(403).json({ error: "Moderators cannot manage admin accounts" });
   }
 
   const ownedEvents = await prisma.event.findMany({
@@ -252,4 +272,21 @@ export async function deleteEventAdmin(req: Request, res: Response) {
   );
 
   res.status(200).json({ message: "Event successfully deleted" });
+}
+
+// Only USER <-> MODERATOR transitions are available through the application.
+export async function setModeratorRole(req: Request, res: Response) {
+  const parsed = z.object({ role: z.enum(["USER", "MODERATOR"]) }).strict().safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: "Choose USER or MODERATOR" });
+  const id = req.params.id as string;
+  const result = await prisma.user.updateMany({
+    where: { id, role: { in: ["USER", "MODERATOR"] } },
+    data: { role: parsed.data.role },
+  });
+  if (!result.count) {
+    const target = await prisma.user.findUnique({ where: { id }, select: { id: true } });
+    return res.status(target ? 403 : 404).json({ error: target ? "Admin roles cannot be changed here" : "User not found" });
+  }
+  const updated = await prisma.user.findUnique({ where: { id }, select: { id: true, role: true } });
+  res.json(updated);
 }
