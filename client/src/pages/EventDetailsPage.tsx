@@ -1,3 +1,4 @@
+import EventComments from "../components/EventComments";
 import { Star } from "lucide-react";
 import RatingDisplay from "../components/RatingDisplay";
 import { useState, useEffect } from "react";
@@ -357,6 +358,7 @@ export default function EventDetailsPage() {
           </div>
         )}
       </div>
+      <EventComments key={`${event.id}:${user?.id ?? "guest"}`} eventId={event.id} />
     </div>
   );
 }

@@ -1,3 +1,5 @@
+import { reportComment } from "../controllers/commentReportController";
+import { requireCommentAccess, getComments, createComment, updateComment, deleteComment } from "../controllers/commentController";
 import { Router } from "express";
 import {
   createEvent,
@@ -12,11 +14,16 @@ import {
 } from "../controllers/eventInviteController";
 import { requireAuth, optionalAuth } from "../middleware/authMiddleware";
 import registrationRoutes from "./registrationRoutes";
-import { eventWriteLimiter, inviteLimiter } from "../middleware/rateLimiters";
+import { eventWriteLimiter, inviteLimiter, commentWriteLimiter, commentPostLimiter, commentReportLimiter } from "../middleware/rateLimiters";
 
 import { rateEvent } from "../controllers/ratingController";
 
 const router = Router();
+router.post("/:id/comments/:commentId/reports", requireAuth, commentReportLimiter, requireCommentAccess, reportComment);
+router.get("/:id/comments", optionalAuth, requireCommentAccess, getComments);
+router.post("/:id/comments", requireAuth, commentPostLimiter, commentWriteLimiter, requireCommentAccess, createComment);
+router.put("/:id/comments/:commentId", requireAuth, commentWriteLimiter, requireCommentAccess, updateComment);
+router.delete("/:id/comments/:commentId", requireAuth, commentWriteLimiter, requireCommentAccess, deleteComment);
 router.put("/:id/rating", requireAuth, eventWriteLimiter, rateEvent);
 
 router.get("/", optionalAuth, getAllEvents);

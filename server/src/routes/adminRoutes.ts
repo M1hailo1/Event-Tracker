@@ -1,3 +1,4 @@
+import { getCommentReports, reviewCommentReport } from "../controllers/commentReportController";
 import { Router } from "express";
 import {
   getAdminStats,
@@ -16,6 +17,8 @@ const router = Router();
 router.use(requireAuth, requireAdmin);
 
 router.get("/stats", getAdminStats);
+router.get("/comment-reports", getCommentReports);
+router.patch("/comment-reports/:reportId", reviewCommentReport);
 
 router.get("/users", getAllUsersAdmin);
 router.delete("/users/:id", deleteUserAdmin);

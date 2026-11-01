@@ -1,3 +1,4 @@
+import CommentReportsTab from "../components/CommentReportsTab";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
@@ -22,7 +23,7 @@ import { formatEventDate } from "../utils/formatDate";
 import LoadingBlock from "../components/LoadingBlock";
 import BanUserModal from "../components/BanUserModal";
 
-type Tab = "overview" | "users" | "events";
+type Tab = "overview" | "users" | "events" | "reports";
 
 const inputClass =
   "w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500";
@@ -610,6 +611,7 @@ export default function AdminPage() {
     { key: "overview", label: "Overview" },
     { key: "users", label: "Users" },
     { key: "events", label: "Events" },
+    { key: "reports", label: "Comment reports" },
   ];
 
   return (
@@ -637,6 +639,7 @@ export default function AdminPage() {
       {tab === "overview" && <OverviewTab />}
       {tab === "users" && <UsersTab />}
       {tab === "events" && <EventsTab />}
+      {tab === "reports" && <CommentReportsTab />}
     </div>
   );
 }

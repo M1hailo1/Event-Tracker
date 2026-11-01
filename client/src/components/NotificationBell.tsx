@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Bell } from "lucide-react";
 import type { Notification } from "../types";
@@ -21,6 +21,7 @@ export default function NotificationBell() {
   const [isLoading, setIsLoading] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+  const panelId = useId();
 
   async function refreshUnreadCount() {
     try {
@@ -125,7 +126,7 @@ export default function NotificationBell() {
 
     setIsOpen(false);
     if (notification.eventId) {
-      navigate(`/events/${notification.eventId}`);
+      navigate(`/events/${notification.eventId}${notification.commentId ? `?comment=${notification.commentId}` : ""}`);
     }
   }
 
@@ -138,11 +139,15 @@ export default function NotificationBell() {
   }
 
   return (
-    <div className="relative" ref={containerRef}>
+    <div className="relative" ref={containerRef} onKeyDown={event => {
+      if (event.key === "Escape") { setIsOpen(false); containerRef.current?.querySelector("button")?.focus(); }
+    }}>
       <button
         onClick={handleToggle}
         className="relative text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400"
         aria-label="Notifications"
+        aria-expanded={isOpen}
+        aria-controls={panelId}
       >
         <Bell size={22} />
         {unreadCount > 0 && (
@@ -153,7 +158,7 @@ export default function NotificationBell() {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-3 w-80 max-h-96 overflow-y-auto bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50">
+        <div id={panelId} className="fixed right-4 top-16 md:absolute md:right-0 md:top-auto mt-3 w-80 max-w-[calc(100vw-2rem)] max-h-96 overflow-y-auto bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50">
           <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-800">
             <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">
               Notifications
@@ -196,6 +201,7 @@ export default function NotificationBell() {
                     <span className="flex-1">
                       <span className="block text-gray-800 dark:text-gray-200">
                         {notification.message}
+                        {notification.activityCount > 1 && ` (${notification.activityCount})`}
                       </span>
                       <span className="block text-xs text-gray-400 dark:text-gray-500 mt-0.5">
                         {formatRelativeTime(notification.createdAt)}

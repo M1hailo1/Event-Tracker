@@ -105,9 +105,13 @@ export type NotificationType =
   | "EVENT_CANCELLED"
   | "EVENT_REMINDER"
   | "NEW_FOLLOWER"
-  | "EVENT_INVITE";
+  | "EVENT_INVITE"
+  | "EVENT_COMMENT"
+  | "COMMENT_REPLY";
 
 export interface Notification {
+  commentId?: string | null;
+  activityCount: number;
   id: string;
   userId: string;
   type: NotificationType;

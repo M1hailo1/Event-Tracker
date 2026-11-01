@@ -38,6 +38,8 @@ model User {
   notifications Notification[]
   eventInvites  EventInvite[]
   ratings       EventRating[]
+  comments      EventComment[]
+  commentReports CommentReport[]
 }
 
 model Category {
@@ -93,6 +95,7 @@ model Event {
   registrations Registration[]
   invites       EventInvite[]
   ratings       EventRating[]
+  comments      EventComment[]
 
   parentEventId String?
   parentEvent   Event?  @relation("EventSeries", fields: [parentEventId], references: [id])
@@ -143,9 +146,14 @@ enum NotificationType {
   EVENT_REMINDER
   NEW_FOLLOWER
   EVENT_INVITE
+  EVENT_COMMENT
+  COMMENT_REPLY
 }
 
 model Notification {
+  commentId String?
+  groupKey String? @unique
+  activityCount Int @default(1)
   id        String           @id @default(uuid())
   userId    String
   user      User             @relation(fields: [userId], references: [id])
@@ -167,4 +175,50 @@ model EventRating {
 
   @@unique([userId, eventId])
   @@index([eventId])
+}
+
+model EventComment {
+  id        String   @id @default(uuid())
+  body      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  eventId   String
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  parentId  String?
+  parent    EventComment? @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   EventComment[] @relation("CommentReplies")
+  reports   CommentReport[]
+
+  @@index([eventId, parentId, createdAt, id])
+}
+
+enum CommentReportReason {
+  HARASSMENT
+  SPAM
+  INAPPROPRIATE
+  OTHER
+}
+enum CommentReportStatus {
+  OPEN
+  DISMISSED
+  REMOVED
+}
+model CommentReport {
+  id String @id @default(uuid())
+  commentId String
+  comment EventComment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  reporterId String
+  reporter User @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+  reason CommentReportReason
+  details String?
+  bodySnapshot String
+  status CommentReportStatus @default(OPEN)
+  createdAt DateTime @default(now())
+  reviewedAt DateTime?
+  reviewedBy String?
+  @@unique([commentId, reporterId])
+  @@index([status, createdAt, id])
 }

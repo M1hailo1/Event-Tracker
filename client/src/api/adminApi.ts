@@ -54,3 +54,19 @@ export async function updateEventAdmin(
 export async function deleteEventAdmin(id: string): Promise<void> {
   await axiosInstance.delete(`/admin/events/${id}`);
 }
+export type ReportStatus = "OPEN" | "DISMISSED" | "REMOVED";
+export interface CommentReport {
+  id: string; reason: string; details: string | null; bodySnapshot: string; status: ReportStatus;
+  createdAt: string; reviewedAt: string | null;
+  reporter: { id: string; name: string };
+  comment: { id: string; body: string; deletedAt: string | null;
+    user: { id: string; name: string; role: "USER" | "ADMIN" };
+    event: { id: string; name: string } };
+}
+export async function getCommentReports(status: ReportStatus, cursor?: string): Promise<{ reports: CommentReport[]; nextCursor: string | null }> {
+  const { data } = await axiosInstance.get("/admin/comment-reports", { params: { status, cursor } });
+  return data;
+}
+export async function reviewCommentReport(id: string, action: "DISMISS" | "REMOVE") {
+  await axiosInstance.patch(`/admin/comment-reports/${id}`, { action });
+}

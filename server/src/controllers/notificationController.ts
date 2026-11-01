@@ -38,7 +38,7 @@ export async function markAsRead(req: Request, res: Response) {
 
   const updated = await prisma.notification.update({
     where: { id },
-    data: { isRead: true },
+    data: { isRead: true, groupKey: null },
   });
 
   res.status(200).json(updated);
@@ -49,7 +49,7 @@ export async function markAllAsRead(req: Request, res: Response) {
 
   await prisma.notification.updateMany({
     where: { userId, isRead: false },
-    data: { isRead: true },
+    data: { isRead: true, groupKey: null },
   });
 
   res.status(200).json({ message: "All notifications marked as read" });
@@ -63,7 +63,7 @@ export async function markEventAsRead(req: Request, res: Response) {
 
   await prisma.notification.updateMany({
     where: { userId: req.userId!, eventId, isRead: false },
-    data: { isRead: true },
+    data: { isRead: true, groupKey: null },
   });
 
   res.status(200).json({ message: "Event notifications marked as read" });

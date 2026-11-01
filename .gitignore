@@ -2,3 +2,7 @@ node_modules/
 dist/
 .env
 *.log
+
+# Local assistant instructions and session notes
+/AGENTS.md
+/SESSION_NOTES.md
