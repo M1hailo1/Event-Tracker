@@ -84,6 +84,7 @@ export interface UserStats {
 }
 
 export interface DashboardData {
+  hasMore: { myUpcomingEvents: boolean; registeredUpcomingEvents: boolean; followingUpcomingEvents: boolean };
   myUpcomingEvents: Event[];
   registeredUpcomingEvents: Event[];
   followingUpcomingEvents: Event[];
@@ -108,6 +109,8 @@ export type NotificationType =
   | "EVENT_UPDATED"
   | "EVENT_CANCELLED"
   | "EVENT_REMINDER"
+  | "EVENT_JOINED"
+  | "EVENT_RATING_PROMPT"
   | "NEW_FOLLOWER"
   | "EVENT_INVITE"
   | "EVENT_COMMENT"

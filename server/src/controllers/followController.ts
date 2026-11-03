@@ -1,3 +1,4 @@
+import { readPagination, paged } from "../utils/pagination";
 import { Request, Response } from "express";
 import prisma from "../prisma";
 import { createNotification } from "../utils/createNotification";
@@ -79,12 +80,18 @@ export async function getFollowers(req: Request, res: Response) {
     return res.status(400).json({ error: "Invalid user ID" });
   }
 
+  const paging = req.query.page !== undefined ? readPagination(req, res) : undefined;
+  if (paging === null) return;
   const followers = await prisma.follow.findMany({
     where: { followingId: userId },
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    ...(paging ? { skip: paging.skip, take: paging.take } : {}),
     include: { follower: { select: { id: true, name: true } } },
   });
 
-  res.status(200).json(followers.map((f) => f.follower));
+  const items = followers.map(f => f.follower);
+  const isFollowing = req.userId ? !!(await prisma.follow.findUnique({ where: { followerId_followingId: { followerId: req.userId, followingId: userId } } })) : false;
+  res.status(200).json(paging ? { ...paged(items, await prisma.follow.count({ where: { followingId: userId } }), paging), isFollowing } : items);
 }
 
 export async function getFollowing(req: Request, res: Response) {
@@ -93,10 +100,16 @@ export async function getFollowing(req: Request, res: Response) {
     return res.status(400).json({ error: "Invalid user ID" });
   }
 
+  const paging = req.query.page !== undefined ? readPagination(req, res) : undefined;
+  if (paging === null) return;
   const following = await prisma.follow.findMany({
     where: { followerId: userId },
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    ...(paging ? { skip: paging.skip, take: paging.take } : {}),
     include: { following: { select: { id: true, name: true } } },
   });
 
-  res.status(200).json(following.map((f) => f.following));
+  const items = following.map(f => f.following);
+  const isFollowing = req.userId ? !!(await prisma.follow.findUnique({ where: { followerId_followingId: { followerId: req.userId, followingId: userId } } })) : false;
+  res.status(200).json(paging ? { ...paged(items, await prisma.follow.count({ where: { followerId: userId } }), paging), isFollowing } : items);
 }

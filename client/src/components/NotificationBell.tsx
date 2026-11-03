@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Bell } from "lucide-react";
 import type { Notification } from "../types";
 import {
-  getMyNotifications,
+  getNotificationPage,
   getUnreadCount,
   markAsRead,
   markAllAsRead,
@@ -15,6 +15,10 @@ import LoadingBlock from "./LoadingBlock";
 const POLL_INTERVAL_MS = 120000;
 
 export default function NotificationBell() {
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [error, setError] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -99,16 +103,23 @@ export default function NotificationBell() {
     setIsOpen(willOpen);
 
     if (willOpen) {
-      setIsLoading(true);
+      setIsLoading(true); setError(""); setPage(0); setHasMore(false);
       try {
-        const data = await getMyNotifications();
-        setNotifications(data);
+        const data = await getNotificationPage();
+        setNotifications(data.items); setPage(1); setHasMore(data.totalPages > 1);
       } catch {
-        setNotifications([]);
+        setNotifications([]); setError("Unable to load notifications.");
       } finally {
         setIsLoading(false);
       }
     }
+  }
+
+  async function loadMore() {
+    setLoadingMore(true); setError("");
+    try { const data = await getNotificationPage(page + 1); setNotifications(previous => [...new Map([...previous, ...data.items].map(item => [item.id, item])).values()]); setPage(data.page); setHasMore(data.page < data.totalPages); }
+    catch { setError("Unable to load notifications."); }
+    finally { setLoadingMore(false); }
   }
 
   async function handleNotificationClick(notification: Notification) {
@@ -173,11 +184,12 @@ export default function NotificationBell() {
             )}
           </div>
 
+          {error && <p role="alert" className="px-4 py-2 text-sm text-red-600">{error}</p>}
           {isLoading ? (
             <LoadingBlock label="Loading..." size={20} compact />
           ) : notifications.length === 0 ? (
             <div className="px-4 py-6 text-sm text-gray-500 dark:text-gray-400 text-center">
-              No notifications yet
+              {error ? "" : "No notifications yet"}
             </div>
           ) : (
             <ul className="divide-y divide-gray-100 dark:divide-gray-700">
@@ -201,7 +213,7 @@ export default function NotificationBell() {
                     <span className="flex-1">
                       <span className="block text-gray-800 dark:text-gray-200">
                         {notification.message}
-                        {notification.activityCount > 1 && ` (${notification.activityCount})`}
+                        {notification.type !== "EVENT_JOINED" && notification.activityCount > 1 && ` (${notification.activityCount})`}
                       </span>
                       <span className="block text-xs text-gray-400 dark:text-gray-500 mt-0.5">
                         {formatRelativeTime(notification.createdAt)}
@@ -212,6 +224,7 @@ export default function NotificationBell() {
               ))}
             </ul>
           )}
+          {(hasMore || error) && <button disabled={isLoading || loadingMore} onClick={loadMore} className="w-full px-4 py-3 text-sm text-indigo-600 dark:text-indigo-400 disabled:opacity-50">{loadingMore ? "Loading?" : error ? "Try again" : "Load more"}</button>}
         </div>
       )}
     </div>

@@ -1,3 +1,4 @@
+import type { PageResult } from "../components/Pagination";
 import axiosInstance from "./axiosInstance";
 import type { AdminStats, AdminUser, Event, BanDuration, Role } from "../types";
 import type { CreateEventPayload } from "./eventsApi";
@@ -79,4 +80,11 @@ export async function reviewCommentReport(id: string, action: "DISMISS" | "REMOV
 export async function setModeratorRole(id: string, role: "USER" | "MODERATOR"): Promise<Pick<AdminUser, "id" | "role">> {
   const { data } = await axiosInstance.patch(`/admin/users/${id}/role`, { role });
   return data;
+}
+
+export async function getAdminUserPage(params: Record<string, string | number>): Promise<PageResult<AdminUser>> {
+  return (await axiosInstance.get("/admin/users", { params: { ...params, pageSize: 20 } })).data;
+}
+export async function getAdminEventPage(params: Record<string, string | number>): Promise<PageResult<Event>> {
+  return (await axiosInstance.get("/admin/events", { params: { ...params, pageSize: 20 } })).data;
 }

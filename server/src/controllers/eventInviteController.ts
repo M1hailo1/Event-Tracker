@@ -1,3 +1,4 @@
+import { readPagination, paged } from "../utils/pagination";
 import { Request, Response } from "express";
 import prisma from "../prisma";
 import { createNotification } from "../utils/createNotification";
@@ -94,11 +95,20 @@ export async function getEventInvites(req: Request, res: Response) {
       .json({ error: "Only the event creator can view invites" });
   }
 
+  const paging = req.query.page !== undefined ? readPagination(req, res) : undefined;
+  if (paging === null) return;
+  if (paging && req.query.kind === "available") {
+    const where = { followingId: event.createdByUserId, follower: { id: { not: event.createdByUserId }, eventInvites: { none: { eventId } } } };
+    const followers = await prisma.follow.findMany({ where, orderBy: [{ createdAt: "desc" }, { id: "desc" }], skip: paging.skip, take: paging.take, include: { follower: { select: { id: true, name: true } } } });
+    return res.json(paged(followers.map(item => item.follower), await prisma.follow.count({ where }), paging));
+  }
   const invites = await prisma.eventInvite.findMany({
     where: { eventId },
     include: { invitedUser: { select: { id: true, name: true } } },
-    orderBy: { invitedAt: "desc" },
+    orderBy: [{ invitedAt: "desc" }, { id: "desc" }],
+    ...(paging ? { skip: paging.skip, take: paging.take } : {}),
   });
 
-  res.status(200).json(invites.map((i) => i.invitedUser));
+  const items = invites.map(i => i.invitedUser);
+  res.status(200).json(paging ? paged(items, await prisma.eventInvite.count({ where: { eventId } }), paging) : items);
 }

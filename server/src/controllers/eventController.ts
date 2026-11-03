@@ -1,3 +1,4 @@
+import { readPagination, paged } from "../utils/pagination";
 import { isStaff } from "../utils/roles";
 import { lockEventSeries } from "../utils/eventSeries";
 import { activeEventsWhere, endedEventsWhere, validUpdatedDates } from "../utils/eventLifecycle";
@@ -101,6 +102,8 @@ export async function createEvent(req: Request, res: Response) {
 }
 
 export async function getAllEvents(req: Request, res: Response) {
+  const paging = req.query.page !== undefined ? readPagination(req, res, 12) : undefined;
+  if (paging === null) return;
   await generateMissingRecurringInstances();
 
   const showPast = req.query.includePast === "true";
@@ -122,7 +125,7 @@ export async function getAllEvents(req: Request, res: Response) {
   const attendedOnly = req.query.attendedOnly === "true";
 
   if (attendedOnly && !userId) {
-    return res.status(200).json([]);
+    return res.status(200).json(paging ? paged([], 0, paging) : []);
   }
 
   const now = new Date();
@@ -171,6 +174,17 @@ export async function getAllEvents(req: Request, res: Response) {
     });
   }
 
+  if (typeof req.query.organizerId === "string") filters.push({ createdByUserId: req.query.organizerId });
+  const scope = req.query.scope;
+  if (scope && !userId) return res.status(401).json({ error: "Sign in required" });
+  if (scope === "organized") filters.push({ createdByUserId: userId });
+  if (scope === "registered") filters.push({ createdByUserId: { not: userId }, registrations: { some: { userId, status: "CONFIRMED" } } });
+  if (scope === "following") filters.push({ createdBy: { followers: { some: { followerId: userId } } }, registrations: { none: { userId } } });
+  if (typeof req.query.from === "string" && typeof req.query.to === "string") {
+    const from = new Date(req.query.from), to = new Date(req.query.to);
+    if (!Number.isFinite(+from) || !Number.isFinite(+to) || from >= to) return res.status(400).json({ error: "Invalid date range" });
+    filters.push({ date: { gte: from, lt: to } });
+  }
   let orderBy: { date: "asc" | "desc" } | { name: "asc" | "desc" } = {
     date: showPast ? "desc" : "asc",
   };
@@ -187,10 +201,12 @@ export async function getAllEvents(req: Request, res: Response) {
       createdBy: { select: { id: true, name: true } },
       _count: { select: { registrations: true } },
     },
-    orderBy,
+    orderBy: [orderBy, { id: "asc" }],
+    ...(paging ? { skip: paging.skip, take: paging.take } : {}),
   });
 
-  res.status(200).json(await withEventRatings(events));
+  const items = await withEventRatings(events);
+  res.status(200).json(paging ? paged(items, await prisma.event.count({ where: { AND: filters } }), paging) : items);
 }
 
 export async function getEventById(req: Request, res: Response) {
@@ -209,7 +225,7 @@ export async function getEventById(req: Request, res: Response) {
         select: { id: true, name: true },
       },
       registrations: {
-        where: { status: "CONFIRMED" },
+        where: { status: "CONFIRMED", userId: req.userId ?? "00000000-0000-0000-0000-000000000000" },
         include: {
           user: { select: { id: true, name: true } },
         },
@@ -471,4 +487,16 @@ export async function generateMissingRecurringInstances() {
       });
     });
   }
+}
+
+export async function getEventAttendees(req: Request, res: Response) {
+  const id = String(req.params.id);
+  const paging = readPagination(req, res);
+  if (!paging) return;
+  const event = await prisma.event.findUnique({ where: { id }, select: { id: true, visibility: true, createdByUserId: true } });
+  if (!event) return res.status(404).json({ error: "Event not found" });
+  if (!(await userCanViewEvent(event, req.userId))) return res.status(403).json({ error: "You don't have access to this event" });
+  const where = { eventId: id, status: "CONFIRMED" as const };
+  const items = await prisma.registration.findMany({ where, orderBy: { id: "asc" }, skip: paging.skip, take: paging.take, include: { user: { select: { id: true, name: true } } } });
+  res.json(paged(items, await prisma.registration.count({ where }), paging));
 }

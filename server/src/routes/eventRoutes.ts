@@ -1,3 +1,4 @@
+import { getEventSharePreview } from "../controllers/eventShareController";
 import { reportComment } from "../controllers/commentReportController";
 import { cancelEvent } from "../controllers/eventCancellationController";
 import { requireCommentAccess, getComments, createComment, updateComment, deleteComment } from "../controllers/commentController";
@@ -6,6 +7,7 @@ import {
   createEvent,
   getAllEvents,
   getEventById,
+  getEventAttendees,
   updateEvent,
   deleteEvent,
 } from "../controllers/eventController";
@@ -28,6 +30,8 @@ router.delete("/:id/comments/:commentId", requireAuth, commentWriteLimiter, requ
 router.put("/:id/rating", requireAuth, eventWriteLimiter, rateEvent);
 
 router.get("/", optionalAuth, getAllEvents);
+router.get("/:id/share", getEventSharePreview);
+router.get("/:id/attendees", optionalAuth, getEventAttendees);
 router.get("/:id", optionalAuth, getEventById);
 router.post("/", requireAuth, eventWriteLimiter, createEvent);
 router.put("/:id", requireAuth, eventWriteLimiter, updateEvent);

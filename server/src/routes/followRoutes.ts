@@ -5,14 +5,14 @@ import {
   getFollowers,
   getFollowing,
 } from "../controllers/followController";
-import { requireAuth } from "../middleware/authMiddleware";
+import { requireAuth, optionalAuth } from "../middleware/authMiddleware";
 import { followLimiter } from "../middleware/rateLimiters";
 
 const router = Router();
 
 router.post("/:userId/follow", requireAuth, followLimiter, followUser);
 router.delete("/:userId/follow", requireAuth, followLimiter, unfollowUser);
-router.get("/:userId/followers", getFollowers);
-router.get("/:userId/following", getFollowing);
+router.get("/:userId/followers", optionalAuth, getFollowers);
+router.get("/:userId/following", optionalAuth, getFollowing);
 
 export default router;

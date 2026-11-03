@@ -1,14 +1,15 @@
+import FollowLists from "../components/FollowLists";
+import { getFollowPage } from "../api/followApi";
+import OrganizerEvents from "../components/OrganizerEvents";
 import RatingDisplay from "../components/RatingDisplay";
 import { useState, useEffect } from "react";
-import { useParams, Navigate, Link } from "react-router-dom";
+import { useParams, Navigate } from "react-router-dom";
 import { getUserById } from "../api/userApi";
 import {
   followUser,
   unfollowUser,
-  getFollowers,
-  getFollowing,
 } from "../api/followApi";
-import type { PublicUser, FollowUser } from "../types";
+import type { PublicUser } from "../types";
 import { useAuth } from "../context/AuthContext";
 import { PageSkeleton } from "../components/Skeleton";
 
@@ -27,37 +28,22 @@ export default function UserProfilePage() {
   const { id } = useParams<{ id: string }>();
   const { user: currentUser } = useAuth();
   const [profile, setProfile] = useState<PublicUser | null>(null);
-  const [followers, setFollowers] = useState<FollowUser[]>([]);
-  const [following, setFollowing] = useState<FollowUser[]>([]);
+  const [isFollowing, setIsFollowing] = useState(false);
+
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [isFollowActionLoading, setIsFollowActionLoading] = useState(false);
 
   useEffect(() => {
     if (!id) return;
-    loadProfile(id);
-  }, [id]);
-
-  async function loadProfile(userId: string) {
-    setIsLoading(true);
-    try {
-      const [profileData, followersData, followingData] = await Promise.all([
-        getUserById(userId),
-        getFollowers(userId),
-        getFollowing(userId),
-      ]);
-      setProfile(profileData);
-      setFollowers(followersData);
-      setFollowing(followingData);
-    } catch (err) {
-      setError("Error loading profile");
-      console.error(err);
-    } finally {
-      setIsLoading(false);
-    }
-  }
-
-  const isFollowing = followers.some((f) => f.id === currentUser?.id);
+    let active = true;
+    setIsLoading(true); setError("");
+    Promise.all([getUserById(id), getFollowPage(id, "followers")])
+      .then(([profileData, followersData]) => { if (active) { setProfile(profileData); setIsFollowing(followersData.isFollowing); } })
+      .catch(() => { if (active) setError("Error loading profile"); })
+      .finally(() => { if (active) setIsLoading(false); });
+    return () => { active = false; };
+  }, [id, currentUser?.id]);
 
   async function handleFollowToggle() {
     if (!id) return;
@@ -68,7 +54,7 @@ export default function UserProfilePage() {
       } else {
         await followUser(id);
       }
-      await loadProfile(id);
+      setIsFollowing(value => !value);
     } catch (err) {
       console.error(err);
     } finally {
@@ -86,7 +72,7 @@ export default function UserProfilePage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-6xl mx-auto">
       <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 mb-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -133,49 +119,10 @@ export default function UserProfilePage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
-          <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-            {followers.length}
-          </p>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
-            Followers
-          </p>
-          <ul className="space-y-1">
-            {followers.map((f) => (
-              <li key={f.id}>
-                <Link
-                  to={`/users/${f.id}`}
-                  className="text-sm text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400"
-                >
-                  {f.name}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
-          <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-            {following.length}
-          </p>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
-            Following
-          </p>
-          <ul className="space-y-1">
-            {following.map((f) => (
-              <li key={f.id}>
-                <Link
-                  to={`/users/${f.id}`}
-                  className="text-sm text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400"
-                >
-                  {f.name}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
+      <FollowLists key={`follows:${profile.id}`} userId={profile.id} refreshKey={Number(isFollowing)} />
+
+      <OrganizerEvents key={`events:${profile.id}`} userId={profile.id} name={profile.name} refreshKey={Number(isFollowing)} />
     </div>
   );
 }

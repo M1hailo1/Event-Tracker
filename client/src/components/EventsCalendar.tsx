@@ -4,6 +4,8 @@ import type { Event } from "../types";
 
 interface EventsCalendarProps {
   events: Event[];
+  month?: Date;
+  onMonthChange?: (month: Date) => void;
 }
 
 const WEEKDAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -28,9 +30,11 @@ function isSameDay(a: Date, b: Date): boolean {
   );
 }
 
-export default function EventsCalendar({ events }: EventsCalendarProps) {
-  const [cursor, setCursor] = useState(() => startOfMonth(new Date()));
+export default function EventsCalendar({ events, month, onMonthChange }: EventsCalendarProps) {
+  const [localCursor, setLocalCursor] = useState(() => startOfMonth(new Date()));
 
+  const cursor = month ?? localCursor;
+  const setCursor = onMonthChange ?? setLocalCursor;
   const monthLabel = cursor.toLocaleDateString("en-GB", {
     month: "long",
     year: "numeric",
@@ -56,10 +60,10 @@ export default function EventsCalendar({ events }: EventsCalendarProps) {
   }, [events]);
 
   function goToPrevMonth() {
-    setCursor((prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
+    setCursor(new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1));
   }
   function goToNextMonth() {
-    setCursor((prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
+    setCursor(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1));
   }
   function goToToday() {
     setCursor(startOfMonth(new Date()));

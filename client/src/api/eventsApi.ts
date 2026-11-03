@@ -1,3 +1,4 @@
+import type { PageResult } from "../components/Pagination";
 import axiosInstance from "./axiosInstance";
 import type { Event, EventVisibility, FollowUser } from "../types";
 
@@ -8,6 +9,10 @@ export type EventSortOption =
   | "name_desc";
 
 export interface EventFilters {
+  organizerId?: string;
+  scope?: string;
+  from?: string;
+  to?: string;
   includePast?: boolean;
   categoryId?: string;
   city?: string;
@@ -20,6 +25,7 @@ export async function getAllEvents(
   filters: EventFilters = {},
 ): Promise<Event[]> {
   const params: Record<string, string> = {};
+  for (const key of ["organizerId", "scope", "from", "to"] as const) if (filters[key]) params[key] = filters[key];
   if (filters.includePast) params.includePast = "true";
   if (filters.categoryId) params.categoryId = filters.categoryId;
   if (filters.city) params.city = filters.city;
@@ -98,4 +104,9 @@ export async function getEventInvites(eventId: string): Promise<FollowUser[]> {
 
 export async function rateEvent(id: string, score: number): Promise<void> {
   await axiosInstance.put(`/events/${id}/rating`, { score });
+}
+
+export async function getEventPage(filters: EventFilters = {}, page = 1): Promise<PageResult<Event>> {
+  const { data } = await axiosInstance.get<PageResult<Event>>("/events", { params: { ...filters, page, pageSize: 12 } });
+  return data;
 }

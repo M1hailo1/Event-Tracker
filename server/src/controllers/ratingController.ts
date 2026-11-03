@@ -28,10 +28,15 @@ export async function rateEvent(req: Request, res: Response) {
   if (registration?.status !== "CONFIRMED") {
     return res.status(403).json({ error: "Only confirmed attendees can rate this event" });
   }
-  const rating = await prisma.eventRating.upsert({
-    where: { userId_eventId: { userId: req.userId!, eventId: id } },
-    create: { userId: req.userId!, eventId: id, score: parsed.data.score },
-    update: { score: parsed.data.score },
+  const rating = await prisma.$transaction(async tx => {
+    await tx.$queryRaw`SELECT "id" FROM "Event" WHERE "id" = ${id} FOR UPDATE`;
+    const saved = await tx.eventRating.upsert({
+      where: { userId_eventId: { userId: req.userId!, eventId: id } },
+      create: { userId: req.userId!, eventId: id, score: parsed.data.score },
+      update: { score: parsed.data.score },
+    });
+    await tx.notification.deleteMany({ where: { userId: req.userId!, eventId: id, type: "EVENT_RATING_PROMPT" } });
+    return saved;
   });
   return res.status(200).json({ score: rating.score });
 }

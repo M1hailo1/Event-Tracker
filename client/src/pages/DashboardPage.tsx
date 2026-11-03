@@ -12,6 +12,8 @@ interface SectionProps {
   subtitle: string;
   events: DashboardData["myUpcomingEvents"];
   emptyText: string;
+  hasMore: boolean;
+  viewAllTo: string;
   actionTo?: string;
   actionLabel?: string;
 }
@@ -23,6 +25,8 @@ function DashboardSection({
   emptyText,
   actionTo = "/",
   actionLabel = "Explore events",
+  viewAllTo,
+  hasMore,
 }: SectionProps) {
   return (
     <section className="mb-10">
@@ -36,7 +40,7 @@ function DashboardSection({
           <p className="mb-3">{emptyText}</p><Link to={actionTo} className="font-medium text-indigo-600 dark:text-indigo-400 hover:underline">{actionLabel}</Link>
         </div>
       ) : (
-        <EventCardGrid events={events} />
+        <div><EventCardGrid events={events} />{hasMore && <Link to={viewAllTo} className="mt-4 inline-block text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:underline">View all</Link>}</div>
       )}
     </section>
   );
@@ -94,6 +98,8 @@ export default function DashboardPage() {
       </div>
 
       <DashboardSection
+        hasMore={data.hasMore?.registeredUpcomingEvents ?? false}
+        viewAllTo="/?scope=registered"
         title="Attending"
         subtitle="Upcoming and ongoing events you're registered for"
         events={data.registeredUpcomingEvents}
@@ -101,6 +107,8 @@ export default function DashboardPage() {
       />
 
       <DashboardSection
+        hasMore={data.hasMore?.myUpcomingEvents ?? false}
+        viewAllTo="/?scope=organized"
         title="Your events"
         subtitle="Upcoming and ongoing events you're organizing"
         events={data.myUpcomingEvents}
@@ -109,6 +117,8 @@ export default function DashboardPage() {
       />
 
       <DashboardSection
+        hasMore={data.hasMore?.followingUpcomingEvents ?? false}
+        viewAllTo="/?scope=following"
         title="From people you follow"
         subtitle="Upcoming and ongoing events you haven't registered for yet"
         events={data.followingUpcomingEvents}

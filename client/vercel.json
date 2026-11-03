@@ -1,3 +1,44 @@
 {
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "functions": {
+    "api/event-preview.mjs": {
+      "maxDuration": 10
+    }
+  },
+  "headers": [
+    {
+      "source": "/events/:id",
+      "headers": [
+        {
+          "key": "Vary",
+          "value": "User-Agent"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "private, no-store"
+        }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/events/:id([0-9a-fA-F-]{36})",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(Discordbot|discordbot|Twitterbot|facebookexternalhit|Facebot|WhatsApp|TelegramBot|LinkedInBot|Slackbot|SkypeUriPreview).*"
+        }
+      ],
+      "destination": "/api/event-preview?id=:id"
+    },
+    {
+      "source": "/api/event-preview",
+      "destination": "/api/event-preview"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
 }

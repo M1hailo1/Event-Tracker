@@ -1,16 +1,20 @@
+import { readPagination, paged } from "../utils/pagination";
 import { Request, Response } from "express";
 import prisma from "../prisma";
 
 export async function getMyNotifications(req: Request, res: Response) {
   const userId = req.userId!;
 
+  const paging = req.query.page !== undefined ? readPagination(req, res) : undefined;
+  if (paging === null) return;
   const notifications = await prisma.notification.findMany({
     where: { userId },
-    orderBy: { createdAt: "desc" },
-    take: 20,
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    take: paging?.take ?? 20,
+    skip: paging?.skip ?? 0,
   });
 
-  res.status(200).json(notifications);
+  res.status(200).json(paging ? paged(notifications, await prisma.notification.count({ where: { userId } }), paging) : notifications);
 }
 
 export async function getUnreadCount(req: Request, res: Response) {

@@ -1,6 +1,7 @@
 import "dotenv/config";
 import app from "./app";
 import { sendDueEventReminders } from "./utils/eventReminders";
+import { sendDueEventRatingPrompts } from "./utils/eventRatingPrompts";
 import { cleanupOldNotifications } from "./utils/notificationCleanup";
 
 const PORT = process.env.PORT || 3000;
@@ -13,6 +14,7 @@ app.listen(PORT, () => {
   sendDueEventReminders().catch((err) =>
     console.error("Event reminder check failed:", err),
   );
+  sendDueEventRatingPrompts().catch(error => console.error("Rating prompt check failed:", error));
   cleanupOldNotifications().catch((err) =>
     console.error("Notification cleanup failed:", err),
   );
@@ -20,6 +22,7 @@ app.listen(PORT, () => {
     sendDueEventReminders().catch((err) =>
       console.error("Event reminder check failed:", err),
     );
+    sendDueEventRatingPrompts().catch(error => console.error("Rating prompt check failed:", error));
     cleanupOldNotifications().catch((err) =>
       console.error("Notification cleanup failed:", err),
     );

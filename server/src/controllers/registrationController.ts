@@ -1,3 +1,4 @@
+import { notifyEventJoin } from "../utils/notifyEventJoin";
 import { Request, Response } from "express";
 import { Prisma } from "@prisma/client";
 import prisma from "../prisma";
@@ -54,13 +55,15 @@ export async function registerForEvent(req: Request, res: Response) {
         throw new Error("EVENT_FULL");
       }
 
-      return tx.registration.create({
+      const created = await tx.registration.create({
         data: {
           userId,
           eventId,
           status: "CONFIRMED",
         },
       });
+      await notifyEventJoin(tx, event, userId);
+      return created;
     });
 
     res.status(201).json(registration);

@@ -20,7 +20,7 @@ export async function getMyDashboard(req: Request, res: Response) {
     where: { createdByUserId: userId, AND: [activeEventsWhere(now)] },
     include: eventInclude,
     orderBy: { date: "asc" },
-    take: UPCOMING_LIMIT,
+    take: UPCOMING_LIMIT + 1,
   });
 
   const registeredUpcomingEvents = await prisma.event.findMany({
@@ -31,7 +31,7 @@ export async function getMyDashboard(req: Request, res: Response) {
     },
     include: eventInclude,
     orderBy: { date: "asc" },
-    take: UPCOMING_LIMIT,
+    take: UPCOMING_LIMIT + 1,
   });
 
   const following = await prisma.follow.findMany({
@@ -59,7 +59,7 @@ export async function getMyDashboard(req: Request, res: Response) {
           },
           include: eventInclude,
           orderBy: { date: "asc" },
-          take: UPCOMING_LIMIT,
+          take: UPCOMING_LIMIT + 1,
         });
 
   const ratedEvents = await withEventRatings([
@@ -67,8 +67,13 @@ export async function getMyDashboard(req: Request, res: Response) {
   ]);
   const byId = new Map(ratedEvents.map(event => [event.id, event]));
   res.status(200).json({
-    myUpcomingEvents: myUpcomingEvents.map(event => byId.get(event.id)),
-    registeredUpcomingEvents: registeredUpcomingEvents.map(event => byId.get(event.id)),
-    followingUpcomingEvents: followingUpcomingEvents.map(event => byId.get(event.id)),
+    hasMore: {
+      myUpcomingEvents: myUpcomingEvents.length > UPCOMING_LIMIT,
+      registeredUpcomingEvents: registeredUpcomingEvents.length > UPCOMING_LIMIT,
+      followingUpcomingEvents: followingUpcomingEvents.length > UPCOMING_LIMIT,
+    },
+    myUpcomingEvents: myUpcomingEvents.slice(0, UPCOMING_LIMIT).map(event => byId.get(event.id)),
+    registeredUpcomingEvents: registeredUpcomingEvents.slice(0, UPCOMING_LIMIT).map(event => byId.get(event.id)),
+    followingUpcomingEvents: followingUpcomingEvents.slice(0, UPCOMING_LIMIT).map(event => byId.get(event.id)),
   });
 }

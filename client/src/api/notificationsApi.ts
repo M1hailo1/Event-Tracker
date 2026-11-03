@@ -1,3 +1,4 @@
+import type { PageResult } from "../components/Pagination";
 import axiosInstance from "./axiosInstance";
 import type { Notification } from "../types";
 
@@ -31,4 +32,8 @@ export async function markAsRead(id: string): Promise<Notification> {
 
 export async function markAllAsRead(): Promise<void> {
   await axiosInstance.patch("/notifications/read-all");
+}
+
+export async function getNotificationPage(page = 1): Promise<PageResult<Notification>> {
+  return (await axiosInstance.get("/notifications", { params: { page, pageSize: 20 } })).data;
 }

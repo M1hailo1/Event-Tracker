@@ -58,7 +58,9 @@ These screenshots show the current interface with fictional demonstration events
 - Events you are attending
 - Events you are organizing
 - Upcoming and ongoing events from people you follow that you have not registered for yet
-- Calendar view of events
+- Event grids use numbered pages (12 events per page); search, categories, city and sort are applied on the server across all matching results
+- Dashboard sections show up to six events, with View all links only when more results exist
+- Calendar view fetches its displayed date range independently; map results are independent of grid pagination
 
 **Visibility and invitations**
 
@@ -69,7 +71,8 @@ These screenshots show the current interface with fictional demonstration events
 **Social**
 
 - Follow / unfollow other users
-- Clickable followers, following and attendee lists leading to user profiles
+- Clickable followers, following and attendee lists leading to user profiles, with 20-at-a-time Load more controls
+- Own and public profiles show organized events below followers/following, with upcoming/ongoing and past/cancelled views; event visibility remains server-enforced
 - Profile statistics: total events attended, most visited categories and a fun "title" based on your favourite category; multi-category events count once in each category but once in the total
 
 **Ratings**
@@ -92,8 +95,12 @@ These screenshots show the current interface with fictional demonstration events
 
 - In-app notification bell with unread counter and a "mark all as read" action
 - Notifications for new events from followed users, event changes/cancellations, new followers, invitations, reminders, event comments and replies
+- Successful joins notify the organizer in one unread group per event ("1 person joined..." / "5 people joined..."); organizer self-registration and failed joins do not notify. Reading starts a fresh group; clicking opens the event page
+- Optional one-time rating prompts go to eligible confirmed nonorganizer attendees after the event ends, excluding cancelled events, already-rated events and events that ended before rollout. Submitting a rating removes an outstanding prompt
 - Repeated comment/reply activity is grouped while unread; links open the relevant comment or reply thread
+- Notifications support Load more beyond the initial 20 items
 - **24-hour reminders** - a background job on the server runs every 15 minutes and notifies registered users whose event starts within 24 hours; a `reminderSent` flag tracks delivered reminders on each registration
+- Rating prompts use the same startup/15-minute scheduler, with a durable sent flag and rollout boundary; overlapping workers do not duplicate prompts
 - Old notifications are cleaned up automatically to keep the database small
 - Client polling pauses when the browser tab is hidden to save backend resources
 
@@ -101,9 +108,10 @@ These screenshots show the current interface with fictional demonstration events
 
 - Role-based access (`USER` / `MODERATOR` / `ADMIN`) checked against the current database role on protected requests
 - Overview with platform statistics, including separate admin/moderator counts
-- User management: search by name or email, filter by role and status
+- User management: server-side search by name/email, role/status filters and numbered pages of 20 results
 - Timed or permanent bans with reasons, unbanning, and account deletion; banned users are hidden from relevant public listings
-- Event management: view, edit, cancel and permanently delete events through protected staff routes
+- Event management: server-side search/category/visibility filters, numbered pages of 20 results, and protected staff routes to view, edit, cancel and permanently delete events
+- Event-table metadata wraps and actions stack; narrower screens use cards to avoid horizontal scrolling
 - A **Manage in admin** shortcut on event details opens that exact event in the staff panel; normal event-page management controls remain organizer-only
 - Comment-report moderation with dismiss/remove actions and author management
 - Only admins can grant/revoke moderator privileges, using an in-app confirmation dialog
@@ -123,6 +131,13 @@ These screenshots show the current interface with fictional demonstration events
 - Skeleton placeholders for event cards, event details, forms, profiles and smaller loading sections; animation respects reduced-motion preferences
 - Actionable empty states with clear-filter, explore-event and create-event links
 - Event states and active lists refresh at start/end boundaries and when the window regains focus
+
+**Shared link previews**
+
+- Public event links expose Open Graph metadata for Discord and other supported social-preview bots: event title, date (UTC), organizer, short description and selected cover
+- Events without covers use a bundled branded EventTracker image; private/missing/unavailable events always use a generic preview without event details
+- A Vercel function serves metadata in the initial HTML; normal browser visits keep the React interface. This is social sharing support, not full server-rendered SEO
+- Requires deployment of both client and server, with the existing production `VITE_API_URL` configured in Vercel. A sleeping backend may cause a generic fallback; live platform routing must be checked after deployment
 
 **Authentication and security**
 
@@ -181,16 +196,18 @@ Cover assets live in [`client/public/event-covers`](client/public/event-covers).
         └── utils/          # JWT, recurrence, notifications, reminders, cleanup
 ```
 
+Additional paths: `client/api/` (Vercel preview function), `client/share/` (metadata helper/tests), `client/public/share/` (fallback image), `assets/share/` (image source) and `server/scripts/` (explicit test/demo utilities).
+
 ## Data Model
 
 Main entities (see `server/prisma/schema.prisma`):
 
 - **User** - email/password or Google account, role (`USER` / `MODERATOR` / `ADMIN`), optional `bannedUntil` and `banReason`
-- **Event** - creator, date range, location, visibility, capacity, recurrence, cancellation timestamp (`cancelledAt`), series-stop flag (`recurrenceStopped`) and optional curated `coverId`; many-to-many categories, with `categoryId` retaining the main category for compatibility
-- **Registration** - a user's registration for an event, with a `reminderSent` flag
+- **Event** - creator, date range, location, visibility, capacity, recurrence, cancellation timestamp (`cancelledAt`), series-stop flag (`recurrenceStopped`) and optional curated `coverId` and persistent rating-prompt rollout boundary (`ratingPromptAfter`); many-to-many categories, with `categoryId` retaining the main category for compatibility
+- **Registration** - a user's registration for an event, with `reminderSent` and `ratingPromptSent` delivery flags
 - **EventInvite** - a user invited to an invite-only event
 - **Follow** - follower / following relation between users
-- **Notification** - typed in-app notification, including comments/replies, unread grouping and an optional comment target
+- **Notification** - typed in-app notification, including grouped joins, rating prompts and comments/replies, unread grouping and an optional comment target
 - **Category** - curated event category; legacy/custom records are retired from selection
 - **EventRating** - one editable rating per user/event
 - **EventComment** - event discussion with a parent reference for replies and soft deletion
@@ -236,6 +253,23 @@ Filtering by the secondary category also finds this event:
 GET /events?categoryId=00000000-0000-4000-8000-000000000013&sortBy=date_asc
 ```
 
+## Labelled demonstration data
+
+The hosted database includes 36 fictional public events across all 18 curated categories, created under three **Demo Organizer** accounts. Titles start with **[DEMO]**, and descriptions explicitly state that no real gathering or booking is taking place. Venue names are fictional; map points are illustrative city locations, not actual event venues. Dates are future dates from the time the batch was created, and do not advance automatically.
+
+Only each organizer's normal registration was created. Attendees, ratings, comments and follows were not fabricated. The batch is non-recurring and does not send creation notifications. Demo organizer emails use the reserved `example.test` domain, with no password or Google login configured.
+
+The batch record is [assets/demo-events/demo-events-2026-11-03.json](assets/demo-events/demo-events-2026-11-03.json), containing the fictional account/event IDs for review or later cleanup. `server/scripts/seed-demo-events.cjs` is an explicit, idempotent utility; it never runs during startup, migrations or deployment:
+
+```bash
+# Review the plan without connecting to a database
+node server/scripts/seed-demo-events.cjs --dry-run
+# Only on an explicitly approved Neon target configured in server/.env
+node server/scripts/seed-demo-events.cjs --apply-neon
+```
+
+Rerunning the same batch skips existing records rather than duplicating or rescheduling them. The utility creates the batch transactionally and leaves saved environment settings unchanged.
+
 ## API Overview
 
 Routes marked with 🔒 require an `Authorization: Bearer <token>` header. Routes marked with 🛡️ additionally require `ADMIN` or `MODERATOR`; moderator role changes are admin-only.
@@ -253,10 +287,13 @@ Routes marked with 🔒 require an `Authorization: Bearer <token>` header. Route
 | Method | Endpoint                                     | Description                                                                |
 | ------ | -------------------------------------------- | -------------------------------------------------------------------------- |
 | GET    | `/events`                                    | List events visible to the requester (`?includePast=true` for past events) |
-| GET    | `/events/:id`                                | Event details (visibility enforced)                                        |
+| GET    | `/events/:id`                                | Event details and viewer registration (visibility enforced)                |
+| GET    | `/events/:id/attendees`                      | Paginated attendees, with event visibility checks                         |
+| GET    | `/events/:id/share`                          | Anonymous public-only metadata for sharing; no private-event details       |
 | POST   | `/events` 🔒                                 | Create an event                                                            |
 | PUT    | `/events/:id` 🔒                             | Update an event (creator only)                                             |
 | DELETE | `/events/:id` 🔒                             | Delete an event (creator only)                                             |
+| POST   | `/events/:id/cancel` 🔒                   | Permanently cancel an owned event (`OCCURRENCE` / `SERIES`)                 |
 | POST   | `/events/:id/register` 🔒                    | Register for an event                                                      |
 | DELETE | `/events/:id/register` 🔒                    | Cancel registration                                                        |
 | POST   | `/events/:id/invites` 🔒                     | Invite a follower to an invite-only event                                  |
@@ -272,7 +309,15 @@ Event create/update requests accept `categoryIds` (1–3 distinct curated IDs, m
 
 For date edits, the final `endDate` must be later than `date`. Omitted values retain their stored value; `endDate: null` removes the optional end time. Events without an end time count as ended at their start time. Registration closes at the start regardless of whether an end time is provided.
 
-List filters include `categoryId`, `search`, `city`, `sortBy` (`date_asc`, `date_desc`, `name_asc`, `name_desc`), `includePast` and authenticated `attendedOnly`. A category filter matches any of an event's selected categories.
+List filters include `categoryId`, `search`, `city`, `sortBy` (`date_asc`, `date_desc`, `name_asc`, `name_desc`), `includePast`, `organizerId` and authenticated `attendedOnly`. A category filter matches any selected category. Authenticated dashboard links use `scope=organized`, `registered` or `following`; paired `from` / `to` ISO timestamps restrict calendar results to a date range.
+
+### Pagination
+
+`GET /events?page=1&pageSize=12` returns `{ items, total, page, pageSize, totalPages }`. Admin users/events, followers/following, notifications and creator-only invitation lists also accept `page` / `pageSize`, using 20 items by default. Page sizes are capped at 100. Clients reset page selection after filter changes and recover when the last page shrinks. Existing requests without `page` retain their legacy array response (notifications retain their initial 20-item limit).
+
+`GET /events/:id/attendees` always returns the paginated shape; full attendee lists are separate from the viewer's registration in event details. Creator-only `/events/:id/invites?kind=available&page=1` lists eligible uninvited followers; the default kind lists existing invitations. Follower responses also include viewer `isFollowing` separately from the loaded slice, so follow status and total counts remain accurate.
+
+Admin filters run before paging: users accept `search`, `role`, `status`; events accept `search`, `categoryId`, `visibility` and exact-event `event`. Comments/replies and comment reports keep their existing cursor-based Load more behavior.
 
 **Categories**
 
@@ -298,7 +343,7 @@ List filters include `categoryId`, `search`, `city`, `sortBy` (`date_asc`, `date
 
 | Method | Endpoint                         | Description                    |
 | ------ | -------------------------------- | ------------------------------ |
-| GET    | `/notifications` 🔒              | Latest notifications           |
+| GET    | `/notifications` 🔒              | Notifications (optional pagination) |
 | GET    | `/notifications/unread-count` 🔒 | Number of unread notifications |
 | PATCH  | `/notifications/:id/read` 🔒     | Mark one as read               |
 | PATCH  | `/notifications/read-all` 🔒     | Mark all as read               |
@@ -314,6 +359,7 @@ List filters include `categoryId`, `search`, `city`, `sortBy` (`date_asc`, `date
 | GET    | `/admin/events` 🛡️                    | List all events                                            |
 | PUT    | `/admin/events/:id` 🛡️                | Edit any event                                             |
 | DELETE | `/admin/events/:id` 🛡️                | Delete any event                                           |
+| POST   | `/admin/events/:id/cancel` 🛡️           | Permanently cancel an event through staff tools                           |
 | DELETE | `/admin/users/:id` 🛡️                 | Delete a user (moderators cannot delete admins)            |
 | PATCH  | `/admin/users/:id/role` 🛡️            | Admin-only: grant/revoke moderator (`USER` or `MODERATOR`) |
 | GET    | `/admin/comment-reports` 🛡️           | List the comment-report queue                              |
@@ -405,7 +451,7 @@ The app runs on `http://localhost:5173`.
 | `npm run build` | Compile TypeScript to `dist/`                                                        |
 | `npm start`     | Run the compiled server                                                              |
 | `npm test`      | Run Jest through `.env.test` (DB integration tests require a migrated test database) |
-| `npm run test:reliability` | Run event lifecycle, date-edit, recurring-duration and concurrent-registration tests in a disposable local database |
+| `npm run test:reliability` | Run lifecycle, cancellation, pagination, sharing privacy and participation-notification integration tests in a disposable local database |
 
 `server/scripts/` contains developer utilities and should be committed with the project. Its reliability runner is invoked explicitly; it is not part of API startup. The runner reads the local `DATABASE_URL`, refuses hosted targets, creates a uniquely named test database, applies existing migrations, runs the integration suite and removes the database afterward. The PostgreSQL role needs permission to create/drop that database. Saved `.env` files and application records are not changed.
 
@@ -414,7 +460,7 @@ cd server
 npm run test:reliability
 ```
 
-The integration tests cover simultaneous requests for the final seat, duplicate registrations, organizer capacity, ongoing-event discovery and registration closure, rating eligibility, owner/staff date edits, recurring duration, permanent cancellation, retained discussions, attendee notifications, staff-route permissions, and cancellation races with joining/reminders/series generation. The isolated suites are skipped by regular `npm test`; use the command above to run them safely. Unit/API tests also verify role-based quotas, immediate role revocation and rejection of client-supplied role claims.
+The integration tests cover simultaneous requests for the final seat, duplicate registrations, organizer capacity, ongoing-event discovery and registration closure, rating eligibility, owner/staff date edits, recurring duration, permanent cancellation, retained discussions, attendee notifications, staff-route permissions, and cancellation races with joining/reminders/series generation. The suite also covers organizer-profile visibility, stable pagination, full follower counts, attendee membership, invitation/notification pages, public-only share metadata, grouped joins, one-time rating prompts and rating/worker races. The isolated suites are skipped by regular `npm test`; use the command above to run them safely. Unit/API tests also verify role-based quotas, immediate role revocation and rejection of client-supplied role claims.
 
 **Client** (`/client`)
 
@@ -424,10 +470,11 @@ The integration tests cover simultaneous requests for the final seat, duplicate 
 | `npm run build`   | Type-check and build for production |
 | `npm run lint`    | Run ESLint                          |
 | `npm run preview` | Preview the production build        |
+| `npm run test:share` | Test preview metadata, escaping, public-only fallbacks and bot routing |
 
 ## Deployment
 
-- **Client** - deployed on Vercel. `client/vercel.json` rewrites all routes to `index.html` so client-side routing works on refresh. Set `VITE_API_URL` and `VITE_GOOGLE_CLIENT_ID` in the Vercel project settings.
+- **Client** - deployed on Vercel with `client/` as the project root. `client/vercel.json` sends supported social-preview bots on event URLs to `client/api/event-preview.mjs`, then falls back to `index.html` for normal React navigation. Set `VITE_API_URL` (the production API origin) and `VITE_GOOGLE_CLIENT_ID` in Vercel settings; the preview function also reads `VITE_API_URL` at runtime. Vite dev/preview alone does not emulate Vercel bot rewrites. Deploy the backend sharing endpoint too, then verify a public and a private event link in the target platform.
 - **Database** - PostgreSQL on Neon. Keep local `DATABASE_URL` and hosted `NEON_ONLINEDATA_URL` separate. From `server/`, the following PowerShell example reads the Neon target from `.env`, temporarily overrides only the shell process, applies committed migrations and restores the previous target:
 
   ```powershell
@@ -449,7 +496,7 @@ The integration tests cover simultaneous requests for the final seat, duplicate 
 
 - **Server** - on any Node.js host. Make sure the Prisma client is generated during the build (for example by adding `"postinstall": "prisma generate"` to the server `package.json`) and that `DATABASE_URL`, `JWT_SECRET`, `GOOGLE_CLIENT_ID` and `PORT` are set as environment variables.
 
-> **Note on reminders:** the 24-hour reminder job runs inside the server process (every 15 minutes). On hosting plans that put the server to sleep when idle, reminders are only sent while the server is awake.
+> **Note on scheduling:** pre-event reminders and post-event rating prompts run inside the server process at startup and every 15 minutes. Rating prompts process up to 100 due registrations per check. Free-host sleep and backlogs can delay delivery; no external scheduler has been configured.
 
 ## Roadmap
 
@@ -460,7 +507,7 @@ The integration tests cover simultaneous requests for the final seat, duplicate 
 - [ ] Offline support through a Progressive Web App (PWA)
 - [ ] Mobile app
 - [ ] Complete UI redesign
-- [ ] Rich link previews when sharing events (Open Graph embeds)
+- [x] Rich link previews when sharing events (Open Graph embeds; verify after deployment)
 - [ ] Email notifications, reminders and account verification
 - [ ] Forgot-password / password recovery
 - [ ] Move reminder scheduling to an external cron job

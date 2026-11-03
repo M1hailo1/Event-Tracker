@@ -1,3 +1,4 @@
+import { readPagination, paged } from "../utils/pagination";
 import { z } from "zod";
 import { validUpdatedDates } from "../utils/eventLifecycle";
 import { selectedCategoryIds, validCategorySelection, curatedCategoryWhere } from "../utils/eventCategories";
@@ -39,7 +40,17 @@ export async function getAdminStats(req: Request, res: Response) {
 }
 
 export async function getAllUsersAdmin(req: Request, res: Response) {
+  const paging = req.query.page !== undefined ? readPagination(req, res) : undefined;
+  if (paging === null) return;
+  const search = typeof req.query.search === "string" ? req.query.search.trim() : "";
+  const where: any = {};
+  if (search) where.OR = [{ name: { contains: search, mode: "insensitive" } }, { email: { contains: search, mode: "insensitive" } }];
+  if (["USER", "MODERATOR", "ADMIN"].includes(String(req.query.role))) where.role = req.query.role;
+  if (req.query.status === "banned") where.bannedUntil = { gt: new Date() };
+  if (req.query.status === "active") where.AND = [{ OR: [{ bannedUntil: null }, { bannedUntil: { lte: new Date() } }] }];
   const users = await prisma.user.findMany({
+    where,
+    ...(paging ? { skip: paging.skip, take: paging.take } : {}),
     select: {
       id: true,
       name: true,
@@ -52,10 +63,10 @@ export async function getAllUsersAdmin(req: Request, res: Response) {
         select: { events: true, registrations: true },
       },
     },
-    orderBy: { createdAt: "desc" },
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
   });
 
-  res.status(200).json(users);
+  res.status(200).json(paging ? paged(users, await prisma.user.count({ where }), paging) : users);
 }
 
 export async function banUserAdmin(req: Request, res: Response) {
@@ -168,17 +179,27 @@ export async function deleteUserAdmin(req: Request, res: Response) {
 }
 
 export async function getAllEventsAdmin(req: Request, res: Response) {
+  const paging = req.query.page !== undefined ? readPagination(req, res) : undefined;
+  if (paging === null) return;
+  const where: any = {};
+  const search = typeof req.query.search === "string" ? req.query.search.trim() : "";
+  if (search) where.OR = [{ name: { contains: search, mode: "insensitive" } }, { createdBy: { name: { contains: search, mode: "insensitive" } } }];
+  if (typeof req.query.event === "string" && req.query.event) where.id = req.query.event;
+  if (typeof req.query.categoryId === "string" && req.query.categoryId) where.AND = [{ OR: [{ categoryId: req.query.categoryId }, { categories: { some: { id: req.query.categoryId } } }] }];
+  if (["PUBLIC", "FOLLOWERS_ONLY", "INVITE_ONLY"].includes(String(req.query.visibility))) where.visibility = req.query.visibility;
   const events = await prisma.event.findMany({
+    where,
+    ...(paging ? { skip: paging.skip, take: paging.take } : {}),
     include: {
       category: true,
       categories: true,
       createdBy: { select: { id: true, name: true } },
       _count: { select: { registrations: true } },
     },
-    orderBy: { date: "desc" },
+    orderBy: [{ date: "desc" }, { id: "desc" }],
   });
 
-  res.status(200).json(events);
+  res.status(200).json(paging ? paged(events, await prisma.event.count({ where }), paging) : events);
 }
 
 export async function updateEventAdmin(req: Request, res: Response) {

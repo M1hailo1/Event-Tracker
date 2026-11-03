@@ -1,0 +1,312 @@
+{
+  "batch": "demo-events-2026-11-03",
+  "disclaimer": "DEMONSTRATION ONLY - NOT A REAL EVENT. No real gathering or booking is taking place. Map points are illustrative city locations, not actual venues.",
+  "organizers": [
+    {
+      "id": "342862fb-f473-4ee0-b3ed-e806c4c835aa",
+      "name": "Demo Organizer - Creative Circle",
+      "email": "eventtracker-demo-1@example.test"
+    },
+    {
+      "id": "40828e03-7ec6-4b09-815a-492563695e29",
+      "name": "Demo Organizer - Active Weekends",
+      "email": "eventtracker-demo-2@example.test"
+    },
+    {
+      "id": "a1dabc53-18be-454f-a6c8-4d20bedfc269",
+      "name": "Demo Organizer - Learning Hub",
+      "email": "eventtracker-demo-3@example.test"
+    }
+  ],
+  "events": [
+    {
+      "id": "9f1960b0-36b6-4554-9cad-8e3e438135d7",
+      "name": "[DEMO] Sunset acoustic session",
+      "date": "2026-11-05T10:00:00.000Z",
+      "endDate": "2026-11-05T11:00:00.000Z",
+      "createdByUserId": "342862fb-f473-4ee0-b3ed-e806c4c835aa",
+      "location": "Demo venue (fictional), Belgrade"
+    },
+    {
+      "id": "e59be006-3e5a-4b8f-92af-559f85c81637",
+      "name": "[DEMO] Sketchbook afternoon",
+      "date": "2026-11-06T12:00:00.000Z",
+      "endDate": "2026-11-06T14:00:00.000Z",
+      "createdByUserId": "40828e03-7ec6-4b09-815a-492563695e29",
+      "location": "Demo venue (fictional), Novi Sad"
+    },
+    {
+      "id": "313a7bac-6dfd-4614-a5f5-36694677a8f8",
+      "name": "[DEMO] Movie discussion night",
+      "date": "2026-11-08T14:00:00.000Z",
+      "endDate": "2026-11-08T17:00:00.000Z",
+      "createdByUserId": "a1dabc53-18be-454f-a6c8-4d20bedfc269",
+      "location": "Demo venue (fictional), Nis"
+    },
+    {
+      "id": "9327a406-7188-456e-bc42-5c09115bf307",
+      "name": "[DEMO] Board game social",
+      "date": "2026-11-09T16:00:00.000Z",
+      "endDate": "2026-11-09T17:00:00.000Z",
+      "createdByUserId": "342862fb-f473-4ee0-b3ed-e806c4c835aa",
+      "location": "Demo venue (fictional), Kragujevac"
+    },
+    {
+      "id": "55aaaf66-6832-45e0-a0ab-8d456aa1f4e3",
+      "name": "[DEMO] Evening dance meetup",
+      "date": "2026-11-11T10:00:00.000Z",
+      "endDate": "2026-11-11T12:00:00.000Z",
+      "createdByUserId": "40828e03-7ec6-4b09-815a-492563695e29",
+      "location": "Demo venue (fictional), Sombor"
+    },
+    {
+      "id": "1db8f3f5-72e1-4cda-8b04-ca91d8033b6c",
+      "name": "[DEMO] Friendly football afternoon",
+      "date": "2026-11-12T12:00:00.000Z",
+      "endDate": "2026-11-12T15:00:00.000Z",
+      "createdByUserId": "a1dabc53-18be-454f-a6c8-4d20bedfc269",
+      "location": "Demo venue (fictional), Cacak"
+    },
+    {
+      "id": "db218807-36b9-4b6a-9dc3-296f18990562",
+      "name": "[DEMO] Morning stretch session",
+      "date": "2026-11-14T14:00:00.000Z",
+      "endDate": "2026-11-14T15:00:00.000Z",
+      "createdByUserId": "342862fb-f473-4ee0-b3ed-e806c4c835aa",
+      "location": "Demo venue (fictional), Belgrade"
+    },
+    {
+      "id": "0620d47c-5b2c-42a0-9c3d-7502cdb74872",
+      "name": "[DEMO] Weekend nature walk",
+      "date": "2026-11-15T16:00:00.000Z",
+      "endDate": "2026-11-15T18:00:00.000Z",
+      "createdByUserId": "40828e03-7ec6-4b09-815a-492563695e29",
+      "location": "Demo venue (fictional), Novi Sad"
+    },
+    {
+      "id": "f4a81c5f-3066-41c9-9515-af5052c135b9",
+      "name": "[DEMO] Study circle",
+      "date": "2026-11-17T10:00:00.000Z",
+      "endDate": "2026-11-17T13:00:00.000Z",
+      "createdByUserId": "a1dabc53-18be-454f-a6c8-4d20bedfc269",
+      "location": "Demo venue (fictional), Nis"
+    },
+    {
+      "id": "c10c741c-73de-44a7-925a-e72ddaa81a64",
+      "name": "[DEMO] Pottery beginners club",
+      "date": "2026-11-18T12:00:00.000Z",
+      "endDate": "2026-11-18T13:00:00.000Z",
+      "createdByUserId": "342862fb-f473-4ee0-b3ed-e806c4c835aa",
+      "location": "Demo venue (fictional), Kragujevac"
+    },
+    {
+      "id": "54c6d4a7-3e95-447f-a3a7-ac495626a9df",
+      "name": "[DEMO] Creative coding meetup",
+      "date": "2026-11-20T14:00:00.000Z",
+      "endDate": "2026-11-20T16:00:00.000Z",
+      "createdByUserId": "40828e03-7ec6-4b09-815a-492563695e29",
+      "location": "Demo venue (fictional), Sombor"
+    },
+    {
+      "id": "ab748634-d137-4b26-8083-dcff127d2a8f",
+      "name": "[DEMO] Coffee and ideas",
+      "date": "2026-11-21T16:00:00.000Z",
+      "endDate": "2026-11-21T19:00:00.000Z",
+      "createdByUserId": "a1dabc53-18be-454f-a6c8-4d20bedfc269",
+      "location": "Demo venue (fictional), Cacak"
+    },
+    {
+      "id": "c154b5f1-01f8-448e-b593-46737b8f8c9c",
+      "name": "[DEMO] New friends picnic",
+      "date": "2026-11-23T10:00:00.000Z",
+      "endDate": "2026-11-23T11:00:00.000Z",
+      "createdByUserId": "342862fb-f473-4ee0-b3ed-e806c4c835aa",
+      "location": "Demo venue (fictional), Belgrade"
+    },
+    {
+      "id": "09cc3d97-d3b9-4876-9bfd-6eb03c58f2e6",
+      "name": "[DEMO] Kitchen inspiration club",
+      "date": "2026-11-24T12:00:00.000Z",
+      "endDate": "2026-11-24T14:00:00.000Z",
+      "createdByUserId": "40828e03-7ec6-4b09-815a-492563695e29",
+      "location": "Demo venue (fictional), Novi Sad"
+    },
+    {
+      "id": "dcdc7b46-31e3-4f57-9041-9b739057f3cf",
+      "name": "[DEMO] Community kindness day",
+      "date": "2026-11-26T14:00:00.000Z",
+      "endDate": "2026-11-26T17:00:00.000Z",
+      "createdByUserId": "a1dabc53-18be-454f-a6c8-4d20bedfc269",
+      "location": "Demo venue (fictional), Nis"
+    },
+    {
+      "id": "78b5785d-89d7-45d4-aafd-308b709bb364",
+      "name": "[DEMO] Birthday planning inspiration",
+      "date": "2026-11-27T16:00:00.000Z",
+      "endDate": "2026-11-27T17:00:00.000Z",
+      "createdByUserId": "342862fb-f473-4ee0-b3ed-e806c4c835aa",
+      "location": "Demo venue (fictional), Kragujevac"
+    },
+    {
+      "id": "896fa69b-40bf-48de-bc74-6d64de29bc43",
+      "name": "[DEMO] Family craft afternoon",
+      "date": "2026-11-29T10:00:00.000Z",
+      "endDate": "2026-11-29T12:00:00.000Z",
+      "createdByUserId": "40828e03-7ec6-4b09-815a-492563695e29",
+      "location": "Demo venue (fictional), Sombor"
+    },
+    {
+      "id": "0620ef0b-300c-4ffd-853e-641d16018e18",
+      "name": "[DEMO] Open hobby exchange",
+      "date": "2026-11-30T12:00:00.000Z",
+      "endDate": "2026-11-30T15:00:00.000Z",
+      "createdByUserId": "a1dabc53-18be-454f-a6c8-4d20bedfc269",
+      "location": "Demo venue (fictional), Cacak"
+    },
+    {
+      "id": "be543d6a-f5b0-4351-aeff-01a1fd5ef8d1",
+      "name": "[DEMO] Live music discovery",
+      "date": "2026-12-02T14:00:00.000Z",
+      "endDate": "2026-12-02T15:00:00.000Z",
+      "createdByUserId": "342862fb-f473-4ee0-b3ed-e806c4c835aa",
+      "location": "Demo venue (fictional), Belgrade"
+    },
+    {
+      "id": "1ce96ee3-7abe-49ce-a0e8-8c5423a3fb99",
+      "name": "[DEMO] Museum-inspired art chat",
+      "date": "2026-12-03T16:00:00.000Z",
+      "endDate": "2026-12-03T18:00:00.000Z",
+      "createdByUserId": "40828e03-7ec6-4b09-815a-492563695e29",
+      "location": "Demo venue (fictional), Novi Sad"
+    },
+    {
+      "id": "c15de55f-f3d1-4680-b495-2e34d73332ee",
+      "name": "[DEMO] Cinema trivia evening",
+      "date": "2026-12-05T10:00:00.000Z",
+      "endDate": "2026-12-05T13:00:00.000Z",
+      "createdByUserId": "a1dabc53-18be-454f-a6c8-4d20bedfc269",
+      "location": "Demo venue (fictional), Nis"
+    },
+    {
+      "id": "e63591e0-5085-48f5-a73f-4c7e63ad01d3",
+      "name": "[DEMO] Cooperative games club",
+      "date": "2026-12-06T12:00:00.000Z",
+      "endDate": "2026-12-06T13:00:00.000Z",
+      "createdByUserId": "342862fb-f473-4ee0-b3ed-e806c4c835aa",
+      "location": "Demo venue (fictional), Kragujevac"
+    },
+    {
+      "id": "f028890e-c218-4291-97b5-9bd768cccccf",
+      "name": "[DEMO] City lights social",
+      "date": "2026-12-08T14:00:00.000Z",
+      "endDate": "2026-12-08T16:00:00.000Z",
+      "createdByUserId": "40828e03-7ec6-4b09-815a-492563695e29",
+      "location": "Demo venue (fictional), Sombor"
+    },
+    {
+      "id": "0d5fd745-c0ec-476e-92b4-bbc86f4ce87c",
+      "name": "[DEMO] Weekend running circle",
+      "date": "2026-12-09T16:00:00.000Z",
+      "endDate": "2026-12-09T19:00:00.000Z",
+      "createdByUserId": "a1dabc53-18be-454f-a6c8-4d20bedfc269",
+      "location": "Demo venue (fictional), Cacak"
+    },
+    {
+      "id": "b3375727-2198-4b1e-a723-95480a778f97",
+      "name": "[DEMO] Mindful pause meetup",
+      "date": "2026-12-11T10:00:00.000Z",
+      "endDate": "2026-12-11T11:00:00.000Z",
+      "createdByUserId": "342862fb-f473-4ee0-b3ed-e806c4c835aa",
+      "location": "Demo venue (fictional), Belgrade"
+    },
+    {
+      "id": "7294dfdc-f574-4efa-ac9e-c2c2d2c2d0df",
+      "name": "[DEMO] Camping stories and tips",
+      "date": "2026-12-12T12:00:00.000Z",
+      "endDate": "2026-12-12T14:00:00.000Z",
+      "createdByUserId": "40828e03-7ec6-4b09-815a-492563695e29",
+      "location": "Demo venue (fictional), Novi Sad"
+    },
+    {
+      "id": "629e9a42-3835-49d8-8cd7-05914304c9da",
+      "name": "[DEMO] Everyday science club",
+      "date": "2026-12-14T14:00:00.000Z",
+      "endDate": "2026-12-14T17:00:00.000Z",
+      "createdByUserId": "a1dabc53-18be-454f-a6c8-4d20bedfc269",
+      "location": "Demo venue (fictional), Nis"
+    },
+    {
+      "id": "f0e06bdd-fa31-48c9-83c0-36edd1a27f7e",
+      "name": "[DEMO] Handmade gifts workshop",
+      "date": "2026-12-15T16:00:00.000Z",
+      "endDate": "2026-12-15T17:00:00.000Z",
+      "createdByUserId": "342862fb-f473-4ee0-b3ed-e806c4c835aa",
+      "location": "Demo venue (fictional), Kragujevac"
+    },
+    {
+      "id": "5161bc28-aa99-41cf-a98e-4d0b395b1fcd",
+      "name": "[DEMO] Small projects showcase",
+      "date": "2026-12-17T10:00:00.000Z",
+      "endDate": "2026-12-17T12:00:00.000Z",
+      "createdByUserId": "40828e03-7ec6-4b09-815a-492563695e29",
+      "location": "Demo venue (fictional), Sombor"
+    },
+    {
+      "id": "1bd7cb82-5b11-458e-ad02-1b50700479cd",
+      "name": "[DEMO] Networking breakfast concept",
+      "date": "2026-12-18T12:00:00.000Z",
+      "endDate": "2026-12-18T15:00:00.000Z",
+      "createdByUserId": "a1dabc53-18be-454f-a6c8-4d20bedfc269",
+      "location": "Demo venue (fictional), Cacak"
+    },
+    {
+      "id": "cdf7b8d1-43df-443b-9632-4a92f2504e60",
+      "name": "[DEMO] Coffee conversation circle",
+      "date": "2026-12-20T14:00:00.000Z",
+      "endDate": "2026-12-20T15:00:00.000Z",
+      "createdByUserId": "342862fb-f473-4ee0-b3ed-e806c4c835aa",
+      "location": "Demo venue (fictional), Belgrade"
+    },
+    {
+      "id": "e5036a98-278a-4af7-8863-76967902e469",
+      "name": "[DEMO] Local flavours discussion",
+      "date": "2026-12-21T16:00:00.000Z",
+      "endDate": "2026-12-21T18:00:00.000Z",
+      "createdByUserId": "40828e03-7ec6-4b09-815a-492563695e29",
+      "location": "Demo venue (fictional), Novi Sad"
+    },
+    {
+      "id": "f1061ffc-f633-43c3-8860-b03dfbfff393",
+      "name": "[DEMO] Green neighbourhood ideas",
+      "date": "2026-12-23T10:00:00.000Z",
+      "endDate": "2026-12-23T13:00:00.000Z",
+      "createdByUserId": "a1dabc53-18be-454f-a6c8-4d20bedfc269",
+      "location": "Demo venue (fictional), Nis"
+    },
+    {
+      "id": "44569655-6aa0-480f-aed0-00ce27147f80",
+      "name": "[DEMO] Celebration ideas exchange",
+      "date": "2026-12-24T12:00:00.000Z",
+      "endDate": "2026-12-24T13:00:00.000Z",
+      "createdByUserId": "342862fb-f473-4ee0-b3ed-e806c4c835aa",
+      "location": "Demo venue (fictional), Kragujevac"
+    },
+    {
+      "id": "03c7641f-5e22-4f3b-a581-39a2df7d6ec9",
+      "name": "[DEMO] Family outdoor games",
+      "date": "2026-12-26T14:00:00.000Z",
+      "endDate": "2026-12-26T16:00:00.000Z",
+      "createdByUserId": "40828e03-7ec6-4b09-815a-492563695e29",
+      "location": "Demo venue (fictional), Sombor"
+    },
+    {
+      "id": "4306bd5c-dabe-49b1-86f5-efddc58dbd6a",
+      "name": "[DEMO] Bring your curiosity",
+      "date": "2026-12-27T16:00:00.000Z",
+      "endDate": "2026-12-27T19:00:00.000Z",
+      "createdByUserId": "a1dabc53-18be-454f-a6c8-4d20bedfc269",
+      "location": "Demo venue (fictional), Cacak"
+    }
+  ],
+  "note": "Only normal organizer registrations were created; no fabricated attendees, ratings, comments, follows or notifications."
+}

@@ -1,7 +1,9 @@
+import Pagination from "../components/Pagination";
+import { useSearchParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Map, LayoutGrid, Calendar as CalendarIcon } from "lucide-react";
-import { getAllEvents } from "../api/eventsApi";
+import { getAllEvents, getEventPage } from "../api/eventsApi";
 import type { EventSortOption } from "../api/eventsApi";
 import { getAllCategories } from "../api/categoriesApi";
 import type { Event, Category } from "../types";
@@ -24,6 +26,11 @@ const sortOptions: { value: EventSortOption; label: string }[] = [
 ];
 
 export default function EventsListPage() {
+  const [params] = useSearchParams();
+  const scope = params.get("scope") || undefined;
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const [month, setMonth] = useState(() => new Date(new Date().getFullYear(), new Date().getMonth(), 1));
   const [events, setEvents] = useState<Event[]>([]);
   const lifecycleClock = useEventClock(events);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -57,32 +64,43 @@ export default function EventsListPage() {
       .catch((err) => console.error("Failed to load categories", err));
   }, []);
 
+  useEffect(() => { setPage(1); }, [showPast, categoryId, city, search, sortBy, historyScope, scope]);
+
   useEffect(() => {
+    let active = true;
     const timeoutId = setTimeout(() => {
       async function fetchEvents() {
         setIsLoading(true);
         try {
-          const data = await getAllEvents({
+          setError("");
+          const filters = {
             includePast: showPast,
             categoryId: categoryId || undefined,
             city: city || undefined,
             search: search || undefined,
             sortBy,
             attendedOnly: showPast && historyScope === "mine",
-          });
-          setEvents(data);
+            scope,
+            ...(view === "calendar" ? { from: new Date(month.getFullYear(), month.getMonth(), 1 - ((month.getDay() + 6) % 7)).toISOString(), to: new Date(month.getFullYear(), month.getMonth(), 43 - ((month.getDay() + 6) % 7)).toISOString() } : {}),
+          };
+          if (view === "list") {
+            const data = await getEventPage(filters, page);
+            if (!active) return;
+            if (page > Math.max(1, data.totalPages)) setPage(Math.max(1, data.totalPages));
+            else { setEvents(data.items); setTotalPages(data.totalPages); }
+          } else { const data = await getAllEvents(filters); if (active) setEvents(data); }
         } catch (err) {
-          setError("Mistake while loading events");
+          if (active) setError("Error loading events");
           console.error(err);
         } finally {
-          setIsLoading(false);
+          if (active) setIsLoading(false);
         }
       }
       fetchEvents();
     }, 300);
 
-    return () => clearTimeout(timeoutId);
-  }, [showPast, categoryId, city, search, sortBy, historyScope, user?.id, lifecycleClock]);
+    return () => { active = false; clearTimeout(timeoutId); };
+  }, [showPast, categoryId, city, search, sortBy, historyScope, user?.id, lifecycleClock, page, view, month, scope]);
 
   function handleResetFilters() {
     setCategoryId("");
@@ -97,7 +115,7 @@ export default function EventsListPage() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-          {showPast ? "Event history" : "Events"}
+          {showPast ? "Event history" : scope === "organized" ? "Your events" : scope === "registered" ? "Events you're attending" : scope === "following" ? "Events from people you follow" : "Events"}
         </h1>
         <div className="flex items-center gap-4">
           <div className="flex items-center bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
@@ -245,7 +263,7 @@ export default function EventsListPage() {
         </div>
       )}
 
-      {!isLoading && !error && events.length === 0 && (
+      {!isLoading && !error && events.length === 0 && view !== "calendar" && (
         <div className="rounded-xl border border-dashed border-gray-300 p-8 text-center dark:border-gray-600">
         <p className="mb-4 text-gray-500 dark:text-gray-400">
           {hasActiveFilters
@@ -258,7 +276,7 @@ export default function EventsListPage() {
         </div>
       )}
 
-      {events.length > 0 &&
+      {(events.length > 0 || view === "calendar") &&
         (view === "map" ? (
           <div>
             <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
@@ -267,10 +285,11 @@ export default function EventsListPage() {
             <EventsMap events={events} />
           </div>
         ) : view === "calendar" ? (
-          <EventsCalendar events={events} />
+          <EventsCalendar events={events} month={month} onMonthChange={setMonth} />
         ) : (
           <EventCardGrid events={events} />
         ))}
+      {view === "list" && !error && <Pagination page={page} totalPages={totalPages} onChange={setPage} disabled={isLoading} />}
     </div>
   );
 }

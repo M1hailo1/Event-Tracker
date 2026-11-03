@@ -1,3 +1,4 @@
+import EventAttendees from "../components/EventAttendees";
 import EventCover from "../components/EventCover";
 import { isStaff } from "../utils/roles";
 import CancelEventModal from "../components/CancelEventModal";
@@ -355,31 +356,7 @@ export default function EventDetailsPage() {
             <EventInviteManager eventId={event.id} creatorId={user.id} />
           )}
 
-        {event.registrations && event.registrations.length > 0 && (
-          <div className="mt-6 pt-4 border-t border-gray-100 dark:border-gray-800">
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-              List of Attendees
-            </h3>
-            <ul className="flex flex-wrap gap-2">
-              {event.registrations.map((r) => (
-                <li key={r.id}>
-                  {r.user ? (
-                    <Link
-                      to={`/users/${r.user.id}`}
-                      className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-3 py-1 rounded-full hover:bg-indigo-50 dark:hover:bg-indigo-900 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
-                    >
-                      {r.user.name}
-                    </Link>
-                  ) : (
-                    <span className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-3 py-1 rounded-full">
-                      Unknown user
-                    </span>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+        <EventAttendees key={`${event.id}:${user?.id}:${event._count?.registrations}`} eventId={event.id} />
       </div>
       <EventComments key={`${event.id}:${user?.id ?? "guest"}`} eventId={event.id} />
     </div>

@@ -1,12 +1,11 @@
+import FollowLists from "../components/FollowLists";
+import OrganizerEvents from "../components/OrganizerEvents";
 import RatingDisplay from "../components/RatingDisplay";
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
 import { Sun, Moon } from "lucide-react";
 import { getMyProfile, getMyStats } from "../api/userApi";
 import type { UserProfile, UserStats } from "../types";
 import { getTitleForCategory } from "../utils/categoryTitles";
-import { getFollowers, getFollowing } from "../api/followApi";
-import type { FollowUser } from "../types";
 import { useTheme } from "../context/ThemeContext";
 import { PageSkeleton } from "../components/Skeleton";
 
@@ -16,22 +15,12 @@ export default function ProfilePage() {
   const [stats, setStats] = useState<UserStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
-  const [followers, setFollowers] = useState<FollowUser[]>([]);
-  const [following, setFollowing] = useState<FollowUser[]>([]);
 
   useEffect(() => {
     Promise.all([getMyProfile(), getMyStats()])
       .then(([profileData, statsData]) => {
         setProfile(profileData);
         setStats(statsData);
-        return Promise.all([
-          getFollowers(profileData.id),
-          getFollowing(profileData.id),
-        ]);
-      })
-      .then(([followersData, followingData]) => {
-        setFollowers(followersData);
-        setFollowing(followingData);
       })
       .catch((err) => {
         setError("Mistake while loading profile");
@@ -45,7 +34,7 @@ export default function ProfilePage() {
   if (!profile) return null;
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-6xl mx-auto">
       <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 mb-6">
         <div className="flex items-center gap-4 mb-4">
           <div className="w-14 h-14 rounded-full bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-xl font-bold">
@@ -80,6 +69,7 @@ export default function ProfilePage() {
         )}
       </div>
 
+
       {stats && (
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
           <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">
@@ -113,49 +103,9 @@ export default function ProfilePage() {
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-4 mt-6">
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
-          <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-            {followers.length}
-          </p>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
-            Followers
-          </p>
-          <ul className="space-y-1">
-            {followers.map((f) => (
-              <li key={f.id}>
-                <Link
-                  to={`/users/${f.id}`}
-                  className="text-sm text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400"
-                >
-                  {f.name}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
+      <FollowLists userId={profile.id} />
 
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
-          <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-            {following.length}
-          </p>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
-            Following
-          </p>
-          <ul className="space-y-1">
-            {following.map((f) => (
-              <li key={f.id}>
-                <Link
-                  to={`/users/${f.id}`}
-                  className="text-sm text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400"
-                >
-                  {f.name}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
+      <OrganizerEvents key={profile.id} userId={profile.id} name={profile.name} />
 
       <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 mt-6">
         <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">

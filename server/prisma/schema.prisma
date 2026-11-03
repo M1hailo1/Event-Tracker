@@ -74,6 +74,7 @@ enum EventVisibility {
 }
 
 model Event {
+  ratingPromptAfter DateTime @default(now())
   cancelledAt       DateTime?
   recurrenceStopped Boolean @default(false)
   categories        Category[] @relation("EventCategories")
@@ -124,6 +125,7 @@ model Registration {
   status        RegistrationStatus @default(PENDING)
   registeredAt  DateTime           @default(now())
   reminderSent  Boolean            @default(false)
+  ratingPromptSent Boolean          @default(false)
 
   userId  String
   user    User   @relation(fields: [userId], references: [id])
@@ -150,6 +152,8 @@ enum NotificationType {
   EVENT_UPDATED
   EVENT_CANCELLED
   EVENT_REMINDER
+  EVENT_JOINED
+  EVENT_RATING_PROMPT
   NEW_FOLLOWER
   EVENT_INVITE
   EVENT_COMMENT

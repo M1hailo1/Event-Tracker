@@ -1,0 +1,218 @@
+[
+  {
+    "name": "Sunset acoustic session",
+    "category": "Music",
+    "coverId": "music-acoustic",
+    "summary": "An easygoing acoustic set and a chance to meet other music fans."
+  },
+  {
+    "name": "Sketchbook afternoon",
+    "category": "Arts & Culture",
+    "coverId": "arts-painting",
+    "summary": "Try relaxed drawing exercises and share creative ideas."
+  },
+  {
+    "name": "Movie discussion night",
+    "category": "Film",
+    "coverId": "fun-cinema",
+    "summary": "Discuss favourite stories, characters and film-making ideas."
+  },
+  {
+    "name": "Board game social",
+    "category": "Gaming",
+    "coverId": "fun-games",
+    "summary": "Discover approachable board games in a friendly small group."
+  },
+  {
+    "name": "Evening dance meetup",
+    "category": "Nightlife",
+    "coverId": "nightlife-dance",
+    "summary": "A colourful evening concept for music and dancing."
+  },
+  {
+    "name": "Friendly football afternoon",
+    "category": "Sports",
+    "coverId": "sport-football",
+    "summary": "A casual football session concept for all experience levels."
+  },
+  {
+    "name": "Morning stretch session",
+    "category": "Fitness & Wellness",
+    "coverId": "wellness-yoga",
+    "summary": "A gentle movement and stretching session concept."
+  },
+  {
+    "name": "Weekend nature walk",
+    "category": "Outdoors & Adventure",
+    "coverId": "outdoors-hiking",
+    "summary": "A relaxed walking and outdoor conversation concept."
+  },
+  {
+    "name": "Study circle",
+    "category": "Education",
+    "coverId": "education-books",
+    "summary": "Exchange study techniques and explore a new topic together."
+  },
+  {
+    "name": "Pottery beginners club",
+    "category": "Workshops & DIY",
+    "coverId": "workshop-pottery",
+    "summary": "Explore simple pottery ideas and making things by hand."
+  },
+  {
+    "name": "Creative coding meetup",
+    "category": "Technology",
+    "coverId": "tech-robotics",
+    "summary": "Share beginner-friendly coding projects and technology ideas."
+  },
+  {
+    "name": "Coffee and ideas",
+    "category": "Business & Networking",
+    "coverId": "business-ideas",
+    "summary": "Meet people interested in sharing project and business ideas."
+  },
+  {
+    "name": "New friends picnic",
+    "category": "Social & Meetups",
+    "coverId": "social-meetup",
+    "summary": "A friendly picnic concept for meeting new people."
+  },
+  {
+    "name": "Kitchen inspiration club",
+    "category": "Food & Drink",
+    "coverId": "food-cooking",
+    "summary": "Exchange simple recipes and cooking inspiration."
+  },
+  {
+    "name": "Community kindness day",
+    "category": "Community & Volunteering",
+    "coverId": "charity-community",
+    "summary": "Discuss small ways to help and connect with the community."
+  },
+  {
+    "name": "Birthday planning inspiration",
+    "category": "Birthdays & Celebrations",
+    "coverId": "birthday-cake",
+    "summary": "Explore cheerful celebration and party-planning ideas."
+  },
+  {
+    "name": "Family craft afternoon",
+    "category": "Family & Kids",
+    "coverId": "family-play",
+    "summary": "A playful craft-session concept for families."
+  },
+  {
+    "name": "Open hobby exchange",
+    "category": "Other",
+    "coverId": null,
+    "summary": "Share hobbies and discover something new to try."
+  },
+  {
+    "name": "Live music discovery",
+    "category": "Music",
+    "coverId": "music-live",
+    "summary": "Discover new sounds and share favourite live music experiences."
+  },
+  {
+    "name": "Museum-inspired art chat",
+    "category": "Arts & Culture",
+    "coverId": "arts-museum",
+    "summary": "Talk about art, exhibitions and creative inspiration."
+  },
+  {
+    "name": "Cinema trivia evening",
+    "category": "Film",
+    "coverId": null,
+    "summary": "A friendly film-trivia and discussion concept."
+  },
+  {
+    "name": "Cooperative games club",
+    "category": "Gaming",
+    "coverId": "fun-picnic",
+    "summary": "Explore cooperative games and friendly team challenges."
+  },
+  {
+    "name": "City lights social",
+    "category": "Nightlife",
+    "coverId": "music-dj",
+    "summary": "An evening social concept with upbeat music."
+  },
+  {
+    "name": "Weekend running circle",
+    "category": "Sports",
+    "coverId": "sport-running",
+    "summary": "An easygoing running-session concept for a mixed group."
+  },
+  {
+    "name": "Mindful pause meetup",
+    "category": "Fitness & Wellness",
+    "coverId": "wellness-mindful",
+    "summary": "Share ways to slow down and enjoy a mindful break."
+  },
+  {
+    "name": "Camping stories and tips",
+    "category": "Outdoors & Adventure",
+    "coverId": "outdoors-camping",
+    "summary": "Swap outdoor stories and beginner camping ideas."
+  },
+  {
+    "name": "Everyday science club",
+    "category": "Education",
+    "coverId": "education-science",
+    "summary": "Explore accessible science questions and everyday discoveries."
+  },
+  {
+    "name": "Handmade gifts workshop",
+    "category": "Workshops & DIY",
+    "coverId": "workshop-crafts",
+    "summary": "Share ideas for thoughtful handmade gifts."
+  },
+  {
+    "name": "Small projects showcase",
+    "category": "Technology",
+    "coverId": null,
+    "summary": "A welcoming place to discuss personal technology projects."
+  },
+  {
+    "name": "Networking breakfast concept",
+    "category": "Business & Networking",
+    "coverId": "conference-network",
+    "summary": "An informal networking concept for meeting collaborators."
+  },
+  {
+    "name": "Coffee conversation circle",
+    "category": "Social & Meetups",
+    "coverId": "general-coffee",
+    "summary": "A relaxed conversation and new-connections concept."
+  },
+  {
+    "name": "Local flavours discussion",
+    "category": "Food & Drink",
+    "coverId": "food-market",
+    "summary": "Share food discoveries and favourite recipe inspiration."
+  },
+  {
+    "name": "Green neighbourhood ideas",
+    "category": "Community & Volunteering",
+    "coverId": "charity-nature",
+    "summary": "Exchange ideas for cleaner, greener neighbourhoods."
+  },
+  {
+    "name": "Celebration ideas exchange",
+    "category": "Birthdays & Celebrations",
+    "coverId": "birthday-balloons",
+    "summary": "A colourful exchange of celebration themes and ideas."
+  },
+  {
+    "name": "Family outdoor games",
+    "category": "Family & Kids",
+    "coverId": "family-kites",
+    "summary": "Explore playful outdoor activity ideas for families."
+  },
+  {
+    "name": "Bring your curiosity",
+    "category": "Other",
+    "coverId": null,
+    "summary": "An open conversation concept for anyone curious about new hobbies."
+  }
+]

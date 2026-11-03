@@ -4,6 +4,8 @@ import prisma from "../src/prisma";
 import { userCanViewEvent } from "../src/controllers/eventController";
 
 jest.mock("../src/prisma", () => ({ __esModule: true, default: {
+  $transaction: jest.fn(), $queryRaw: jest.fn(),
+  notification: { deleteMany: jest.fn() },
   event: { findUnique: jest.fn() },
   registration: { findUnique: jest.fn() },
   eventRating: { upsert: jest.fn() },
@@ -15,6 +17,7 @@ let req: Request;
 let res: Response;
 beforeEach(() => {
   jest.resetAllMocks();
+  (prisma.$transaction as jest.Mock).mockImplementation(callback => callback(prisma));
   req = { params: { id: "event" }, userId: "attendee", body: { score: 4 } } as unknown as Request;
   res = { status: jest.fn().mockReturnThis(), json: jest.fn().mockReturnThis() } as unknown as Response;
   (prisma.event.findUnique as jest.Mock).mockResolvedValue(event);

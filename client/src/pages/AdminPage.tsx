@@ -1,3 +1,5 @@
+import Pagination from "../components/Pagination";
+import { getAdminUserPage, getAdminEventPage } from "../api/adminApi";
 import { getEventCategories } from "../utils/eventCategories";
 import ModeratorRoleModal from "../components/ModeratorRoleModal";
 import CancelEventModal from "../components/CancelEventModal";
@@ -14,10 +16,8 @@ import { useAuth } from "../context/AuthContext";
 import {
   getAdminStats,
   setModeratorRole,
-  getAllUsersAdmin,
   banUserAdmin,
   unbanUserAdmin,
-  getAllEventsAdmin,
   deleteEventAdmin,
 } from "../api/adminApi";
 import { getAllCategories } from "../api/categoriesApi";
@@ -126,6 +126,9 @@ type StatusFilter = "all" | "active" | "banned";
 function UsersTab() {
   const { confirm, confirmationDialog } = useConfirmAction();
   const { user: currentUser } = useAuth();
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const [refresh, setRefresh] = useState(0);
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -137,25 +140,22 @@ function UsersTab() {
   const [roleFilter, setRoleFilter] = useState<RoleFilter>("all");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
 
-  function loadUsers() {
-    setIsLoading(true);
-    getAllUsersAdmin()
-      .then(setUsers)
-      .catch((err) => {
-        setError("Failed to load users");
-        console.error(err);
-      })
-      .finally(() => setIsLoading(false));
-  }
-
-  useEffect(loadUsers, []);
+  useEffect(() => { setPage(1); }, [search, roleFilter, statusFilter]);
+  useEffect(() => {
+    let active = true; setIsLoading(true); setError("");
+    const timer = setTimeout(() => { getAdminUserPage({ page, search, role: roleFilter, status: statusFilter })
+      .then(data => { if (!active) return; if (page > Math.max(1, data.totalPages)) setPage(Math.max(1, data.totalPages)); else { setUsers(data.items); setTotalPages(data.totalPages); } })
+      .catch(() => { if (active) setError("Failed to load users"); })
+      .finally(() => { if (active) setIsLoading(false); }); }, 250);
+    return () => { active = false; clearTimeout(timer); };
+  }, [page, search, roleFilter, statusFilter, refresh]);
 
   async function handleBanConfirm(duration: BanDuration, reason: string) {
     if (!banningUser) return;
     const target = banningUser;
     const updated = await banUserAdmin(target.id, duration, reason);
     setUsers((prev) => prev.map((u) => (u.id === updated.id ? { ...u, ...updated } : u)));
-    setBanningUser(null);
+    setBanningUser(null); setRefresh(n => n + 1);
   }
 
   async function handleUnban(targetUser: AdminUser) {
@@ -163,28 +163,14 @@ function UsersTab() {
       const updated = await unbanUserAdmin(targetUser.id);
       setUsers((prev) =>
         prev.map((u) => (u.id === updated.id ? { ...u, ...updated } : u)),
-      );
+      ); setRefresh(n => n + 1);
     } });
   }
 
-  if (isLoading) return <LoadingBlock label="Loading users..." />;
-  if (error) return <p className="text-red-600 dark:text-red-400">{error}</p>;
 
-  const filteredUsers = users.filter((u) => {
-    const banned = isActivelyBanned(u.bannedUntil);
 
-    const matchesSearch =
-      search.trim() === "" ||
-      u.name.toLowerCase().includes(search.toLowerCase()) ||
-      u.email.toLowerCase().includes(search.toLowerCase());
 
-    const matchesRole = roleFilter === "all" || u.role === roleFilter;
-
-    const matchesStatus =
-      statusFilter === "all" || (statusFilter === "banned" ? banned : !banned);
-
-    return matchesSearch && matchesRole && matchesStatus;
-  });
+  const filteredUsers = users;
 
   async function handleRoleChange(target: AdminUser) {
     const role = target.role === "MODERATOR" ? "USER" : "MODERATOR";
@@ -192,7 +178,7 @@ function UsersTab() {
     try {
       const updated = await setModeratorRole(target.id, role);
       setUsers(previous => previous.map(item => item.id === updated.id ? { ...item, ...updated } : item));
-      setRoleTarget(null);
+      setRoleTarget(null); setRefresh(n => n + 1);
     } finally {
       setChangingRole(null);
     }
@@ -255,6 +241,8 @@ function UsersTab() {
         </select>
       </div>
 
+      {error && <p role="alert">{error} <button onClick={() => setRefresh(n => n + 1)}>Try again</button></p>}
+      {isLoading && <LoadingBlock label="Loading users..." />}
       {/* Desktop table */}
       <div className="hidden md:block bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl overflow-x-auto">
         <table className="w-full min-w-[850px] text-sm">
@@ -318,7 +306,7 @@ function UsersTab() {
           </tbody>
         </table>
 
-        {filteredUsers.length === 0 && (
+        {!isLoading && !error && filteredUsers.length === 0 && (
           <p className="text-center text-sm text-gray-500 dark:text-gray-400 py-6">
             No users match your filters.
           </p>
@@ -373,7 +361,7 @@ function UsersTab() {
           </div>
         ))}
 
-        {filteredUsers.length === 0 && (
+        {!isLoading && !error && filteredUsers.length === 0 && (
           <p className="text-center text-sm text-gray-500 dark:text-gray-400 py-6">
             No users match your filters.
           </p>
@@ -390,6 +378,7 @@ function UsersTab() {
           onConfirm={handleBanConfirm}
         />
       )}
+      <Pagination page={page} totalPages={totalPages} onChange={setPage} disabled={isLoading} />
     </div>
   );
 }
@@ -403,6 +392,9 @@ function EventsTab() {
   const selectedEventId = params.get("event") ?? "";
   const [cancellingEvent, setCancellingEvent] = useState<Event | null>(null);
   const { confirm, confirmationDialog } = useConfirmAction();
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const [refresh, setRefresh] = useState(0);
   const [events, setEvents] = useState<Event[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -414,48 +406,28 @@ function EventsTab() {
     useState<VisibilityFilter>("all");
   useEffect(() => { setSearch(""); setCategoryId(""); setVisibilityFilter("all"); }, [selectedEventId]);
 
-  function loadEvents() {
-    setIsLoading(true);
-    getAllEventsAdmin()
-      .then(setEvents)
-      .catch((err) => {
-        setError("Failed to load events");
-        console.error(err);
-      })
-      .finally(() => setIsLoading(false));
-  }
-
-  useEffect(loadEvents, []);
-
+  useEffect(() => { setPage(1); }, [search, categoryId, visibilityFilter, selectedEventId]);
   useEffect(() => {
-    getAllCategories()
-      .then(setCategories)
-      .catch((err) => console.error("Failed to load categories", err));
-  }, []);
+    let active = true; setIsLoading(true); setError("");
+    const timer = setTimeout(() => { getAdminEventPage({ page, search, categoryId, visibility: visibilityFilter, event: selectedEventId ?? "" })
+      .then(data => { if (!active) return; if (page > Math.max(1, data.totalPages)) setPage(Math.max(1, data.totalPages)); else { setEvents(data.items); setTotalPages(data.totalPages); } })
+      .catch(() => { if (active) setError("Failed to load events"); })
+      .finally(() => { if (active) setIsLoading(false); }); }, 250);
+    return () => { active = false; clearTimeout(timer); };
+  }, [page, search, categoryId, visibilityFilter, selectedEventId, refresh]);
+  useEffect(() => { getAllCategories().then(setCategories).catch(() => setError("Failed to load categories")); }, []);
 
   async function handleDelete(id: string, name: string) {
     confirm({ title: "Delete event?", message: `Permanently delete “${name}”? This cannot be undone.`, confirmLabel: "Delete event", danger: true, action: async () => {
       await deleteEventAdmin(id);
-      setEvents((prev) => prev.filter((e) => e.id !== id));
+      setEvents((prev) => prev.filter((e) => e.id !== id)); setRefresh(n => n + 1);
     } });
   }
 
-  if (isLoading) return <LoadingBlock label="Loading events..." />;
-  if (error) return <p className="text-red-600 dark:text-red-400">{error}</p>;
 
-  const filteredEvents = events.filter((e) => {
-    const matchesSearch =
-      search.trim() === "" ||
-      e.name.toLowerCase().includes(search.toLowerCase()) ||
-      (e.createdBy?.name.toLowerCase().includes(search.toLowerCase()) ?? false);
 
-    const matchesCategory = categoryId === "" || getEventCategories(e).some(category => category.id === categoryId);
 
-    const matchesVisibility =
-      visibilityFilter === "all" || e.visibility === visibilityFilter;
-
-    return (!selectedEventId || e.id === selectedEventId) && matchesSearch && matchesCategory && matchesVisibility;
-  });
+  const filteredEvents = events;
 
   function EventActions({ event }: { event: Event }) {
     const canCancel = (!event.cancelledAt && getEventState(event) !== "ENDED") || (event.cancelledAt && event.isRecurring && !event.recurrenceStopped);
@@ -474,7 +446,7 @@ function EventsTab() {
         <button className="font-medium underline underline-offset-2" onClick={() => setParams(current => { const next = new URLSearchParams(current); next.delete("event"); return next; })}>Show all events</button>
       </div>}
       {cancellingEvent && <CancelEventModal event={cancellingEvent} onCancel={() => setCancellingEvent(null)} onConfirm={async scope => {
-        await cancelEventAdmin(cancellingEvent.id, scope); setEvents(await getAllEventsAdmin()); setCancellingEvent(null);
+        await cancelEventAdmin(cancellingEvent.id, scope); setRefresh(n => n + 1); setCancellingEvent(null);
       }} />}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
         <input
@@ -500,18 +472,24 @@ function EventsTab() {
         </select>
       </div>
 
+      {error && <p role="alert">{error} <button onClick={() => setRefresh(n => n + 1)}>Try again</button></p>}
+      {isLoading && <LoadingBlock label="Loading events..." />}
       {/* Desktop table */}
-      <div className="hidden md:block bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl overflow-x-auto">
-        <table className="w-full text-sm">
+      <div className="hidden xl:block bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl">
+        <table className="w-full table-fixed text-sm">
+          <colgroup>
+            <col className="w-[21%]" /><col className="w-[13%]" /><col className="w-[17%]" />
+            <col className="w-[12%]" /><col className="w-[14%]" /><col className="w-[10%]" /><col className="w-[13%]" />
+          </colgroup>
           <thead className="bg-gray-50 dark:bg-gray-800 text-left text-gray-500 dark:text-gray-400">
             <tr>
-              <th className="px-4 py-3 font-medium">Name</th>
-              <th className="px-4 py-3 font-medium">Organizer</th>
-              <th className="px-4 py-3 font-medium">Category</th>
-              <th className="px-4 py-3 font-medium">Visibility</th>
-              <th className="px-4 py-3 font-medium">Date</th>
-              <th className="px-4 py-3 font-medium">Registrations</th>
-              <th className="px-4 py-3"></th>
+              <th className="px-3 py-3 font-medium">Name</th>
+              <th className="px-3 py-3 font-medium">Organizer</th>
+              <th className="px-3 py-3 font-medium">Category</th>
+              <th className="px-3 py-3 font-medium">Visibility</th>
+              <th className="px-3 py-3 font-medium">Date</th>
+              <th className="px-3 py-3 font-medium">Joined</th>
+              <th className="px-3 py-3"></th>
             </tr>
           </thead>
           <tbody>
@@ -520,39 +498,41 @@ function EventsTab() {
                 key={e.id}
                 className="border-t border-gray-100 dark:border-gray-800"
               >
-                <td className="px-4 py-3">
+                <td className="px-3 py-3">
                   <Link
                     to={`/events/${e.id}`}
-                    className="text-indigo-600 dark:text-indigo-400 hover:underline"
+                    className="break-words text-indigo-600 dark:text-indigo-400 hover:underline"
                   >
                     {e.name}
                   </Link>
                   <div className="mt-1"><Availability event={e} /></div>
                 </td>
-                <td className="px-4 py-3 text-gray-600 dark:text-gray-400 whitespace-nowrap">
+                <td className="px-3 py-3 text-gray-600 dark:text-gray-400 break-words">
                   {e.createdBy?.name ?? "—"}
                 </td>
-                <td className="px-4 py-3 text-gray-600 dark:text-gray-400 whitespace-nowrap">
+                <td className="px-3 py-3 text-gray-600 dark:text-gray-400 break-words">
                   {getEventCategories(e).map(category => category.name).join(", ") || "—"}
                 </td>
-                <td className="px-4 py-3 text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                <td className="px-3 py-3 text-gray-500 dark:text-gray-400 break-words">
                   {visibilityLabels[e.visibility]}
                 </td>
-                <td className="px-4 py-3 text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                <td className="px-3 py-3 text-gray-500 dark:text-gray-400 break-words">
                   {formatEventDate(e.date)}
                 </td>
-                <td className="px-4 py-3 text-gray-600 dark:text-gray-400">
+                <td className="px-3 py-3 text-gray-600 dark:text-gray-400">
                   {e._count?.registrations ?? 0}
                 </td>
-                <td className="px-4 py-3 text-right space-x-3 whitespace-nowrap">
-                  <EventActions event={e} />
+                <td className="px-3 py-3 text-right break-words">
+                  <div className="flex flex-col items-end gap-2">
+                    <EventActions event={e} />
+                  </div>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
 
-        {filteredEvents.length === 0 && (
+        {!isLoading && !error && filteredEvents.length === 0 && (
           <p className="text-center text-sm text-gray-500 dark:text-gray-400 py-6">
             No events match your filters.
           </p>
@@ -560,7 +540,7 @@ function EventsTab() {
       </div>
 
       {/* Mobile cards */}
-      <div className="md:hidden space-y-3">
+      <div className="xl:hidden space-y-3">
         {filteredEvents.map((e) => (
           <div
             key={e.id}
@@ -591,12 +571,13 @@ function EventsTab() {
           </div>
         ))}
 
-        {filteredEvents.length === 0 && (
+        {!isLoading && !error && filteredEvents.length === 0 && (
           <p className="text-center text-sm text-gray-500 dark:text-gray-400 py-6">
             No events match your filters.
           </p>
         )}
       </div>
+      <Pagination page={page} totalPages={totalPages} onChange={setPage} disabled={isLoading} />
     </div>
   );
 }
