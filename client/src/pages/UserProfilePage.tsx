@@ -10,7 +10,7 @@ import {
 } from "../api/followApi";
 import type { PublicUser, FollowUser } from "../types";
 import { useAuth } from "../context/AuthContext";
-import LoadingBlock from "../components/LoadingBlock";
+import { PageSkeleton } from "../components/Skeleton";
 
 function isActivelyBanned(bannedUntil: string | null | undefined): boolean {
   if (!bannedUntil) return false;
@@ -76,7 +76,7 @@ export default function UserProfilePage() {
     }
   }
 
-  if (isLoading) return <LoadingBlock label="Loading profile..." />;
+  if (isLoading) return <PageSkeleton kind="profile" />;
   if (error) return <p className="text-red-600 dark:text-red-400">{error}</p>;
   if (!profile)
     return <p className="text-gray-500 dark:text-gray-400">User not found</p>;

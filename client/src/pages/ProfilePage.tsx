@@ -8,7 +8,7 @@ import { getTitleForCategory } from "../utils/categoryTitles";
 import { getFollowers, getFollowing } from "../api/followApi";
 import type { FollowUser } from "../types";
 import { useTheme } from "../context/ThemeContext";
-import LoadingBlock from "../components/LoadingBlock";
+import { PageSkeleton } from "../components/Skeleton";
 
 export default function ProfilePage() {
   const { theme, toggleTheme } = useTheme();
@@ -40,7 +40,7 @@ export default function ProfilePage() {
       .finally(() => setIsLoading(false));
   }, []);
 
-  if (isLoading) return <LoadingBlock label="Loading profile..." />;
+  if (isLoading) return <PageSkeleton kind="profile" />;
   if (error) return <p className="text-red-600 dark:text-red-400">{error}</p>;
   if (!profile) return null;
 

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { validUpdatedDates } from "../utils/eventLifecycle";
 import { selectedCategoryIds, validCategorySelection, curatedCategoryWhere } from "../utils/eventCategories";
 import { Request, Response } from "express";
 import prisma from "../prisma";
@@ -197,6 +198,8 @@ export async function updateEventAdmin(req: Request, res: Response) {
   }
 
   const data = parseResult.data;
+
+  if (!validUpdatedDates(existingEvent, data)) return res.status(400).json({ error: "End date must be after the start date" });
 
   const categoryIds = selectedCategoryIds(data);
   if (!await validCategorySelection(categoryIds)) return res.status(400).json({ error: "Choose categories from the collection" });

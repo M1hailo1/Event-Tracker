@@ -6,8 +6,10 @@ import { getCommentReports, reviewCommentReport, banUserAdmin } from "../api/adm
 import type { CommentReport, ReportStatus } from "../api/adminApi";
 import BanUserModal from "./BanUserModal";
 import LoadingBlock from "./LoadingBlock";
+import { useConfirmAction } from "./ConfirmDialog";
 
 export default function CommentReportsTab() {
+  const { confirm, confirmationDialog } = useConfirmAction();
   const { user } = useAuth();
   const [status, setStatus] = useState<ReportStatus>("OPEN");
   const [reports, setReports] = useState<CommentReport[]>([]);
@@ -33,13 +35,19 @@ export default function CommentReportsTab() {
     finally { setLoading(false); }
   }
   async function review(report: CommentReport, action: "DISMISS" | "REMOVE") {
-    if (action === "REMOVE" && !window.confirm("Remove this comment? Replies will remain visible.")) return;
+    if (action === "REMOVE") {
+      confirm({ title: "Remove comment?", message: "The comment will be removed. Its replies will remain visible.", confirmLabel: "Remove comment", danger: true, action: async () => {
+        await reviewCommentReport(report.id, "REMOVE"); setReports(previous => previous.filter(item => item.comment.id !== report.comment.id));
+      } });
+      return;
+    }
     setBusy(true); setError("");
     try { await reviewCommentReport(report.id, action); setReports(previous => previous.filter(item => item.comment.id !== report.comment.id)); }
     catch (err) { setError(isAxiosError(err) ? err.response?.data?.error ?? "Failed to review report" : "Failed to review report"); }
     finally { setBusy(false); }
   }
   return <div className="space-y-4">
+    {confirmationDialog}
     <div className="flex flex-wrap items-center gap-3">
       <label className="text-sm text-gray-700 dark:text-gray-300">Report status <select value={status} disabled={busy || loading} onChange={e => setStatus(e.target.value as ReportStatus)} className="ml-2 rounded-lg border border-gray-300 bg-white p-2 dark:border-gray-600 dark:bg-gray-800">
         <option value="OPEN">Open</option><option value="DISMISSED">Dismissed</option><option value="REMOVED">Removed</option>
@@ -64,10 +72,7 @@ export default function CommentReportsTab() {
     {!loading && !error && !reports.length && <p className="text-sm text-gray-500">No {status.toLowerCase()} reports.</p>}
     {!loading && (cursor || error) && <button disabled={busy} onClick={loadMore} className="text-sm text-indigo-600 dark:text-indigo-400">{error ? "Try again" : "Load more"}</button>}
     {banning && <BanUserModal userName={banning.name} onCancel={() => setBanning(null)} onConfirm={async (duration, reason) => {
-      const target = banning; setBanning(null); setBusy(true); setError("");
-      try { await banUserAdmin(target.id, duration, reason); }
-      catch (err) { setError(isAxiosError(err) ? err.response?.data?.error ?? "Failed to ban user" : "Failed to ban user"); }
-      finally { setBusy(false); }
+      await banUserAdmin(banning.id, duration, reason); setBanning(null);
     }} />}
   </div>;
 }

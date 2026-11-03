@@ -1,4 +1,5 @@
 import { withEventRatings } from "../utils/ratings";
+import { activeEventsWhere } from "../utils/eventLifecycle";
 import { Request, Response } from "express";
 import prisma from "../prisma";
 
@@ -16,7 +17,7 @@ export async function getMyDashboard(req: Request, res: Response) {
   const now = new Date();
 
   const myUpcomingEvents = await prisma.event.findMany({
-    where: { createdByUserId: userId, date: { gte: now } },
+    where: { createdByUserId: userId, AND: [activeEventsWhere(now)] },
     include: eventInclude,
     orderBy: { date: "asc" },
     take: UPCOMING_LIMIT,
@@ -24,7 +25,7 @@ export async function getMyDashboard(req: Request, res: Response) {
 
   const registeredUpcomingEvents = await prisma.event.findMany({
     where: {
-      date: { gte: now },
+      AND: [activeEventsWhere(now)],
       createdByUserId: { not: userId },
       registrations: { some: { userId, status: "CONFIRMED" } },
     },
@@ -45,7 +46,7 @@ export async function getMyDashboard(req: Request, res: Response) {
       : await prisma.event.findMany({
           where: {
             createdByUserId: { in: followingIds },
-            date: { gte: now },
+            AND: [activeEventsWhere(now)],
             registrations: { none: { userId } },
             OR: [
               { visibility: "PUBLIC" },

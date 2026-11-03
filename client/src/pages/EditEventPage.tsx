@@ -8,7 +8,7 @@ import { updateEventAdmin } from "../api/adminApi";
 import type { Event } from "../types";
 import EventForm from "../components/EventForm";
 import { useAuth } from "../context/AuthContext";
-import LoadingBlock from "../components/LoadingBlock";
+import { PageSkeleton } from "../components/Skeleton";
 
 export default function EditEventPage() {
   const { id } = useParams<{ id: string }>();
@@ -29,7 +29,7 @@ export default function EditEventPage() {
       .finally(() => setIsLoading(false));
   }, [id]);
 
-  if (isLoading) return <LoadingBlock label="Loading event..." />;
+  if (isLoading) return <PageSkeleton kind="form" />;
   if (error) return <p className="text-red-600 dark:text-red-400">{error}</p>;
   if (!event) return <p className="text-gray-500 dark:text-gray-400">Event not found</p>;
 

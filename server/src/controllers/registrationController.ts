@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { Prisma } from "@prisma/client";
 import prisma from "../prisma";
+import { getEventState } from "../utils/eventLifecycle";
 
 export async function registerForEvent(req: Request, res: Response) {
   const eventId = req.params.id;
@@ -12,6 +13,8 @@ export async function registerForEvent(req: Request, res: Response) {
 
   try {
     const registration = await prisma.$transaction(async (tx) => {
+      // Serialize registrations for this event before counting available seats.
+      await tx.$queryRaw`SELECT "id" FROM "Event" WHERE "id" = ${eventId} FOR UPDATE`;
       const event = await tx.event.findUnique({
         where: { id: eventId },
         include: {
@@ -25,8 +28,9 @@ export async function registerForEvent(req: Request, res: Response) {
         throw new Error("EVENT_NOT_FOUND");
       }
 
-      if (event.date < new Date()) {
-        throw new Error("EVENT_ENDED");
+      const state = getEventState(event);
+      if (state !== "UPCOMING") {
+        throw new Error(state === "ENDED" ? "EVENT_ENDED" : "REGISTRATION_CLOSED");
       }
 
       const canView = await userCanAccessEvent(tx, event, userId);
@@ -74,6 +78,9 @@ export async function registerForEvent(req: Request, res: Response) {
       }
       if (err.message === "EVENT_ENDED") {
         return res.status(403).json({ error: "Event already finished" });
+      }
+      if (err.message === "REGISTRATION_CLOSED") {
+        return res.status(403).json({ error: "Registration closed when this event started" });
       }
       if (err.message === "NO_ACCESS") {
         return res
@@ -137,10 +144,10 @@ export async function unregisterFromEvent(req: Request, res: Response) {
   }
 
   const event = await prisma.event.findUnique({ where: { id: eventId } });
-  if (event && event.date < new Date()) {
+  if (event && event.date <= new Date()) {
     return res
       .status(403)
-      .json({ error: "You can't unregister from an event that ended" });
+      .json({ error: "You can't unregister from an event that has started" });
   }
 
   await prisma.registration.delete({

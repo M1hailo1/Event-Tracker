@@ -4,13 +4,16 @@ import { getMyDashboard } from "../api/userApi";
 import type { DashboardData } from "../types";
 import EventCardGrid from "../components/EventCardGrid";
 import { useAuth } from "../context/AuthContext";
-import LoadingBlock from "../components/LoadingBlock";
+import { EventCardsSkeleton } from "../components/Skeleton";
+import { useEventClock } from "../utils/eventLifecycle";
 
 interface SectionProps {
   title: string;
   subtitle: string;
   events: DashboardData["myUpcomingEvents"];
   emptyText: string;
+  actionTo?: string;
+  actionLabel?: string;
 }
 
 function DashboardSection({
@@ -18,6 +21,8 @@ function DashboardSection({
   subtitle,
   events,
   emptyText,
+  actionTo = "/",
+  actionLabel = "Explore events",
 }: SectionProps) {
   return (
     <section className="mb-10">
@@ -27,9 +32,9 @@ function DashboardSection({
       </div>
 
       {events.length === 0 ? (
-        <p className="text-sm text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-5 py-6">
-          {emptyText}
-        </p>
+        <div className="text-sm text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-5 py-6">
+          <p className="mb-3">{emptyText}</p><Link to={actionTo} className="font-medium text-indigo-600 dark:text-indigo-400 hover:underline">{actionLabel}</Link>
+        </div>
       ) : (
         <EventCardGrid events={events} />
       )}
@@ -39,9 +44,10 @@ function DashboardSection({
 
 export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
+  const lifecycleClock = useEventClock(data ? [...data.myUpcomingEvents, ...data.registeredUpcomingEvents, ...data.followingUpcomingEvents] : []);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
 
   useEffect(() => {
     if (!user) return;
@@ -60,8 +66,9 @@ export default function DashboardPage() {
     }
 
     loadDashboard();
-  }, [user]);
+  }, [user, lifecycleClock]);
 
+  if (authLoading && !user) return <EventCardsSkeleton />;
   if (!user) {
     return (
       <p className="text-gray-500 dark:text-gray-400">
@@ -70,7 +77,7 @@ export default function DashboardPage() {
     );
   }
 
-  if (isLoading) return <LoadingBlock label="Loading dashboard..." />;
+  if (isLoading && !data) return <EventCardsSkeleton />;
   if (error) return <p className="text-red-600 dark:text-red-400">{error}</p>;
   if (!data) return null;
 
@@ -88,23 +95,24 @@ export default function DashboardPage() {
 
       <DashboardSection
         title="Attending"
-        subtitle="Upcoming events you're registered for"
+        subtitle="Upcoming and ongoing events you're registered for"
         events={data.registeredUpcomingEvents}
-        emptyText="You're not registered for any upcoming events yet."
+        emptyText="You're not registered for any upcoming or ongoing events."
       />
 
       <DashboardSection
         title="Your events"
-        subtitle="Upcoming events you're organizing"
+        subtitle="Upcoming and ongoing events you're organizing"
         events={data.myUpcomingEvents}
-        emptyText="You haven't created any upcoming events."
+        emptyText="You have no upcoming or ongoing events."
+        actionTo="/events/new" actionLabel="Create an event"
       />
 
       <DashboardSection
         title="From people you follow"
-        subtitle="Upcoming events you haven't registered for yet"
+        subtitle="Upcoming and ongoing events you haven't registered for yet"
         events={data.followingUpcomingEvents}
-        emptyText="No upcoming events from people you follow right now."
+        emptyText="No upcoming or ongoing events from people you follow right now."
       />
     </div>
   );

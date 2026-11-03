@@ -37,6 +37,7 @@ export async function getEventById(id: string): Promise<Event> {
 }
 
 export interface CreateEventPayload {
+  endDate?: string | null;
   coverId?: string | null;
   name: string;
   description?: string;

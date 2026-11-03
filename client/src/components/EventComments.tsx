@@ -1,4 +1,6 @@
 import { isStaff } from "../utils/roles";
+import { useConfirmAction } from "./ConfirmDialog";
+import LoadingBlock from "./LoadingBlock";
 import CommentReportForm from "./CommentReportForm";
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
@@ -54,6 +56,7 @@ function CommentItem({ eventId, comment: initial, targetId, onDeleted }: { event
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [replyVersion, setReplyVersion] = useState(0);
+  const { confirm, confirmationDialog } = useConfirmAction();
   const own = user?.id === comment.user?.id;
   const articleRef = useRef<HTMLElement>(null);
   useEffect(() => {
@@ -64,6 +67,7 @@ function CommentItem({ eventId, comment: initial, targetId, onDeleted }: { event
   }, [targetId, comment.id]);
   if (comment.deletedAt && comment._count.replies === 0) return null;
   return <article ref={articleRef} tabIndex={-1} className={`py-4 scroll-mt-24 ${targetId === comment.id ? "rounded-lg ring-2 ring-indigo-400 px-3" : ""}`}>
+    {confirmationDialog}
     <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
       {comment.user ? <>
         <Link to={`/users/${comment.user.id}`} className="font-semibold text-gray-800 hover:text-indigo-600 dark:text-gray-200">{comment.user.name}</Link>
@@ -82,11 +86,11 @@ function CommentItem({ eventId, comment: initial, targetId, onDeleted }: { event
       {!comment.parentId && user && !comment.deletedAt && <button type="button" className={actionClass} onClick={() => setReplying(!replying)}><Reply size={14} />Reply</button>}
       {!comment.deletedAt && own && !editing && <button type="button" className={actionClass} onClick={() => setEditing(true)}><Pencil size={13} />Edit</button>}
       {!comment.deletedAt && (own || isStaff(user?.role)) && <button type="button" disabled={busy} className={actionClass} onClick={async () => {
-        if (!window.confirm("Delete this comment? Its replies will remain visible.")) return;
-        setBusy(true); setError("");
-        try { await deleteComment(eventId, comment.id); setComment({ ...comment, body: "", user: null, deletedAt: new Date().toISOString() }); setEditing(false); setReplying(false); onDeleted?.(); }
-        catch (err) { setError(errorMessage(err)); }
-        finally { setBusy(false); }
+        confirm({ title: "Delete comment?", message: "Its replies will remain visible.", confirmLabel: "Delete comment", danger: true, action: async () => {
+          setBusy(true); setError("");
+          try { await deleteComment(eventId, comment.id); setComment({ ...comment, body: "", user: null, deletedAt: new Date().toISOString() }); setEditing(false); setReplying(false); onDeleted?.(); }
+          finally { setBusy(false); }
+        } });
       }}><Trash2 size={13} />{busy ? "Deleting..." : "Delete"}</button>}
       {user && !own && !comment.deletedAt && <button type="button" className={actionClass} disabled={reported} onClick={() => setReporting(!reporting)}><Flag size={13} />{reported ? "Reported" : "Report"}</button>}
       {!comment.parentId && comment._count.replies > 0 && <button type="button" className={actionClass} aria-expanded={showReplies} onClick={() => setShowReplies(!showReplies)}>{showReplies ? "Hide replies" : `View replies (${comment._count.replies})`}</button>}
@@ -134,7 +138,7 @@ function CommentList({ eventId, parentId, targetId, onDeleted }: { eventId: stri
   }
   return <div>
     <div className="divide-y divide-gray-100 dark:divide-gray-700">{comments.map(comment => <CommentItem key={comment.id} eventId={eventId} comment={comment} targetId={targetId} onDeleted={onDeleted} />)}</div>
-    {loading && <p role="status" className="py-3 text-sm text-gray-500">Loading comments...</p>}
+    {loading && <LoadingBlock label="Loading comments..." compact />}
     {!loading && !error && comments.length === 0 && <p className="py-4 text-sm text-gray-500 dark:text-gray-400">{parentId ? "No replies yet." : "No comments yet. Start the conversation!"}</p>}
     {error && <p role="alert" className="my-3 text-sm text-red-600 dark:text-red-400">{error}</p>}
     {!loading && (cursor || error) && <button type="button" className={actionClass} onClick={loadMore}>{error ? "Try again" : "Load more"}</button>}

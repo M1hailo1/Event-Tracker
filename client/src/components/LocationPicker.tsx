@@ -12,9 +12,10 @@ function MapResizeFix() {
   const map = useMap();
 
   useEffect(() => {
-    setTimeout(() => {
+    const timer = setTimeout(() => {
       map.invalidateSize();
     }, 350);
+    return () => clearTimeout(timer);
   }, [map]);
 
   return null;

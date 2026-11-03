@@ -1,5 +1,6 @@
 import { getEventCategories } from "../utils/eventCategories";
 import ModeratorRoleModal from "../components/ModeratorRoleModal";
+import { useConfirmAction } from "../components/ConfirmDialog";
 import SearchableSelect from "../components/SearchableSelect";
 import { isStaff } from "../utils/roles";
 import CommentReportsTab from "../components/CommentReportsTab";
@@ -119,6 +120,7 @@ type RoleFilter = "all" | "USER" | "MODERATOR" | "ADMIN";
 type StatusFilter = "all" | "active" | "banned";
 
 function UsersTab() {
+  const { confirm, confirmationDialog } = useConfirmAction();
   const { user: currentUser } = useAuth();
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -147,29 +149,18 @@ function UsersTab() {
   async function handleBanConfirm(duration: BanDuration, reason: string) {
     if (!banningUser) return;
     const target = banningUser;
+    const updated = await banUserAdmin(target.id, duration, reason);
+    setUsers((prev) => prev.map((u) => (u.id === updated.id ? { ...u, ...updated } : u)));
     setBanningUser(null);
-    try {
-      const updated = await banUserAdmin(target.id, duration, reason);
-      setUsers((prev) =>
-        prev.map((u) => (u.id === updated.id ? { ...u, ...updated } : u)),
-      );
-    } catch (err) {
-      alert("Failed to ban user");
-      console.error(err);
-    }
   }
 
   async function handleUnban(targetUser: AdminUser) {
-    if (!confirm(`Unban ${targetUser.name}?`)) return;
-    try {
+    confirm({ title: "Unban user?", message: `Restore access for ${targetUser.name}?`, confirmLabel: "Unban", action: async () => {
       const updated = await unbanUserAdmin(targetUser.id);
       setUsers((prev) =>
         prev.map((u) => (u.id === updated.id ? { ...u, ...updated } : u)),
       );
-    } catch (err) {
-      alert("Failed to unban user");
-      console.error(err);
-    }
+    } });
   }
 
   if (isLoading) return <LoadingBlock label="Loading users..." />;
@@ -385,6 +376,7 @@ function UsersTab() {
         )}
       </div>
 
+      {confirmationDialog}
       {roleTarget && <ModeratorRoleModal userName={roleTarget.name} removing={roleTarget.role === "MODERATOR"}
         onCancel={() => setRoleTarget(null)} onConfirm={() => handleRoleChange(roleTarget)} />}
       {banningUser && (
@@ -403,6 +395,7 @@ function UsersTab() {
 type VisibilityFilter = "all" | EventVisibility;
 
 function EventsTab() {
+  const { confirm, confirmationDialog } = useConfirmAction();
   const [events, setEvents] = useState<Event[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -433,15 +426,10 @@ function EventsTab() {
   }, []);
 
   async function handleDelete(id: string, name: string) {
-    if (!confirm(`Delete "${name}"? This can't be undone.`)) return;
-
-    try {
+    confirm({ title: "Delete event?", message: `Permanently delete “${name}”? This cannot be undone.`, confirmLabel: "Delete event", danger: true, action: async () => {
       await deleteEventAdmin(id);
       setEvents((prev) => prev.filter((e) => e.id !== id));
-    } catch (err) {
-      alert("Failed to delete event");
-      console.error(err);
-    }
+    } });
   }
 
   if (isLoading) return <LoadingBlock label="Loading events..." />;
@@ -463,6 +451,7 @@ function EventsTab() {
 
   return (
     <div>
+      {confirmationDialog}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
         <input
           type="text"
@@ -609,9 +598,10 @@ function EventsTab() {
 }
 
 export default function AdminPage() {
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const [tab, setTab] = useState<Tab>("overview");
 
+  if (authLoading && !user) return <LoadingBlock label="Loading admin panel..." />;
   if (!user) {
     return (
       <p className="text-gray-500 dark:text-gray-400">You must be logged in.</p>

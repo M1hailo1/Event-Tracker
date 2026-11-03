@@ -44,16 +44,18 @@ These screenshots show the current interface with fictional demonstration events
 - Optional covers from a bundled library of 40 compressed illustrations (about 2 MB total), with preview, replacement and removal; no uploads or external image storage needed
 - Pick the event location on an interactive map (Leaflet + OpenStreetMap) with automatic reverse geocoding of the address
 - Map display of events, so you can browse what is happening and where
-- Recurring events (daily, weekly, monthly, yearly) - upcoming instances are generated automatically
-- Register / unregister from events, with capacity limits and a public attendee list
+- Recurring events (daily, weekly, monthly, yearly) - future instances are generated after the current event ends, preserving its duration, cover and categories
+- Register / unregister before an event starts, with capacity limits and a public attendee list; registration stays closed while an event is ongoing
+- Concurrent registrations are serialized per event so competing requests cannot claim the same final seat; the organizer's registration is created atomically with the event
 - Search by name or city, filter by any selected category, and sort by date or name
-- Upcoming and past events views, plus an attended-events history filter
+- Upcoming and ongoing events remain in active discovery and dashboards until their end time; ended events appear in history, with an attended-events filter
+- Event edits validate the final combined start/end dates, including partial updates; an optional end time can be removed
 
 **Dashboard and calendar**
 
 - Events you are attending
 - Events you are organizing
-- Upcoming events from people you follow that you have not registered for yet
+- Upcoming and ongoing events from people you follow that you have not registered for yet
 - Calendar view of events
 
 **Visibility and invitations**
@@ -89,7 +91,7 @@ These screenshots show the current interface with fictional demonstration events
 - In-app notification bell with unread counter and a "mark all as read" action
 - Notifications for new events from followed users, event changes/cancellations, new followers, invitations, reminders, event comments and replies
 - Repeated comment/reply activity is grouped while unread; links open the relevant comment or reply thread
-- **24-hour reminders** - a background job on the server runs every 15 minutes and notifies registered users whose event starts within 24 hours; a `reminderSent` flag on each registration guarantees a reminder is never sent twice
+- **24-hour reminders** - a background job on the server runs every 15 minutes and notifies registered users whose event starts within 24 hours; a `reminderSent` flag tracks delivered reminders on each registration
 - Old notifications are cleaned up automatically to keep the database small
 - Client polling pauses when the browser tab is hidden to save backend resources
 
@@ -113,7 +115,11 @@ These screenshots show the current interface with fictional demonstration events
 - All selected categories appear as card icons with names on hover or keyboard focus
 - Searchable category/cover menus, selected category tags, and "Other" placed last
 - Event details show visibility below the title and equal-width category badges on the right
-- Loading states for data-heavy pages
+- Availability labels such as "8 places left", "Full", "Open places" and "Happening now" on cards and event details
+- Styled confirmation dialogs with keyboard focus containment, busy states and inline failure/retry, including event/comment removal and user moderation
+- Skeleton placeholders for event cards, event details, forms, profiles and smaller loading sections; animation respects reduced-motion preferences
+- Actionable empty states with clear-filter, explore-event and create-event links
+- Event states and active lists refresh at start/end boundaries and when the window regains focus
 
 **Authentication and security**
 
@@ -259,6 +265,8 @@ Routes marked with 🔒 require an `Authorization: Bearer <token>` header. Route
 
 Event create/update requests accept `categoryIds` (1–3 distinct curated IDs, main first) and optional `coverId` (an ID from the bundled cover catalog, or `null` to remove). An omitted field is preserved during partial edits. The legacy `categoryId` field remains accepted for a single-category selection; it must agree with the first ID when both forms are supplied.
 
+For date edits, the final `endDate` must be later than `date`. Omitted values retain their stored value; `endDate: null` removes the optional end time. Events without an end time count as ended at their start time. Registration closes at the start regardless of whether an end time is provided.
+
 List filters include `categoryId`, `search`, `city`, `sortBy` (`date_asc`, `date_desc`, `name_asc`, `name_desc`), `includePast` and authenticated `attendedOnly`. A category filter matches any of an event's selected categories.
 
 **Categories**
@@ -392,6 +400,16 @@ The app runs on `http://localhost:5173`.
 | `npm run build` | Compile TypeScript to `dist/`                                                        |
 | `npm start`     | Run the compiled server                                                              |
 | `npm test`      | Run Jest through `.env.test` (DB integration tests require a migrated test database) |
+| `npm run test:reliability` | Run event lifecycle, date-edit, recurring-duration and concurrent-registration tests in a disposable local database |
+
+`server/scripts/` contains developer utilities and should be committed with the project. Its reliability runner is invoked explicitly; it is not part of API startup. The runner reads the local `DATABASE_URL`, refuses hosted targets, creates a uniquely named test database, applies existing migrations, runs the integration suite and removes the database afterward. The PostgreSQL role needs permission to create/drop that database. Saved `.env` files and application records are not changed.
+
+```bash
+cd server
+npm run test:reliability
+```
+
+The integration tests cover simultaneous requests for the final seat, duplicate registrations, organizer capacity, ongoing-event discovery and registration closure, rating eligibility, owner/staff date edits, and recurring duration. The isolated suite is skipped by regular `npm test`; use the command above to run it safely.
 
 **Client** (`/client`)
 

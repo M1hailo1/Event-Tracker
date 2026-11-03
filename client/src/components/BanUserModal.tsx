@@ -1,5 +1,6 @@
 import type { BanDuration } from "../types";
-import { useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
+import { isAxiosError } from "axios";
 
 const banDurationOptions: { value: BanDuration; label: string }[] = [
   { value: "1h", label: "1 Hour" },
@@ -11,7 +12,7 @@ const banDurationOptions: { value: BanDuration; label: string }[] = [
 interface BanUserModalProps {
   userName: string;
   onCancel: () => void;
-  onConfirm: (duration: BanDuration, reason: string) => void;
+  onConfirm: (duration: BanDuration, reason: string) => Promise<void> | void;
 }
 
 export default function BanUserModal({
@@ -20,16 +21,20 @@ export default function BanUserModal({
   onConfirm,
 }: BanUserModalProps) {
   const [reason, setReason] = useState("");
+  const [busy, setBusy] = useState(false), [error, setError] = useState("");
+  const dialog = useRef<HTMLDialogElement>(null); const titleId = useId();
+  useEffect(() => { dialog.current?.showModal(); const current = dialog.current; return () => current?.close(); }, []);
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
-      onClick={onCancel}
+    <dialog ref={dialog} aria-labelledby={titleId}
+      className="m-auto w-[calc(100%-2rem)] max-w-sm rounded-xl bg-transparent p-0 shadow-xl backdrop:bg-black/40"
+      onCancel={event => { event.preventDefault(); if (!busy) onCancel(); }}
+      onClick={event => { if (event.target === event.currentTarget && !busy) onCancel(); }}
     >
       <div
         className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-sm p-6"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
+        <h2 id={titleId} className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
           Ban {userName}
         </h2>
         <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
@@ -41,6 +46,7 @@ export default function BanUserModal({
         </label>
         <textarea
           id="ban-reason"
+          disabled={busy}
           value={reason}
           onChange={(e) => setReason(e.target.value)}
           maxLength={500}
@@ -52,7 +58,12 @@ export default function BanUserModal({
           {banDurationOptions.map((opt) => (
             <button
               key={opt.value}
-              onClick={() => onConfirm(opt.value, reason.trim())}
+              disabled={busy}
+              onClick={async () => {
+                if (busy) return; setBusy(true); setError("");
+                try { await onConfirm(opt.value, reason.trim()); }
+                catch (err) { const detail = isAxiosError(err) ? err.response?.data?.error : null; setError(typeof detail === "string" ? detail : "Failed to ban user. Please try again."); setBusy(false); }
+              }}
               className="border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:border-red-400 dark:hover:border-red-500 hover:text-red-600 dark:hover:text-red-400"
             >
               {opt.label}
@@ -61,12 +72,15 @@ export default function BanUserModal({
         </div>
 
         <button
+          disabled={busy}
           onClick={onCancel}
           className="w-full text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 py-1"
         >
           Cancel
         </button>
+        {error && <p role="alert" className="mt-3 text-sm text-red-600 dark:text-red-400">{error}</p>}
+        {busy && <p role="status" className="mt-3 text-sm text-gray-500">Saving…</p>}
       </div>
-    </div>
+    </dialog>
   );
 }

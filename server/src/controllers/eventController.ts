@@ -1,4 +1,5 @@
 import { isStaff } from "../utils/roles";
+import { activeEventsWhere, endedEventsWhere, validUpdatedDates } from "../utils/eventLifecycle";
 import { eventCoverIds } from "../utils/eventCovers";
 import { selectedCategoryIds, validCategorySelection } from "../utils/eventCategories";
 import { Request, Response } from "express";
@@ -15,7 +16,7 @@ export const baseEventSchema = z.object({
   categoryId: z.string().uuid().optional(),
   categoryIds: z.array(z.string().uuid()).min(1).max(3).refine(ids => new Set(ids).size === ids.length, "Choose distinct categories").optional(),
   date: z.string().datetime(),
-  endDate: z.string().datetime().optional(),
+  endDate: z.string().datetime().nullable().optional(),
   location: z.string().min(2),
   latitude: z.number(),
   longitude: z.number(),
@@ -71,14 +72,7 @@ export async function createEvent(req: Request, res: Response) {
       recurrencePattern: data.recurrencePattern ?? null,
       visibility: data.visibility,
       createdByUserId: req.userId!,
-    },
-  });
-
-  await prisma.registration.create({
-    data: {
-      userId: req.userId!,
-      eventId: event.id,
-      status: "CONFIRMED",
+      registrations: { create: { userId: req.userId!, status: "CONFIRMED" } },
     },
   });
 
@@ -130,9 +124,8 @@ export async function getAllEvents(req: Request, res: Response) {
     return res.status(200).json([]);
   }
 
-  const dateFilter = showPast
-    ? { date: { lt: new Date() } }
-    : { date: { gte: new Date() } };
+  const now = new Date();
+  const dateFilter = showPast ? endedEventsWhere(now) : activeEventsWhere(now);
 
   const visibilityFilter = userId
     ? {
@@ -313,10 +306,10 @@ export async function updateEvent(req: Request, res: Response) {
       .json({ error: "You don't have permission to edit this event" });
   }
 
-  if (existingEvent.date < new Date()) {
+  if (existingEvent.date <= new Date()) {
     return res
       .status(403)
-      .json({ error: "You can't edit events that finished" });
+      .json({ error: "You can't edit events that have started" });
   }
 
   const parseResult = updateEventSchema.safeParse(req.body);
@@ -325,6 +318,8 @@ export async function updateEvent(req: Request, res: Response) {
   }
 
   const data = parseResult.data;
+
+  if (!validUpdatedDates(existingEvent, data)) return res.status(400).json({ error: "End date must be after the start date" });
 
   const categoryIds = selectedCategoryIds(data);
   if (!await validCategorySelection(categoryIds)) return res.status(400).json({ error: "Choose categories from the collection" });
@@ -394,10 +389,10 @@ export async function deleteEvent(req: Request, res: Response) {
       .json({ error: "You don't have permission to delete this event" });
   }
 
-  if (existingEvent.date < new Date()) {
+  if (existingEvent.date <= new Date()) {
     return res
       .status(403)
-      .json({ error: "You can't delete events that finished" });
+      .json({ error: "You can't delete events that have started" });
   }
 
   const registeredUsers = await prisma.registration.findMany({
@@ -428,12 +423,13 @@ export async function deleteEvent(req: Request, res: Response) {
   res.status(200).json({ message: "Event successfully deleted" });
 }
 
-async function generateMissingRecurringInstances() {
+export async function generateMissingRecurringInstances() {
+  const now = new Date();
   const expiredRecurring = await prisma.event.findMany({
     include: { categories: true },
     where: {
       isRecurring: true,
-      date: { lt: new Date() },
+      AND: [endedEventsWhere(now)],
       nextInstances: { none: {} },
     },
   });
@@ -443,7 +439,7 @@ async function generateMissingRecurringInstances() {
 
     let nextDate = getNextDate(event.date, event.recurrencePattern);
 
-    while (nextDate < new Date()) {
+    while (nextDate <= now) {
       nextDate = getNextDate(nextDate, event.recurrencePattern);
     }
 
@@ -455,6 +451,7 @@ async function generateMissingRecurringInstances() {
         categoryId: event.categoryId,
         categories: { connect: (event.categories?.length ? event.categories : [{ id: event.categoryId }]).map(category => ({ id: category.id })) },
         date: nextDate,
+        endDate: event.endDate ? new Date(nextDate.getTime() + (event.endDate.getTime() - event.date.getTime())) : null,
         location: event.location,
         latitude: event.latitude,
         longitude: event.longitude,

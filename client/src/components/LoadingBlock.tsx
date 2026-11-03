@@ -1,4 +1,4 @@
-import Spinner from "./Spinner";
+import { Skeleton } from "./Skeleton";
 
 interface LoadingBlockProps {
   label?: string;
@@ -13,12 +13,14 @@ export default function LoadingBlock({
 }: LoadingBlockProps) {
   return (
     <div
-      className={`flex flex-col items-center justify-center gap-3 ${
+      role="status" aria-label={label}
+      className={`w-full space-y-3 ${
         compact ? "py-6" : "py-12"
       }`}
     >
-      <Spinner size={size} />
-      <p className="text-sm text-gray-500 dark:text-gray-400">{label}</p>
+      <span className="sr-only">{label}</span>
+      <div aria-hidden="true" className="flex items-center gap-3"><div style={{ width: size, height: size }} className="shrink-0 rounded-full bg-gray-200 dark:bg-gray-700 motion-safe:animate-pulse" /><Skeleton className="h-4 w-2/3" /></div>
+      <Skeleton className="h-4 w-full" /><Skeleton className="h-4 w-4/5" />
     </div>
   );
 }

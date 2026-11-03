@@ -6,12 +6,15 @@ import { formatEventDateRange } from "../utils/formatDate";
 import { getEventCover } from "../data/eventCovers";
 import { getEventCategories } from "../utils/eventCategories";
 import CategoryIcon from "./CategoryIcon";
+import Availability from "./Availability";
+import { useEventState } from "../utils/eventLifecycle";
 
 interface EventCardProps {
   event: Event;
 }
 
 export default function EventCard({ event }: EventCardProps) {
+  const state = useEventState(event);
   const hasCover = !!getEventCover(event.coverId);
   const dateLabel = formatEventDateRange(event.date, event.endDate);
   const categories = getEventCategories(event);
@@ -35,13 +38,16 @@ export default function EventCard({ event }: EventCardProps) {
         {event.location}
       </p>
 
-      {new Date(event.endDate ?? event.date) <= new Date() && (
+      {state === "ENDED" && (
         <div className="min-w-0 shrink-0 mb-1 [&_span]:truncate"><RatingDisplay rating={event.rating} label="Event rating" /></div>
       )}
 
-      <p className="mt-auto shrink-0 text-sm font-medium text-gray-700 dark:text-gray-300">
+      <p className="mt-auto shrink-0 flex items-center justify-between gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+        <span>
         Attendees: {event._count?.registrations ?? 0}
         {event.maxCapacity ? ` / ${event.maxCapacity}` : ""}
+        </span>
+        <Availability event={event} />
       </p>
     </Link>
     <div role="group" aria-label="Event categories" className="absolute right-5 top-5 flex gap-1">

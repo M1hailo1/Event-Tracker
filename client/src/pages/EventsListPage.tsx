@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { Map, LayoutGrid, Calendar as CalendarIcon } from "lucide-react";
 import { getAllEvents } from "../api/eventsApi";
 import type { EventSortOption } from "../api/eventsApi";
@@ -8,8 +9,9 @@ import { useAuth } from "../context/AuthContext";
 import EventCardGrid from "../components/EventCardGrid";
 import EventsMap from "../components/EventsMap";
 import EventsCalendar from "../components/EventsCalendar";
-import Spinner from "../components/Spinner";
+import { EventCardsSkeleton } from "../components/Skeleton";
 import SearchableSelect from "../components/SearchableSelect";
+import { useEventClock } from "../utils/eventLifecycle";
 
 const inputClass =
   "w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500";
@@ -23,6 +25,7 @@ const sortOptions: { value: EventSortOption; label: string }[] = [
 
 export default function EventsListPage() {
   const [events, setEvents] = useState<Event[]>([]);
+  const lifecycleClock = useEventClock(events);
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -79,7 +82,7 @@ export default function EventsListPage() {
     }, 300);
 
     return () => clearTimeout(timeoutId);
-  }, [showPast, categoryId, city, search, sortBy, historyScope, user?.id]);
+  }, [showPast, categoryId, city, search, sortBy, historyScope, user?.id, lifecycleClock]);
 
   function handleResetFilters() {
     setCategoryId("");
@@ -136,7 +139,7 @@ export default function EventsListPage() {
             onClick={() => setShowPast(!showPast)}
             className="text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300"
           >
-            {showPast ? "Show future events" : "Show history"}
+            {showPast ? "Show active events" : "Show history"}
           </button>
         </div>
       </div>
@@ -228,8 +231,8 @@ export default function EventsListPage() {
       {error && <p className="text-red-600 dark:text-red-400 mb-4">{error}</p>}
 
       {isLoading && events.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-16 gap-3">
-          <Spinner />
+        <div className="w-full space-y-4">
+          <EventCardsSkeleton />
           <p className="text-sm text-gray-500 dark:text-gray-400">
             Loading events...
           </p>
@@ -242,12 +245,17 @@ export default function EventsListPage() {
         </div>
       )}
 
-      {!isLoading && events.length === 0 && (
-        <p className="text-gray-500 dark:text-gray-400">
+      {!isLoading && !error && events.length === 0 && (
+        <div className="rounded-xl border border-dashed border-gray-300 p-8 text-center dark:border-gray-600">
+        <p className="mb-4 text-gray-500 dark:text-gray-400">
           {hasActiveFilters
             ? "No events match your filters."
             : "There are no events currently."}
         </p>
+        {hasActiveFilters ? <button onClick={handleResetFilters} className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">Clear filters</button>
+          : showPast ? <button onClick={() => setShowPast(false)} className="text-sm font-medium text-indigo-600 dark:text-indigo-400">Explore active events</button>
+          : <Link to={user ? "/events/new" : "/login"} className="text-sm font-medium text-indigo-600 dark:text-indigo-400">{user ? "Create an event" : "Sign in to create an event"}</Link>}
+        </div>
       )}
 
       {events.length > 0 &&

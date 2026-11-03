@@ -13,7 +13,7 @@ export interface EventFormValues {
   description?: string;
   categoryIds: string[];
   date: string;
-  endDate?: string;
+  endDate?: string | null;
   location: string;
   latitude: number;
   longitude: number;
@@ -140,7 +140,7 @@ export default function EventForm({
         description: description || undefined,
         categoryIds,
         date: new Date(date).toISOString(),
-        endDate: endDate ? new Date(endDate).toISOString() : undefined,
+        endDate: endDate ? new Date(endDate).toISOString() : null,
         location,
         latitude,
         longitude,

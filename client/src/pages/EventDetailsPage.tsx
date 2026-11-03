@@ -1,4 +1,5 @@
 import EventCover from "../components/EventCover";
+import { useEventState } from "../utils/eventLifecycle";
 import { getEventCategories } from "../utils/eventCategories";
 import EventComments from "../components/EventComments";
 import { Star } from "lucide-react";
@@ -18,12 +19,16 @@ import { useAuth } from "../context/AuthContext";
 import LocationPicker from "../components/LocationPicker";
 import EventInviteManager from "../components/EventInviteManager";
 import { formatEventDate } from "../utils/formatDate";
-import LoadingBlock from "../components/LoadingBlock";
+import { PageSkeleton } from "../components/Skeleton";
+import Availability from "../components/Availability";
+import { useConfirmAction } from "../components/ConfirmDialog";
 import { markEventAsRead } from "../api/notificationsApi";
 
 export default function EventDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const [event, setEvent] = useState<Event | null>(null);
+  const { confirm, confirmationDialog } = useConfirmAction();
+  const eventState = useEventState(event ?? { date: "9999-01-01T00:00:00.000Z", endDate: null });
   const [hoveredRating, setHoveredRating] = useState(0);
   const [selectedRating, setSelectedRating] = useState(0);
   const [ratingMessage, setRatingMessage] = useState("");
@@ -49,18 +54,10 @@ export default function EventDetailsPage() {
 
   async function handleDelete() {
     if (!id) return;
-    const confirmed = window.confirm(
-      "Are you sure you want to delete this event?",
-    );
-    if (!confirmed) return;
-
-    try {
+    confirm({ title: "Delete event?", message: "This will permanently delete the event and its registrations.", confirmLabel: "Delete event", danger: true, action: async () => {
       await deleteEvent(id);
       navigate("/");
-    } catch (err) {
-      setActionError("Failed to delete");
-      console.error(err);
-    }
+    } });
   }
 
   useEffect(() => {
@@ -142,17 +139,18 @@ export default function EventDetailsPage() {
     }
   }
 
-  if (isLoading) return <LoadingBlock label="Loading event..." />;
+  if (isLoading) return <PageSkeleton />;
   if (error) return <p className="text-red-600 dark:text-red-400">{error}</p>;
   if (!event) return <p className="text-gray-500 dark:text-gray-400">Event not found</p>;
 
   const isFull =
     event.maxCapacity !== null &&
     (event._count?.registrations ?? 0) >= event.maxCapacity;
-  const isPastEvent = new Date(event.date) < new Date();
+  const hasStarted = eventState !== "UPCOMING";
 
   return (
     <div className="max-w-3xl mx-auto">
+      {confirmationDialog}
       <button
         onClick={handleBack}
         className="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 mb-4 inline-block"
@@ -225,14 +223,15 @@ export default function EventDetailsPage() {
                 ? ` / ${event.maxCapacity}`
                 : " (unlimited places)"}
             </p>
+            <Availability event={event} />
           </div>
         </div>
 
-        {new Date(event.endDate ?? event.date) <= new Date() && (
+        {eventState === "ENDED" && (
         <div className="mb-5 space-y-3">
           <RatingDisplay rating={event.rating} label="Event rating" />
           {user && user.id !== event.createdByUserId && isRegistered &&
-            new Date(event.endDate ?? event.date) <= new Date() && (
+            eventState === "ENDED" && (
             <div>
               <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">{event.myRating ? "Update your rating" : "Rate this event"}</p>
               <div className="flex flex-wrap items-center gap-2">
@@ -280,9 +279,9 @@ export default function EventDetailsPage() {
           <p className="text-red-600 dark:text-red-400 text-sm mb-3">{actionError}</p>
         )}
 
-        {isPastEvent ? (
+        {hasStarted ? (
           <p className="text-sm text-gray-500 dark:text-gray-400 italic">
-            This event already finished.
+            {eventState === "ONGOING" ? "Happening now. Registration closed when this event started." : "This event has ended."}
           </p>
         ) : user ? (
           isRegistered ? (
@@ -314,7 +313,7 @@ export default function EventDetailsPage() {
           </p>
         )}
 
-        {user && user.id === event.createdByUserId && !isPastEvent && (
+        {user && user.id === event.createdByUserId && !hasStarted && (
           <div className="flex gap-3 mt-4 pt-4 border-t border-gray-100 dark:border-gray-800">
             <button
               onClick={() => navigate(`/events/${event.id}/edit`)}
