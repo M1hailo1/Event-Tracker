@@ -54,6 +54,11 @@ export async function updateEventAdmin(
 export async function deleteEventAdmin(id: string): Promise<void> {
   await axiosInstance.delete(`/admin/events/${id}`);
 }
+
+export async function cancelEventAdmin(id: string, scope: "OCCURRENCE" | "SERIES" = "OCCURRENCE"): Promise<Event> {
+  const response = await axiosInstance.post<Event>(`/admin/events/${id}/cancel`, { scope });
+  return response.data;
+}
 export type ReportStatus = "OPEN" | "DISMISSED" | "REMOVED";
 export interface CommentReport {
   id: string; reason: string; details: string | null; bodySnapshot: string; status: ReportStatus;

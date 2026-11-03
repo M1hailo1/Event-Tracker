@@ -7,6 +7,8 @@ import categoryRoutes from "./routes/categoryRoutes";
 import userRoutes from "./routes/userRoutes";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
+import { createGeneralLimiter } from "./middleware/rateLimiters";
+import { resolveRateLimitIdentity } from "./middleware/rateLimitIdentity";
 import followRoutes from "./routes/followRoutes";
 import notificationRoutes from "./routes/notificationRoutes";
 import adminRoutes from "./routes/adminRoutes";
@@ -25,9 +27,9 @@ const authLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-const globalLimiter = rateLimit({
+const ipSafetyLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: isTestEnv ? 100000 : 300,
+  max: isTestEnv ? 100000 : 5000,
   standardHeaders: "draft-8",
   legacyHeaders: false,
   message: { error: "Too many requests. Please try again later." },
@@ -40,7 +42,9 @@ const allowedOrigins = [
 
 app.use(cors({ origin: allowedOrigins }));
 app.use(helmet());
-app.use(globalLimiter);
+app.use(ipSafetyLimiter);
+app.use(resolveRateLimitIdentity);
+app.use(createGeneralLimiter());
 app.use(express.json());
 app.use("/auth", authLimiter, authRoutes);
 app.use("/events", eventRoutes);

@@ -1,4 +1,5 @@
 import { isStaff } from "../utils/roles";
+import { lockEventSeries } from "../utils/eventSeries";
 import { activeEventsWhere, endedEventsWhere, validUpdatedDates } from "../utils/eventLifecycle";
 import { eventCoverIds } from "../utils/eventCovers";
 import { selectedCategoryIds, validCategorySelection } from "../utils/eventCategories";
@@ -125,7 +126,7 @@ export async function getAllEvents(req: Request, res: Response) {
   }
 
   const now = new Date();
-  const dateFilter = showPast ? endedEventsWhere(now) : activeEventsWhere(now);
+  const dateFilter = showPast ? { OR: [{ cancelledAt: { not: null } }, endedEventsWhere(now)] } : activeEventsWhere(now);
 
   const visibilityFilter = userId
     ? {
@@ -164,6 +165,7 @@ export async function getAllEvents(req: Request, res: Response) {
     filters.push({ name: { contains: search, mode: "insensitive" } });
   }
   if (attendedOnly) {
+    filters.push({ cancelledAt: null });
     filters.push({
       registrations: { some: { userId: userId!, status: "CONFIRMED" } },
     });
@@ -306,6 +308,8 @@ export async function updateEvent(req: Request, res: Response) {
       .json({ error: "You don't have permission to edit this event" });
   }
 
+  if (existingEvent.cancelledAt) return res.status(409).json({ error: "Cancelled events cannot be edited" });
+
   if (existingEvent.date <= new Date()) {
     return res
       .status(403)
@@ -415,7 +419,7 @@ export async function deleteEvent(req: Request, res: Response) {
       createNotification(
         r.userId,
         "EVENT_CANCELLED",
-        `The event "${existingEvent.name}" you were registered for has been cancelled`,
+        `The event "${existingEvent.name}" you were registered for was permanently deleted`,
       ),
     ),
   );
@@ -429,39 +433,42 @@ export async function generateMissingRecurringInstances() {
     include: { categories: true },
     where: {
       isRecurring: true,
+      recurrenceStopped: false,
       AND: [endedEventsWhere(now)],
       nextInstances: { none: {} },
     },
   });
 
-  for (const event of expiredRecurring) {
-    if (!event.recurrencePattern) continue;
+  for (const candidate of expiredRecurring) {
+    await prisma.$transaction(async tx => {
+      if (!await lockEventSeries(tx, candidate.id)) return;
+      const event = await tx.event.findUnique({ where: { id: candidate.id }, include: { categories: true, nextInstances: { select: { id: true }, take: 1 } } });
+      if (!event || !event.recurrencePattern || event.recurrenceStopped || event.nextInstances.length || (event.endDate ?? event.date) > now) return;
 
-    let nextDate = getNextDate(event.date, event.recurrencePattern);
+      let nextDate = getNextDate(event.date, event.recurrencePattern);
 
-    while (nextDate <= now) {
-      nextDate = getNextDate(nextDate, event.recurrencePattern);
-    }
+      while (nextDate <= now) nextDate = getNextDate(nextDate, event.recurrencePattern);
 
-    await prisma.event.create({
-      data: {
-        name: event.name,
-        coverId: event.coverId,
-        description: event.description,
-        categoryId: event.categoryId,
-        categories: { connect: (event.categories?.length ? event.categories : [{ id: event.categoryId }]).map(category => ({ id: category.id })) },
-        date: nextDate,
-        endDate: event.endDate ? new Date(nextDate.getTime() + (event.endDate.getTime() - event.date.getTime())) : null,
-        location: event.location,
-        latitude: event.latitude,
-        longitude: event.longitude,
-        maxCapacity: event.maxCapacity,
-        isRecurring: event.isRecurring,
-        recurrencePattern: event.recurrencePattern,
-        visibility: event.visibility,
-        createdByUserId: event.createdByUserId,
-        parentEventId: event.id,
-      },
+      await tx.event.create({
+        data: {
+          name: event.name,
+          coverId: event.coverId,
+          description: event.description,
+          categoryId: event.categoryId,
+          categories: { connect: (event.categories?.length ? event.categories : [{ id: event.categoryId }]).map(category => ({ id: category.id })) },
+          date: nextDate,
+          endDate: event.endDate ? new Date(nextDate.getTime() + (event.endDate.getTime() - event.date.getTime())) : null,
+          location: event.location,
+          latitude: event.latitude,
+          longitude: event.longitude,
+          maxCapacity: event.maxCapacity,
+          isRecurring: event.isRecurring,
+          recurrencePattern: event.recurrencePattern,
+          visibility: event.visibility,
+          createdByUserId: event.createdByUserId,
+          parentEventId: event.id,
+        },
+      });
     });
   }
 }

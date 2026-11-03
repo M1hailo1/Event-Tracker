@@ -13,8 +13,11 @@ it('treats an event without an end as ended at its start, matching rating eligib
   expect(getEventState({ date: start, endDate: null }, start)).toBe('ENDED');
 });
 it('uses complementary active/history end-time filters', () => {
-  expect(activeEventsWhere(start)).toEqual({ OR: [{ endDate: { gt: start } }, { endDate: null, date: { gt: start } }] });
+  expect(activeEventsWhere(start)).toEqual({ cancelledAt: null, OR: [{ endDate: { gt: start } }, { endDate: null, date: { gt: start } }] });
   expect(endedEventsWhere(start)).toEqual({ OR: [{ endDate: { lte: start } }, { endDate: null, date: { lte: start } }] });
+});
+it('keeps cancellation permanent regardless of date boundaries', () => {
+  expect(getEventState({ date: start, endDate: end, cancelledAt: start }, new Date('2099-01-01'))).toBe('CANCELLED');
 });
 it('validates edits against merged dates, preserving omissions and allowing explicit removal', () => {
   const stored = { date: start, endDate: end };

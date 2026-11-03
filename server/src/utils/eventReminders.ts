@@ -1,5 +1,4 @@
 import prisma from "../prisma";
-import { createNotification } from "./createNotification";
 
 const REMINDER_WINDOW_MS = 24 * 60 * 60 * 1000;
 
@@ -12,6 +11,7 @@ export async function sendDueEventReminders() {
       status: "CONFIRMED",
       reminderSent: false,
       event: {
+        cancelledAt: null,
         date: { gte: now, lte: windowEnd },
       },
     },
@@ -22,16 +22,13 @@ export async function sendDueEventReminders() {
 
   for (const registration of dueRegistrations) {
     try {
-      await createNotification(
-        registration.userId,
-        "EVENT_REMINDER",
-        `Reminder: "${registration.event.name}" starts in less than 24 hours`,
-        registration.event.id,
-      );
-
-      await prisma.registration.update({
-        where: { id: registration.id },
-        data: { reminderSent: true },
+      await prisma.$transaction(async tx => {
+        await tx.$queryRaw`SELECT "id" FROM "Event" WHERE "id" = ${registration.event.id} FOR UPDATE`;
+        const event = await tx.event.findUnique({ where: { id: registration.event.id } });
+        const current = await tx.registration.findUnique({ where: { id: registration.id } });
+        if (!event || event.cancelledAt || event.date <= new Date() || !current || current.reminderSent || current.status !== "CONFIRMED") return;
+        await tx.notification.create({ data: { userId: registration.userId, type: "EVENT_REMINDER", message: `Reminder: "${event.name}" starts in less than 24 hours`, eventId: event.id } });
+        await tx.registration.update({ where: { id: registration.id }, data: { reminderSent: true } });
       });
     } catch (err) {
       console.error(

@@ -12,6 +12,7 @@ export async function rateEvent(req: Request, res: Response) {
   if (!parsed.success) return res.status(400).json({ error: "Choose a whole number from 1 to 5" });
   const event = await prisma.event.findUnique({ where: { id } });
   if (!event) return res.status(404).json({ error: "Event not found" });
+  if (event.cancelledAt) return res.status(409).json({ error: "Cancelled events cannot be rated" });
   if (!(await userCanViewEvent(event, req.userId))) {
     return res.status(403).json({ error: "You don't have access to this event" });
   }

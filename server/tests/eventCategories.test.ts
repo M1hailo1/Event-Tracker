@@ -7,6 +7,7 @@ import { validCategorySelection, categoryNames } from "../src/utils/eventCategor
 import prisma from "../src/prisma";
 
 jest.mock("../src/prisma", () => ({ __esModule: true, default: {
+  $transaction: jest.fn(), $queryRaw: jest.fn(),
   category: { count: jest.fn(), findMany: jest.fn() },
   event: { findUnique: jest.fn(), findMany: jest.fn(), update: jest.fn(), create: jest.fn() },
   registration: { findMany: jest.fn(), create: jest.fn() },
@@ -18,6 +19,8 @@ let req: Request;
 let res: Response;
 beforeEach(() => {
   jest.resetAllMocks();
+  (prisma.$transaction as jest.Mock).mockImplementation(callback => callback(prisma));
+  (prisma.$queryRaw as jest.Mock).mockResolvedValue([{ id: 'parent', parentEventId: null }]);
   req = { userId: "owner", params: { id: "event" }, query: {}, body: { categoryIds: ids.slice(0, 3) } } as unknown as Request;
   res = { status: jest.fn().mockReturnThis(), json: jest.fn() } as unknown as Response;
   (prisma.event.findUnique as jest.Mock).mockResolvedValue({ id: "event", createdByUserId: "owner", date: new Date("2099-01-01") });
@@ -64,6 +67,7 @@ it("filters events by any selected category", async () => {
   expect(prisma.event.findMany).toHaveBeenLastCalledWith(expect.objectContaining({ where: { AND: expect.arrayContaining([{ OR: [{ categoryId: ids[1] }, { categories: { some: { id: ids[1] } } }] }]) } }));
 });
 it("copies every selected category into a recurring instance", async () => {
+  (prisma.event.findUnique as jest.Mock).mockResolvedValue({ id: "parent", categoryId: ids[0], categories: ids.slice(0, 3).map(id => ({ id })), date: new Date(Date.now() - 86400000), recurrencePattern: "DAILY", nextInstances: [] });
   (prisma.event.findMany as jest.Mock).mockResolvedValueOnce([{ id: "parent", categoryId: ids[0], categories: ids.slice(0, 3).map(id => ({ id })), date: new Date(Date.now() - 86400000), recurrencePattern: "DAILY" }]).mockResolvedValueOnce([]);
   await getAllEvents(req, res);
   expect(prisma.event.create).toHaveBeenCalledWith({ data: expect.objectContaining({ categoryId: ids[0], categories: { connect: ids.slice(0, 3).map(id => ({ id })) }, parentEventId: "parent" }) });

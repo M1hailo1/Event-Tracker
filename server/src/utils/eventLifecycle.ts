@@ -1,12 +1,13 @@
 import type { Prisma } from "@prisma/client";
 
-export function getEventState(event: { date: Date; endDate?: Date | null }, now = new Date()) {
+export function getEventState(event: { date: Date; endDate?: Date | null; cancelledAt?: Date | null }, now = new Date()) {
+  if (event.cancelledAt) return "CANCELLED";
   if ((event.endDate ?? event.date) <= now) return "ENDED";
   return event.date <= now ? "ONGOING" : "UPCOMING";
 }
 
 export function activeEventsWhere(now = new Date()): Prisma.EventWhereInput {
-  return { OR: [{ endDate: { gt: now } }, { endDate: null, date: { gt: now } }] };
+  return { cancelledAt: null, OR: [{ endDate: { gt: now } }, { endDate: null, date: { gt: now } }] };
 }
 
 export function endedEventsWhere(now = new Date()): Prisma.EventWhereInput {

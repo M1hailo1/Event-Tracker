@@ -1,11 +1,15 @@
 import { getEventCategories } from "../utils/eventCategories";
 import ModeratorRoleModal from "../components/ModeratorRoleModal";
+import CancelEventModal from "../components/CancelEventModal";
+import Availability from "../components/Availability";
+import { cancelEventAdmin } from "../api/adminApi";
+import { getEventState } from "../utils/eventLifecycle";
 import { useConfirmAction } from "../components/ConfirmDialog";
 import SearchableSelect from "../components/SearchableSelect";
 import { isStaff } from "../utils/roles";
 import CommentReportsTab from "../components/CommentReportsTab";
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import {
   getAdminStats,
@@ -395,6 +399,9 @@ function UsersTab() {
 type VisibilityFilter = "all" | EventVisibility;
 
 function EventsTab() {
+  const [params, setParams] = useSearchParams();
+  const selectedEventId = params.get("event") ?? "";
+  const [cancellingEvent, setCancellingEvent] = useState<Event | null>(null);
   const { confirm, confirmationDialog } = useConfirmAction();
   const [events, setEvents] = useState<Event[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -405,6 +412,7 @@ function EventsTab() {
   const [categoryId, setCategoryId] = useState("");
   const [visibilityFilter, setVisibilityFilter] =
     useState<VisibilityFilter>("all");
+  useEffect(() => { setSearch(""); setCategoryId(""); setVisibilityFilter("all"); }, [selectedEventId]);
 
   function loadEvents() {
     setIsLoading(true);
@@ -446,12 +454,28 @@ function EventsTab() {
     const matchesVisibility =
       visibilityFilter === "all" || e.visibility === visibilityFilter;
 
-    return matchesSearch && matchesCategory && matchesVisibility;
+    return (!selectedEventId || e.id === selectedEventId) && matchesSearch && matchesCategory && matchesVisibility;
   });
+
+  function EventActions({ event }: { event: Event }) {
+    const canCancel = (!event.cancelledAt && getEventState(event) !== "ENDED") || (event.cancelledAt && event.isRecurring && !event.recurrenceStopped);
+    return <>
+      {canCancel && <button onClick={() => setCancellingEvent(event)} className="text-sm font-semibold text-red-600 dark:text-red-400 hover:underline">{event.cancelledAt ? "Stop series" : "Cancel event"}</button>}
+      {!event.cancelledAt && <Link to={`/events/${event.id}/edit`} className="text-sm text-indigo-600 dark:text-indigo-400 hover:underline">Edit</Link>}
+      <button onClick={() => handleDelete(event.id, event.name)} className="text-xs text-gray-500 dark:text-gray-400 hover:underline">Permanently delete</button>
+    </>;
+  }
 
   return (
     <div>
       {confirmationDialog}
+      {selectedEventId && <div role="status" className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-indigo-200 bg-indigo-50 p-3 text-sm text-indigo-700 dark:border-indigo-800 dark:bg-indigo-950 dark:text-indigo-200">
+        <span>Managing the selected event.</span>
+        <button className="font-medium underline underline-offset-2" onClick={() => setParams(current => { const next = new URLSearchParams(current); next.delete("event"); return next; })}>Show all events</button>
+      </div>}
+      {cancellingEvent && <CancelEventModal event={cancellingEvent} onCancel={() => setCancellingEvent(null)} onConfirm={async scope => {
+        await cancelEventAdmin(cancellingEvent.id, scope); setEvents(await getAllEventsAdmin()); setCancellingEvent(null);
+      }} />}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
         <input
           type="text"
@@ -503,6 +527,7 @@ function EventsTab() {
                   >
                     {e.name}
                   </Link>
+                  <div className="mt-1"><Availability event={e} /></div>
                 </td>
                 <td className="px-4 py-3 text-gray-600 dark:text-gray-400 whitespace-nowrap">
                   {e.createdBy?.name ?? "—"}
@@ -520,18 +545,7 @@ function EventsTab() {
                   {e._count?.registrations ?? 0}
                 </td>
                 <td className="px-4 py-3 text-right space-x-3 whitespace-nowrap">
-                  <Link
-                    to={`/events/${e.id}/edit`}
-                    className="text-sm text-indigo-600 dark:text-indigo-400 hover:underline"
-                  >
-                    Edit
-                  </Link>
-                  <button
-                    onClick={() => handleDelete(e.id, e.name)}
-                    className="text-sm text-red-600 dark:text-red-400 hover:underline"
-                  >
-                    Delete
-                  </button>
+                  <EventActions event={e} />
                 </td>
               </tr>
             ))}
@@ -559,29 +573,19 @@ function EventsTab() {
               {e.name}
             </Link>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+              <span className="mb-1 block"><Availability event={e} /></span>
               by {e.createdBy?.name ?? "—"} · {getEventCategories(e).map(category => category.name).join(", ") || "—"}
             </p>
             <p className="text-xs text-gray-500 dark:text-gray-400">
               {formatEventDate(e.date)} · {visibilityLabels[e.visibility]}
             </p>
 
-            <div className="flex items-center justify-between mt-3">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mt-3">
               <span className="text-xs text-gray-500 dark:text-gray-400">
                 {e._count?.registrations ?? 0} registrations
               </span>
-              <div className="space-x-3">
-                <Link
-                  to={`/events/${e.id}/edit`}
-                  className="text-sm text-indigo-600 dark:text-indigo-400 hover:underline"
-                >
-                  Edit
-                </Link>
-                <button
-                  onClick={() => handleDelete(e.id, e.name)}
-                  className="text-sm text-red-600 dark:text-red-400 hover:underline"
-                >
-                  Delete
-                </button>
+              <div className="flex flex-wrap items-center gap-3">
+                <EventActions event={e} />
               </div>
             </div>
           </div>
@@ -599,7 +603,9 @@ function EventsTab() {
 
 export default function AdminPage() {
   const { user, isLoading: authLoading } = useAuth();
-  const [tab, setTab] = useState<Tab>("overview");
+  const [params, setParams] = useSearchParams();
+  const requestedTab = params.get("tab");
+  const tab: Tab = requestedTab === "users" || requestedTab === "events" || requestedTab === "reports" ? requestedTab : "overview";
 
   if (authLoading && !user) return <LoadingBlock label="Loading admin panel..." />;
   if (!user) {
@@ -633,7 +639,7 @@ export default function AdminPage() {
         {tabs.map((t) => (
           <button
             key={t.key}
-            onClick={() => setTab(t.key)}
+            onClick={() => setParams(current => { const next = new URLSearchParams(current); next.set("tab", t.key); if (t.key !== "events") next.delete("event"); return next; })}
             className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px ${
               tab === t.key
                 ? "border-indigo-600 dark:border-indigo-400 text-indigo-600 dark:text-indigo-400"

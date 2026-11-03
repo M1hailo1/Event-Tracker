@@ -21,6 +21,8 @@ export type RecurrencePattern = "DAILY" | "WEEKLY" | "MONTHLY" | "YEARLY";
 export type EventVisibility = "PUBLIC" | "FOLLOWERS_ONLY" | "INVITE_ONLY";
 
 export interface Event {
+  cancelledAt?: string | null;
+  recurrenceStopped?: boolean;
   coverId?: string | null;
   rating?: RatingSummary;
   myRating?: number | null;

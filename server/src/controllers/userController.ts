@@ -27,6 +27,7 @@ export async function getMyStats(req: Request, res: Response) {
       userId,
       status: "CONFIRMED",
       event: {
+        cancelledAt: null,
         OR: [
           { endDate: { lte: now } },
           { endDate: null, date: { lte: now } },

@@ -1,4 +1,5 @@
 import { reportComment } from "../controllers/commentReportController";
+import { cancelEvent } from "../controllers/eventCancellationController";
 import { requireCommentAccess, getComments, createComment, updateComment, deleteComment } from "../controllers/commentController";
 import { Router } from "express";
 import {
@@ -31,6 +32,7 @@ router.get("/:id", optionalAuth, getEventById);
 router.post("/", requireAuth, eventWriteLimiter, createEvent);
 router.put("/:id", requireAuth, eventWriteLimiter, updateEvent);
 router.delete("/:id", requireAuth, eventWriteLimiter, deleteEvent);
+router.post("/:id/cancel", requireAuth, eventWriteLimiter, cancelEvent);
 router.post("/:id/invites", requireAuth, inviteLimiter, inviteUserToEvent);
 router.get("/:id/invites", requireAuth, getEventInvites);
 router.use("/:id/register", registrationRoutes);

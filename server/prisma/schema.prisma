@@ -74,6 +74,8 @@ enum EventVisibility {
 }
 
 model Event {
+  cancelledAt       DateTime?
+  recurrenceStopped Boolean @default(false)
   categories        Category[] @relation("EventCategories")
   coverId           String?
   id                String             @id @default(uuid())

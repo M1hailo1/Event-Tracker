@@ -1,4 +1,5 @@
 import { getCommentReports, reviewCommentReport } from "../controllers/commentReportController";
+import { cancelEventAdmin } from "../controllers/eventCancellationController";
 import { Router } from "express";
 import {
   getAdminStats,
@@ -12,24 +13,26 @@ import {
   deleteEventAdmin,
 } from "../controllers/adminController";
 import { requireAuth, requireAdmin, requireStaff } from "../middleware/authMiddleware";
+import { eventWriteLimiter, moderationLimiter } from "../middleware/rateLimiters";
 
 const router = Router();
 
 router.use(requireAuth, requireStaff);
 
-router.patch("/users/:id/role", requireAdmin, setModeratorRole);
+router.patch("/users/:id/role", requireAdmin, moderationLimiter, setModeratorRole);
 
 router.get("/stats", getAdminStats);
 router.get("/comment-reports", getCommentReports);
-router.patch("/comment-reports/:reportId", reviewCommentReport);
+router.patch("/comment-reports/:reportId", moderationLimiter, reviewCommentReport);
 
 router.get("/users", getAllUsersAdmin);
-router.delete("/users/:id", deleteUserAdmin);
-router.patch("/users/:id/ban", banUserAdmin);
-router.patch("/users/:id/unban", unbanUserAdmin);
+router.delete("/users/:id", moderationLimiter, deleteUserAdmin);
+router.patch("/users/:id/ban", moderationLimiter, banUserAdmin);
+router.patch("/users/:id/unban", moderationLimiter, unbanUserAdmin);
 
 router.get("/events", getAllEventsAdmin);
-router.put("/events/:id", updateEventAdmin);
-router.delete("/events/:id", deleteEventAdmin);
+router.put("/events/:id", eventWriteLimiter, updateEventAdmin);
+router.delete("/events/:id", eventWriteLimiter, deleteEventAdmin);
+router.post("/events/:id/cancel", eventWriteLimiter, cancelEventAdmin);
 
 export default router;

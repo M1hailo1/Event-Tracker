@@ -69,6 +69,11 @@ export async function deleteEvent(id: string): Promise<void> {
   await axiosInstance.delete(`/events/${id}`);
 }
 
+export async function cancelEvent(id: string, scope: "OCCURRENCE" | "SERIES" = "OCCURRENCE"): Promise<Event> {
+  const response = await axiosInstance.post<Event>(`/events/${id}/cancel`, { scope });
+  return response.data;
+}
+
 export async function updateEvent(
   id: string,
   payload: Partial<CreateEventPayload>,

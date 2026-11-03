@@ -19,6 +19,7 @@ export async function inviteUserToEvent(req: Request, res: Response) {
   if (!event) {
     return res.status(404).json({ error: "Event not found" });
   }
+  if (event.cancelledAt) return res.status(409).json({ error: "Cancelled events cannot accept invitations" });
 
   if (event.createdByUserId !== requesterId) {
     return res

@@ -39,7 +39,9 @@ These screenshots show the current interface with fictional demonstration events
 
 **Events**
 
-- Create, edit and delete events with name, description, date range, capacity and location
+- Create and edit events with name, description, date range, capacity and location
+- Permanent cancellation is the primary removal action: retain the event page, discussion and registrations, show a cancelled status, stop registrations/invitations/reminders and notify attendees in-app. Permanent deletion remains available for accidental creation
+- Cancel a single recurring occurrence or stop the whole series; stopping a series cancels upcoming/ongoing occurrences while preserving ended history
 - Choose 1–3 categories from 18 curated choices, with one main category; custom category creation is disabled
 - Optional covers from a bundled library of 40 compressed illustrations (about 2 MB total), with preview, replacement and removal; no uploads or external image storage needed
 - Pick the event location on an interactive map (Leaflet + OpenStreetMap) with automatic reverse geocoding of the address
@@ -48,7 +50,7 @@ These screenshots show the current interface with fictional demonstration events
 - Register / unregister before an event starts, with capacity limits and a public attendee list; registration stays closed while an event is ongoing
 - Concurrent registrations are serialized per event so competing requests cannot claim the same final seat; the organizer's registration is created atomically with the event
 - Search by name or city, filter by any selected category, and sort by date or name
-- Upcoming and ongoing events remain in active discovery and dashboards until their end time; ended events appear in history, with an attended-events filter
+- Upcoming and ongoing events remain in active discovery and dashboards until their end time; ended and cancelled events appear in history. Cancelled events are excluded from attended-event statistics and the attended-only filter
 - Event edits validate the final combined start/end dates, including partial updates; an optional end time can be removed
 
 **Dashboard and calendar**
@@ -84,7 +86,7 @@ These screenshots show the current interface with fictional demonstration events
 - Soft deletion hides the author/text while preserving visible replies
 - Report comments for harassment, spam, inappropriate content or other reasons, with an optional explanation
 - Staff review open, dismissed and removed reports, including the reported text snapshot; a new report on changed text can reopen a dismissed report
-- Shared posting limit of 5 comments/replies per user per minute, with separate change/report limits
+- Shared posting limit of 5 comments/replies per regular user per minute, with separate change/report limits and staff multipliers
 
 **Notifications**
 
@@ -101,7 +103,8 @@ These screenshots show the current interface with fictional demonstration events
 - Overview with platform statistics, including separate admin/moderator counts
 - User management: search by name or email, filter by role and status
 - Timed or permanent bans with reasons, unbanning, and account deletion; banned users are hidden from relevant public listings
-- Event management: view, edit and delete any event
+- Event management: view, edit, cancel and permanently delete events through protected staff routes
+- A **Manage in admin** shortcut on event details opens that exact event in the staff panel; normal event-page management controls remain organizer-only
 - Comment-report moderation with dismiss/remove actions and author management
 - Only admins can grant/revoke moderator privileges, using an in-app confirmation dialog
 - Moderators cannot ban, unban or delete admin accounts
@@ -126,6 +129,8 @@ These screenshots show the current interface with fictional demonstration events
 - Email + password registration and login (bcrypt password hashing, JWT sessions)
 - Sign in with Google
 - Request validation with Zod, secure headers with Helmet, CORS allow-list, and rate limiting (stricter on auth routes)
+- General request limits per 15 minutes: 300 for regular users, 900 for moderators and 1,500 for admins. Action limits use the same 1×/3×/5× multipliers; roles and bans are verified against the database on each request. Anonymous requests use IP-based limits, with an additional aggregate IP safety ceiling
+- Login/register limits remain 20 attempts per IP per 15 minutes for all roles
 - Email verification and password recovery are not implemented; email delivery is deferred pending a free setup
 
 ### Curated categories
@@ -181,7 +186,7 @@ Cover assets live in [`client/public/event-covers`](client/public/event-covers).
 Main entities (see `server/prisma/schema.prisma`):
 
 - **User** - email/password or Google account, role (`USER` / `MODERATOR` / `ADMIN`), optional `bannedUntil` and `banReason`
-- **Event** - creator, date range, location, visibility, capacity, recurrence and optional curated `coverId`; many-to-many categories, with `categoryId` retaining the main category for compatibility
+- **Event** - creator, date range, location, visibility, capacity, recurrence, cancellation timestamp (`cancelledAt`), series-stop flag (`recurrenceStopped`) and optional curated `coverId`; many-to-many categories, with `categoryId` retaining the main category for compatibility
 - **Registration** - a user's registration for an event, with a `reminderSent` flag
 - **EventInvite** - a user invited to an invite-only event
 - **Follow** - follower / following relation between users
@@ -409,7 +414,7 @@ cd server
 npm run test:reliability
 ```
 
-The integration tests cover simultaneous requests for the final seat, duplicate registrations, organizer capacity, ongoing-event discovery and registration closure, rating eligibility, owner/staff date edits, and recurring duration. The isolated suite is skipped by regular `npm test`; use the command above to run it safely.
+The integration tests cover simultaneous requests for the final seat, duplicate registrations, organizer capacity, ongoing-event discovery and registration closure, rating eligibility, owner/staff date edits, recurring duration, permanent cancellation, retained discussions, attendee notifications, staff-route permissions, and cancellation races with joining/reminders/series generation. The isolated suites are skipped by regular `npm test`; use the command above to run them safely. Unit/API tests also verify role-based quotas, immediate role revocation and rejection of client-supplied role claims.
 
 **Client** (`/client`)
 

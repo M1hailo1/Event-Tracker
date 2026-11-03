@@ -1,4 +1,6 @@
 import EventCover from "../components/EventCover";
+import { isStaff } from "../utils/roles";
+import CancelEventModal from "../components/CancelEventModal";
 import { useEventState } from "../utils/eventLifecycle";
 import { getEventCategories } from "../utils/eventCategories";
 import EventComments from "../components/EventComments";
@@ -13,6 +15,7 @@ import {
   registerForEvent,
   unregisterFromEvent,
   deleteEvent,
+  cancelEvent,
 } from "../api/eventsApi";
 import type { Event } from "../types";
 import { useAuth } from "../context/AuthContext";
@@ -27,6 +30,7 @@ import { markEventAsRead } from "../api/notificationsApi";
 export default function EventDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const [event, setEvent] = useState<Event | null>(null);
+  const [cancelling, setCancelling] = useState(false);
   const { confirm, confirmationDialog } = useConfirmAction();
   const eventState = useEventState(event ?? { date: "9999-01-01T00:00:00.000Z", endDate: null });
   const [hoveredRating, setHoveredRating] = useState(0);
@@ -146,11 +150,18 @@ export default function EventDetailsPage() {
   const isFull =
     event.maxCapacity !== null &&
     (event._count?.registrations ?? 0) >= event.maxCapacity;
-  const hasStarted = eventState !== "UPCOMING";
+  const hasStarted = new Date(event.date).getTime() <= Date.now();
+  const canManage = user?.id === event.createdByUserId;
 
   return (
     <div className="max-w-3xl mx-auto">
       {confirmationDialog}
+      {isStaff(user?.role) && <div className="mb-4 flex justify-end">
+        <Link to={`/admin?tab=events&event=${encodeURIComponent(event.id)}`} className="rounded-lg border border-indigo-200 px-3 py-2 text-sm font-medium text-indigo-600 hover:bg-indigo-50 dark:border-indigo-800 dark:text-indigo-300 dark:hover:bg-indigo-950">Manage in admin</Link>
+      </div>}
+      {cancelling && <CancelEventModal event={event} onCancel={() => setCancelling(false)} onConfirm={async scope => {
+        const updated = await cancelEvent(event.id, scope); setEvent({ ...event, ...updated }); setCancelling(false);
+      }} />}
       <button
         onClick={handleBack}
         className="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 mb-4 inline-block"
@@ -160,6 +171,10 @@ export default function EventDetailsPage() {
 
       <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
         <EventCover coverId={event.coverId} className="rounded-lg mb-5" eager />
+        {event.cancelledAt && <div role="status" className="mb-5 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-200">
+          <strong>Event cancelled.</strong> Registration is closed and reminders have stopped. This page and discussion are kept for reference.
+          {event.recurrenceStopped && <p className="mt-1">The recurring series has also been stopped.</p>}
+        </div>}
         <div className="flex items-start justify-between gap-4 mb-4">
           <div className="min-w-0 flex-1 space-y-2">
             <h1 className="min-w-0 break-words text-2xl font-bold text-gray-900 dark:text-gray-100">{event.name}</h1>
@@ -279,7 +294,7 @@ export default function EventDetailsPage() {
           <p className="text-red-600 dark:text-red-400 text-sm mb-3">{actionError}</p>
         )}
 
-        {hasStarted ? (
+        {event.cancelledAt ? null : hasStarted ? (
           <p className="text-sm text-gray-500 dark:text-gray-400 italic">
             {eventState === "ONGOING" ? "Happening now. Registration closed when this event started." : "This event has ended."}
           </p>
@@ -313,25 +328,29 @@ export default function EventDetailsPage() {
           </p>
         )}
 
-        {user && user.id === event.createdByUserId && !hasStarted && (
-          <div className="flex gap-3 mt-4 pt-4 border-t border-gray-100 dark:border-gray-800">
+        {user && canManage && (
+          <div className="flex flex-wrap gap-3 mt-4 pt-4 border-t border-gray-100 dark:border-gray-800">
+            {((!event.cancelledAt && eventState !== "ENDED") || (event.cancelledAt && event.isRecurring && !event.recurrenceStopped)) && <button onClick={() => setCancelling(true)} className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700">{event.cancelledAt ? "Stop recurring series" : "Cancel event"}</button>}
+            {!event.cancelledAt && !hasStarted &&
             <button
               onClick={() => navigate(`/events/${event.id}/edit`)}
               className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400"
             >
               Edit event
-            </button>
+            </button>}
+            {!hasStarted &&
             <button
               onClick={handleDelete}
               className="text-sm font-medium text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-400"
             >
-              Delete event
-            </button>
+              Permanently delete
+            </button>}
           </div>
         )}
 
         {user &&
           user.id === event.createdByUserId &&
+          !event.cancelledAt &&
           event.visibility === "INVITE_ONLY" && (
             <EventInviteManager eventId={event.id} creatorId={user.id} />
           )}

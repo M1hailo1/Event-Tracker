@@ -193,6 +193,7 @@ export async function updateEventAdmin(req: Request, res: Response) {
   }
 
   const parseResult = updateEventSchema.safeParse(req.body);
+  if (existingEvent.cancelledAt) return res.status(409).json({ error: "Cancelled events cannot be edited" });
   if (!parseResult.success) {
     return res.status(400).json({ error: parseResult.error.flatten() });
   }
@@ -275,7 +276,7 @@ export async function deleteEventAdmin(req: Request, res: Response) {
       createNotification(
         r.userId,
         "EVENT_CANCELLED",
-        `The event "${existingEvent.name}" you were registered for has been cancelled by an admin`,
+        `The event "${existingEvent.name}" you were registered for was permanently deleted by staff`,
       ),
     ),
   );

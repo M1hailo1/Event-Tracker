@@ -24,9 +24,9 @@ export async function requireAuth(
   try {
     const payload = verifyToken(token);
 
-    const user = await prisma.user.findUnique({
+    const user = req.currentUser?.id === payload.userId ? req.currentUser : await prisma.user.findUnique({
       where: { id: payload.userId },
-      select: { bannedUntil: true, banReason: true },
+      select: { id: true, role: true, bannedUntil: true, banReason: true },
     });
 
     if (!user) {
@@ -40,6 +40,7 @@ export async function requireAuth(
     }
 
     req.userId = payload.userId;
+    req.currentUser = user;
     next();
   } catch (err) {
     return res.status(401).json({ error: "Invalid or expired token" });

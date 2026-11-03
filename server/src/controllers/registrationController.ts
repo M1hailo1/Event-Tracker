@@ -29,6 +29,7 @@ export async function registerForEvent(req: Request, res: Response) {
       }
 
       const state = getEventState(event);
+      if (state === "CANCELLED") throw new Error("EVENT_CANCELLED");
       if (state !== "UPCOMING") {
         throw new Error(state === "ENDED" ? "EVENT_ENDED" : "REGISTRATION_CLOSED");
       }
@@ -79,6 +80,7 @@ export async function registerForEvent(req: Request, res: Response) {
       if (err.message === "EVENT_ENDED") {
         return res.status(403).json({ error: "Event already finished" });
       }
+      if (err.message === "EVENT_CANCELLED") return res.status(409).json({ error: "This event has been cancelled" });
       if (err.message === "REGISTRATION_CLOSED") {
         return res.status(403).json({ error: "Registration closed when this event started" });
       }

@@ -1,0 +1,2 @@
+ALTER TABLE "Event" ADD COLUMN "cancelledAt" TIMESTAMP(3),
+ADD COLUMN "recurrenceStopped" BOOLEAN NOT NULL DEFAULT false;

@@ -7,6 +7,7 @@ import { eventCoverIds } from "../src/utils/eventCovers";
 import prisma from "../src/prisma";
 
 jest.mock("../src/prisma", () => ({ __esModule: true, default: {
+  $transaction: jest.fn(), $queryRaw: jest.fn(),
   event: { create: jest.fn(), update: jest.fn(), findUnique: jest.fn(), findMany: jest.fn() },
   registration: { create: jest.fn(), findMany: jest.fn() },
   user: { findUnique: jest.fn() }, follow: { findMany: jest.fn() },
@@ -17,6 +18,8 @@ let req: Request;
 let res: Response;
 beforeEach(() => {
   jest.resetAllMocks();
+  (prisma.$transaction as jest.Mock).mockImplementation(callback => callback(prisma));
+  (prisma.$queryRaw as jest.Mock).mockResolvedValue([{ id: 'parent', parentEventId: null }]);
   req = { userId: "owner", params: { id: "event" }, query: {}, body: { coverId: "music-live" } } as unknown as Request;
   res = { status: jest.fn().mockReturnThis(), json: jest.fn() } as unknown as Response;
   (prisma.event.findUnique as jest.Mock).mockResolvedValue({ id: "event", createdByUserId: "owner", date: new Date("2099-01-01") });
@@ -47,6 +50,7 @@ it("persists the selected cover when creating an event", async () => {
   expect(res.status).toHaveBeenCalledWith(201);
 });
 it("keeps the cover on the next recurring event instance", async () => {
+  (prisma.event.findUnique as jest.Mock).mockResolvedValue({ id: "parent", date: new Date(Date.now() - 86400000), recurrencePattern: "DAILY", coverId: "music-dj", nextInstances: [] });
   (prisma.event.findMany as jest.Mock).mockResolvedValueOnce([{ id: "parent", date: new Date(Date.now() - 86400000), recurrencePattern: "DAILY", coverId: "music-dj" }]).mockResolvedValueOnce([]);
   await getAllEvents(req, res);
   expect(prisma.event.create).toHaveBeenCalledWith({ data: expect.objectContaining({ coverId: "music-dj", parentEventId: "parent" }) });
