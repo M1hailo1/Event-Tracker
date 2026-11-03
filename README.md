@@ -1,23 +1,52 @@
 # Event Tracker
 
-A full-stack web application for creating, discovering and attending events. Users can publish events on an interactive map, control who can see them, follow other users, and get notified about everything that matters to them. Admins get a dedicated panel to moderate users and events.
+A full-stack web application for creating, discovering and attending events. Users can publish illustrated events on an interactive map, control who can see them, follow other users, discuss events and rate events they registered for. Admins and moderators have a dedicated panel for managing users, events and comment reports.
 
 Built as a diploma (thesis) project.
 
 **Live demo:** https://event-tracker-liard-seven.vercel.app
 
-<img width="1098" height="417" alt="image" src="https://github.com/user-attachments/assets/4c8aa48e-d6b7-4ffd-af3d-58fec531fb58" />
+## Screenshots
+
+These screenshots show the current interface with fictional demonstration events, locations and accounts. They do not contain real user records or private addresses.
+
+**Discover events:** illustrated covers, category icons, search filters and balanced card columns.
+
+![Desktop event discovery with illustrated covers and category icons](assets/screenshots/events-desktop.png)
+
+<details>
+<summary>More screenshots: event details, cover selection, categories and mobile</summary>
+
+**Event summary:** a cover, description, visibility, selected categories and attendance information.
+
+![Event summary showing an acoustic session with its cover and category badges](assets/screenshots/event-details.png)
+
+**Cover library:** browse the bundled illustrations by category without uploading files.
+
+![Cover library filtered to outdoors and adventure illustrations](assets/screenshots/cover-library.png)
+
+**Category selection:** choose up to three categories and set the main one.
+
+![Three selected categories with main-category and remove controls](assets/screenshots/category-selection.png)
+
+**Mobile discovery:** the same event cards and filters adapt to a narrow screen.
+
+<img src="assets/screenshots/events-mobile.png" alt="Mobile event list with responsive navigation and illustrated cards" width="320" />
+
+</details>
 
 ## Features
 
 **Events**
 
-- Create, edit and delete events with name, description, category, date range, capacity and location
+- Create, edit and delete events with name, description, date range, capacity and location
+- Choose 1–3 categories from 18 curated choices, with one main category; custom category creation is disabled
+- Optional covers from a bundled library of 40 compressed illustrations (about 2 MB total), with preview, replacement and removal; no uploads or external image storage needed
 - Pick the event location on an interactive map (Leaflet + OpenStreetMap) with automatic reverse geocoding of the address
 - Map display of events, so you can browse what is happening and where
 - Recurring events (daily, weekly, monthly, yearly) - upcoming instances are generated automatically
 - Register / unregister from events, with capacity limits and a public attendee list
-- Filtering and sorting of the event list
+- Search by name or city, filter by any selected category, and sort by date or name
 - Upcoming and past events views, plus an attended-events history filter
 
 **Dashboard and calendar**
@@ -37,29 +66,53 @@ Built as a diploma (thesis) project.
 
 - Follow / unfollow other users
 - Clickable followers, following and attendee lists leading to user profiles
-- Profile statistics: total events attended, most visited categories and a fun "title" based on your favourite category
+- Profile statistics: total events attended, most visited categories and a fun "title" based on your favourite category; multi-category events count once in each category but once in the total
+
+**Ratings**
+
+- Confirmed registrants can leave or update one 1–5 star rating after an event ends; organizers cannot rate their own events
+- Event ratings appear on cards and details after the event ends
+- Organizer ratings on profiles aggregate the individual ratings across their events
+- Eligibility verifies registration, not physical attendance or check-in
+
+**Comments and reports**
+
+- Visibility-protected event discussions with one level of replies, editing, pagination and comments remaining open after events end
+- Authors can edit/delete their own comments; staff can remove others' comments
+- Soft deletion hides the author/text while preserving visible replies
+- Report comments for harassment, spam, inappropriate content or other reasons, with an optional explanation
+- Staff review open, dismissed and removed reports, including the reported text snapshot; a new report on changed text can reopen a dismissed report
+- Shared posting limit of 5 comments/replies per user per minute, with separate change/report limits
 
 **Notifications**
 
 - In-app notification bell with unread counter and a "mark all as read" action
-- Notifications for: new event from someone you follow, event updated, event cancelled, new follower, event invitations and event reminders
+- Notifications for new events from followed users, event changes/cancellations, new followers, invitations, reminders, event comments and replies
+- Repeated comment/reply activity is grouped while unread; links open the relevant comment or reply thread
 - **24-hour reminders** - a background job on the server runs every 15 minutes and notifies registered users whose event starts within 24 hours; a `reminderSent` flag on each registration guarantees a reminder is never sent twice
 - Old notifications are cleaned up automatically to keep the database small
 - Client polling pauses when the browser tab is hidden to save backend resources
 
-**Admin panel**
+**Admin and moderator panel**
 
-- Role-based access (`USER` / `ADMIN`) enforced by server-side middleware
-- Overview with platform statistics (users, events, upcoming events, registrations, categories)
+- Role-based access (`USER` / `MODERATOR` / `ADMIN`) checked against the current database role on protected requests
+- Overview with platform statistics, including separate admin/moderator counts
 - User management: search by name or email, filter by role and status
-- **Ban / unban** users instead of deleting accounts - banned users are soft-hidden from the app, and the action is fully reversible
+- Timed or permanent bans with reasons, unbanning, and account deletion; banned users are hidden from relevant public listings
 - Event management: view, edit and delete any event
-- Admin badge shown next to admin users
+- Comment-report moderation with dismiss/remove actions and author management
+- Only admins can grant/revoke moderator privileges, using an in-app confirmation dialog
+- Moderators cannot ban, unban or delete admin accounts
+- Admin and moderator badges appear beside staff users
 
 **UI**
 
 - Dark mode
 - Responsive layout (desktop and mobile navigation)
+- Balanced event-card columns with two fixed card sizes for events with/without covers
+- All selected categories appear as card icons with names on hover or keyboard focus
+- Searchable category/cover menus, selected category tags, and "Other" placed last
+- Event details show visibility below the title and equal-width category badges on the right
 - Loading states for data-heavy pages
 
 **Authentication and security**
@@ -67,6 +120,15 @@ Built as a diploma (thesis) project.
 - Email + password registration and login (bcrypt password hashing, JWT sessions)
 - Sign in with Google
 - Request validation with Zod, secure headers with Helmet, CORS allow-list, and rate limiting (stricter on auth routes)
+- Email verification and password recovery are not implemented; email delivery is deferred pending a free setup
+
+### Curated categories
+
+Music; Arts & Culture; Film; Gaming; Nightlife; Sports; Fitness & Wellness; Outdoors & Adventure; Education; Workshops & DIY; Technology; Business & Networking; Social & Meetups; Food & Drink; Community & Volunteering; Birthdays & Celebrations; Family & Kids; Other.
+
+The category migration seeds these choices and maps legacy event categories to them. Retired category records remain for reference; unrecognized legacy names map to Other. The first selected category is the main one, and recurring event instances inherit all selected categories and their cover.
+
+Cover assets live in [`client/public/event-covers`](client/public/event-covers). See the [library preview](assets/event-covers/preview-40.jpg) and the [original](assets/event-covers/prompts.json) / [additional](assets/event-covers/additional-prompts.json) generation prompts.
 
 ## Tech Stack
 
@@ -84,14 +146,20 @@ Built as a diploma (thesis) project.
 ```
 .
 ├── client/                 # React single-page application
+│   ├── public/event-covers/ # 40 bundled WebP illustrations
 │   └── src/
 │       ├── api/            # Axios API clients (auth, events, users, follow, notifications, admin...)
 │       ├── components/     # Navbar, NotificationBell, EventForm, LocationPicker, ...
 │       ├── context/        # AuthContext (and theme state)
+│       ├── data/           # Curated cover catalog
 │       ├── pages/          # Route-level pages (events, dashboard, profile, admin...)
 │       ├── types/          # Shared TypeScript types
 │       └── utils/          # Date formatting, helpers
+├── assets/
+│   ├── event-covers/       # Cover previews and generation prompts
+│   └── screenshots/       # README screenshots with fictional demo data
 └── server/                 # Express REST API
+    ├── tests/              # Jest unit and API integration tests
     ├── prisma/
     │   ├── schema.prisma   # Data model
     │   └── migrations/     # SQL migrations
@@ -106,17 +174,60 @@ Built as a diploma (thesis) project.
 
 Main entities (see `server/prisma/schema.prisma`):
 
-- **User** - account (email/password or Google) with a `role` (`USER` / `ADMIN`) and an `isBanned` flag
-- **Event** - belongs to a **Category**, has a creator, visibility, optional capacity and recurrence
+- **User** - email/password or Google account, role (`USER` / `MODERATOR` / `ADMIN`), optional `bannedUntil` and `banReason`
+- **Event** - creator, date range, location, visibility, capacity, recurrence and optional curated `coverId`; many-to-many categories, with `categoryId` retaining the main category for compatibility
 - **Registration** - a user's registration for an event, with a `reminderSent` flag
 - **EventInvite** - a user invited to an invite-only event
 - **Follow** - follower / following relation between users
-- **Notification** - typed in-app notification (`NEW_EVENT_FROM_FOLLOWED`, `EVENT_UPDATED`, `EVENT_CANCELLED`, `EVENT_REMINDER`, `NEW_FOLLOWER`, `EVENT_INVITE`)
-- **Category** - predefined or user-created (custom) event categories
+- **Notification** - typed in-app notification, including comments/replies, unread grouping and an optional comment target
+- **Category** - curated event category; legacy/custom records are retired from selection
+- **EventRating** - one editable rating per user/event
+- **EventComment** - event discussion with a parent reference for replies and soft deletion
+- **CommentReport** - reason, details, text snapshot and moderation status for a reported comment
+
+## Usage Examples
+
+### Organize an acoustic meetup
+
+1. Open **Create event** and enter a title, description, date range and map location.
+2. Choose **Music** and **Social & Meetups**, with Music as the main category.
+3. Pick **Acoustic session** from the cover library, set capacity to 60 and choose **Public** visibility.
+4. Publish the event. Visitors can discover it through either category, open its details, register and join the discussion. Confirmed registrants can rate it after it ends.
+
+### Create the same event through the API
+
+Send `POST /events` with `Authorization: Bearer <your-token>` and `Content-Type: application/json`:
+
+```json
+{
+  "name": "Sunset acoustic session",
+  "description": "An easygoing evening of acoustic music and good company.",
+  "categoryIds": [
+    "00000000-0000-4000-8000-000000000001",
+    "00000000-0000-4000-8000-000000000013"
+  ],
+  "coverId": "music-acoustic",
+  "date": "2030-06-14T16:00:00.000Z",
+  "endDate": "2030-06-14T18:00:00.000Z",
+  "location": "Demo Park",
+  "latitude": 44.8,
+  "longitude": 20.4,
+  "maxCapacity": 60,
+  "visibility": "PUBLIC"
+}
+```
+
+The category IDs above are seeded by the migration for Music and Social & Meetups. Use `GET /categories` to look up available IDs, and choose future dates when trying the request.
+
+Filtering by the secondary category also finds this event:
+
+```http
+GET /events?categoryId=00000000-0000-4000-8000-000000000013&sortBy=date_asc
+```
 
 ## API Overview
 
-Routes marked with 🔒 require an `Authorization: Bearer <token>` header. Routes marked with 🛡️ additionally require the `ADMIN` role.
+Routes marked with 🔒 require an `Authorization: Bearer <token>` header. Routes marked with 🛡️ additionally require `ADMIN` or `MODERATOR`; moderator role changes are admin-only.
 
 **Auth**
 
@@ -128,25 +239,34 @@ Routes marked with 🔒 require an `Authorization: Bearer <token>` header. Route
 
 **Events**
 
-| Method | Endpoint                  | Description                                                                |
-| ------ | ------------------------- | -------------------------------------------------------------------------- |
-| GET    | `/events`                 | List events visible to the requester (`?includePast=true` for past events) |
-| GET    | `/events/:id`             | Event details (visibility enforced)                                        |
-| POST   | `/events` 🔒              | Create an event                                                            |
-| PUT    | `/events/:id` 🔒          | Update an event (creator only)                                             |
-| DELETE | `/events/:id` 🔒          | Delete an event (creator only)                                             |
-| POST   | `/events/:id/register` 🔒 | Register for an event                                                      |
-| DELETE | `/events/:id/register` 🔒 | Cancel registration                                                        |
-| POST   | `/events/:id/invites` 🔒  | Invite a follower to an invite-only event                                  |
-| GET    | `/events/:id/invites` 🔒  | List invited users (creator only)                                          |
+| Method | Endpoint                                     | Description                                                                |
+| ------ | -------------------------------------------- | -------------------------------------------------------------------------- |
+| GET    | `/events`                                    | List events visible to the requester (`?includePast=true` for past events) |
+| GET    | `/events/:id`                                | Event details (visibility enforced)                                        |
+| POST   | `/events` 🔒                                 | Create an event                                                            |
+| PUT    | `/events/:id` 🔒                             | Update an event (creator only)                                             |
+| DELETE | `/events/:id` 🔒                             | Delete an event (creator only)                                             |
+| POST   | `/events/:id/register` 🔒                    | Register for an event                                                      |
+| DELETE | `/events/:id/register` 🔒                    | Cancel registration                                                        |
+| POST   | `/events/:id/invites` 🔒                     | Invite a follower to an invite-only event                                  |
+| GET    | `/events/:id/invites` 🔒                     | List invited users (creator only)                                          |
+| PUT    | `/events/:id/rating` 🔒                      | Set/update an ended event's rating (`score`: 1–5)                          |
+| GET    | `/events/:id/comments`                       | Read comments/replies with visibility checks and cursor pagination         |
+| POST   | `/events/:id/comments` 🔒                    | Post a comment or reply (`body`, optional `parentId`)                      |
+| PUT    | `/events/:id/comments/:commentId` 🔒         | Edit your own comment                                                      |
+| DELETE | `/events/:id/comments/:commentId` 🔒         | Delete your own comment, or remove as staff                                |
+| POST   | `/events/:id/comments/:commentId/reports` 🔒 | Report a comment (`reason`, optional `details`)                            |
+
+Event create/update requests accept `categoryIds` (1–3 distinct curated IDs, main first) and optional `coverId` (an ID from the bundled cover catalog, or `null` to remove). An omitted field is preserved during partial edits. The legacy `categoryId` field remains accepted for a single-category selection; it must agree with the first ID when both forms are supplied.
+
+List filters include `categoryId`, `search`, `city`, `sortBy` (`date_asc`, `date_desc`, `name_asc`, `name_desc`), `includePast` and authenticated `attendedOnly`. A category filter matches any of an event's selected categories.
 
 **Categories**
 
-| Method | Endpoint          | Description                |
-| ------ | ----------------- | -------------------------- |
-| GET    | `/categories`     | List predefined categories |
-| GET    | `/categories/:id` | Get a category             |
-| POST   | `/categories` 🔒  | Create a custom category   |
+| Method | Endpoint          | Description                                     |
+| ------ | ----------------- | ----------------------------------------------- |
+| GET    | `/categories`     | List the 18 curated categories, with Other last |
+| GET    | `/categories/:id` | Get a selectable curated category               |
 
 **Users and social**
 
@@ -172,21 +292,25 @@ Routes marked with 🔒 require an `Authorization: Bearer <token>` header. Route
 
 **Admin**
 
-| Method | Endpoint                    | Description         |
-| ------ | --------------------------- | ------------------- |
-| GET    | `/admin/stats` 🛡️           | Platform statistics |
-| GET    | `/admin/users` 🛡️           | List all users      |
-| PATCH  | `/admin/users/:id/ban` 🛡️   | Ban a user          |
-| PATCH  | `/admin/users/:id/unban` 🛡️ | Unban a user        |
-| GET    | `/admin/events` 🛡️          | List all events     |
-| PUT    | `/admin/events/:id` 🛡️      | Edit any event      |
-| DELETE | `/admin/events/:id` 🛡️      | Delete any event    |
+| Method | Endpoint                              | Description                                                |
+| ------ | ------------------------------------- | ---------------------------------------------------------- |
+| GET    | `/admin/stats` 🛡️                     | Platform statistics                                        |
+| GET    | `/admin/users` 🛡️                     | List all users                                             |
+| PATCH  | `/admin/users/:id/ban` 🛡️             | Ban a user                                                 |
+| PATCH  | `/admin/users/:id/unban` 🛡️           | Unban a user                                               |
+| GET    | `/admin/events` 🛡️                    | List all events                                            |
+| PUT    | `/admin/events/:id` 🛡️                | Edit any event                                             |
+| DELETE | `/admin/events/:id` 🛡️                | Delete any event                                           |
+| DELETE | `/admin/users/:id` 🛡️                 | Delete a user (moderators cannot delete admins)            |
+| PATCH  | `/admin/users/:id/role` 🛡️            | Admin-only: grant/revoke moderator (`USER` or `MODERATOR`) |
+| GET    | `/admin/comment-reports` 🛡️           | List the comment-report queue                              |
+| PATCH  | `/admin/comment-reports/:reportId` 🛡️ | Dismiss a report or remove the comment                     |
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js 20+ and npm
+- Node.js 22.12+ and npm (or a compatible Node 20 release starting at 20.19)
 - A PostgreSQL database (local installation or a hosted one such as [Neon](https://neon.tech))
 - A Google OAuth Client ID (for "Sign in with Google") - create one in the [Google Cloud Console](https://console.cloud.google.com/apis/credentials)
 
@@ -208,6 +332,8 @@ Create `server/.env`:
 
 ```env
 DATABASE_URL="postgresql://USER:PASSWORD@localhost:5432/eventtracker"
+# Optional: separate Neon target used only for explicit hosted migration runs
+# NEON_ONLINEDATA_URL="postgresql://USER:PASSWORD@HOST/neondb?sslmode=require"
 JWT_SECRET="a-long-random-secret-string"
 GOOGLE_CLIENT_ID="your-google-client-id.apps.googleusercontent.com"
 PORT=3000
@@ -216,7 +342,8 @@ PORT=3000
 Apply database migrations and generate the Prisma client:
 
 ```bash
-npx prisma migrate dev
+npx prisma migrate deploy
+npx prisma generate
 ```
 
 Start the API:
@@ -227,11 +354,11 @@ npm run dev
 
 The server runs on `http://localhost:3000`. The reminder job starts together with the server.
 
-> **Categories:** predefined categories (e.g. Music, Sport, Education, Fun, Birthday, Conference, Charity) live in the `Category` table with `isCustom = false`. Add them once, for example through `npx prisma studio`.
+> **Categories:** migrations seed all 18 curated categories automatically. Do not manually seed the retired category list. Use `npx prisma migrate dev --name <change>` when developing a new schema change; use `migrate deploy` to apply committed migrations.
 
 > **Admin account:** to create an admin, register a normal account and then set its `role` to `ADMIN` in the database (for example with `npx prisma studio`).
 
-> **CORS:** allowed origins are defined in `server/src/index.ts`. Add the URL of your deployed frontend there.
+> **CORS:** allowed origins are defined in `server/src/app.ts`. Add the URL of your deployed frontend there.
 
 ### 3. Set up the client
 
@@ -259,11 +386,12 @@ The app runs on `http://localhost:5173`.
 
 **Server** (`/server`)
 
-| Command         | Description                                 |
-| --------------- | ------------------------------------------- |
-| `npm run dev`   | Start the API with hot reload (`tsx watch`) |
-| `npm run build` | Compile TypeScript to `dist/`               |
-| `npm start`     | Run the compiled server                     |
+| Command         | Description                                                                          |
+| --------------- | ------------------------------------------------------------------------------------ |
+| `npm run dev`   | Start the API with hot reload (`tsx watch`)                                          |
+| `npm run build` | Compile TypeScript to `dist/`                                                        |
+| `npm start`     | Run the compiled server                                                              |
+| `npm test`      | Run Jest through `.env.test` (DB integration tests require a migrated test database) |
 
 **Client** (`/client`)
 
@@ -277,18 +405,24 @@ The app runs on `http://localhost:5173`.
 ## Deployment
 
 - **Client** - deployed on Vercel. `client/vercel.json` rewrites all routes to `index.html` so client-side routing works on refresh. Set `VITE_API_URL` and `VITE_GOOGLE_CLIENT_ID` in the Vercel project settings.
-- **Database** - PostgreSQL on Neon. Apply migrations to the production database with:
+- **Database** - PostgreSQL on Neon. Keep local `DATABASE_URL` and hosted `NEON_ONLINEDATA_URL` separate. From `server/`, the following PowerShell example reads the Neon target from `.env`, temporarily overrides only the shell process, applies committed migrations and restores the previous target:
 
-  ```bash
-  # PowerShell
-  $env:DATABASE_URL="<your-neon-connection-string>"
-  npx prisma migrate deploy
+  ```powershell
+  $neonDatabaseUrl = node -p "require('dotenv').config({ quiet: true }).parsed.NEON_ONLINEDATA_URL || ''"
+  if (-not $neonDatabaseUrl) { throw "Set NEON_ONLINEDATA_URL in server/.env first." }
+  $previousDatabaseUrl = $env:DATABASE_URL
+  try {
+    $env:DATABASE_URL = $neonDatabaseUrl
+    npx.cmd prisma migrate deploy
+    if ($LASTEXITCODE -ne 0) { throw "Migration failed." }
+    npx.cmd prisma migrate status
+  } finally {
+    $env:DATABASE_URL = $previousDatabaseUrl
+    Remove-Variable neonDatabaseUrl
+  }
   ```
 
-  ```bash
-  # bash
-  DATABASE_URL="<your-neon-connection-string>" npx prisma migrate deploy
-  ```
+  This does not edit `.env`. Use `migrate deploy` for hosted databases, not `migrate dev`.
 
 - **Server** - on any Node.js host. Make sure the Prisma client is generated during the build (for example by adding `"postinstall": "prisma generate"` to the server `package.json`) and that `DATABASE_URL`, `JWT_SECRET`, `GOOGLE_CLIENT_ID` and `PORT` are set as environment variables.
 
@@ -296,9 +430,18 @@ The app runs on `http://localhost:5173`.
 
 ## Roadmap
 
-- [ ] Invite any user (search by name), not only followers
-- [ ] Approval flow for event registrations (`PENDING` / `CONFIRMED` / `CANCELLED` statuses are already prepared in the schema)
-- [ ] Real-time notifications (Server-Sent Events or WebSockets) instead of polling
+- [ ] AI-powered event recommendations
+- [ ] Saved events / wishlist
+- [ ] Ticketing system
+- [ ] QR code check-in
+- [ ] Offline support through a Progressive Web App (PWA)
+- [ ] Mobile app
+- [ ] Complete UI redesign
+- [ ] Rich link previews when sharing events (Open Graph embeds)
+- [ ] Email notifications, reminders and account verification
+- [ ] Forgot-password / password recovery
+- [ ] Move reminder scheduling to an external cron job
+- [ ] User-uploaded event images with moderation
 
 ## Author
 

@@ -44,6 +44,7 @@ model User {
 }
 
 model Category {
+  categorizedEvents Event[] @relation("EventCategories")
   id              String   @id @default(uuid())
   name            String
   isCustom        Boolean  @default(false)
@@ -73,6 +74,8 @@ enum EventVisibility {
 }
 
 model Event {
+  categories        Category[] @relation("EventCategories")
+  coverId           String?
   id                String             @id @default(uuid())
   name              String
   description       String?

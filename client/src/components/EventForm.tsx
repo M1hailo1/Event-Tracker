@@ -1,18 +1,17 @@
 import { useState, useEffect } from "react";
 import type { FormEvent } from "react";
 import { isAxiosError } from "axios";
-import {
-  getAllCategories,
-  createCategory,
-  getCategoryById,
-} from "../api/categoriesApi";
+import { getAllCategories } from "../api/categoriesApi";
+import CategoryPicker from "./CategoryPicker";
 import type { Category, RecurrencePattern, EventVisibility } from "../types";
 import LocationPicker from "./LocationPicker";
+import EventCoverPicker from "./EventCoverPicker";
 
 export interface EventFormValues {
+  coverId: string | null;
   name: string;
   description?: string;
-  categoryId: string;
+  categoryIds: string[];
   date: string;
   endDate?: string;
   location: string;
@@ -26,9 +25,10 @@ export interface EventFormValues {
 
 interface EventFormProps {
   initialData?: {
+    coverId: string | null;
     name: string;
     description: string | null;
-    categoryId: string;
+    categoryIds: string[];
     date: string;
     endDate: string | null;
     location: string;
@@ -80,12 +80,12 @@ export default function EventForm({
   submitLabel,
 }: EventFormProps) {
   const [categories, setCategories] = useState<Category[]>([]);
+  const [coverId, setCoverId] = useState<string | null>(initialData?.coverId ?? null);
   const [name, setName] = useState(initialData?.name ?? "");
   const [description, setDescription] = useState(
     initialData?.description ?? "",
   );
-  const [categoryId, setCategoryId] = useState(initialData?.categoryId ?? "");
-  const [customCategoryName, setCustomCategoryName] = useState("");
+  const [categoryIds, setCategoryIds] = useState<string[]>(initialData?.categoryIds ?? []);
   const [date, setDate] = useState(
     initialData ? toDatetimeLocalValue(initialData.date) : "",
   );
@@ -115,31 +115,16 @@ export default function EventForm({
 
   useEffect(() => {
     getAllCategories()
-      .then((cats) => {
-        if (
-          initialData?.categoryId &&
-          !cats.some((c) => c.id === initialData.categoryId)
-        ) {
-          getCategoryById(initialData.categoryId)
-            .then((customCat) => setCategories([...cats, customCat]))
-            .catch(() => setCategories(cats));
-        } else {
-          setCategories(cats);
-        }
-      })
-      .catch(console.error);
-  }, [initialData?.categoryId]);
+      .then(setCategories)
+      .catch(() => setError("Unable to load categories. Please reload and try again."));
+  }, []);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError("");
 
-    if (!categoryId) {
-      setError("Choose category");
-      return;
-    }
-    if (categoryId === "CUSTOM" && !customCategoryName.trim()) {
-      setError("Enter category title");
+    if (!categoryIds.length || categoryIds.length > 3) {
+      setError("Choose 1 to 3 categories");
       return;
     }
     if (latitude === null || longitude === null) {
@@ -149,17 +134,11 @@ export default function EventForm({
 
     setIsSubmitting(true);
     try {
-      let finalCategoryId = categoryId;
-
-      if (categoryId === "CUSTOM") {
-        const newCategory = await createCategory(customCategoryName.trim());
-        finalCategoryId = newCategory.id;
-      }
-
       await onSubmit({
+        coverId,
         name,
         description: description || undefined,
-        categoryId: finalCategoryId,
+        categoryIds,
         date: new Date(date).toISOString(),
         endDate: endDate ? new Date(endDate).toISOString() : undefined,
         location,
@@ -204,24 +183,11 @@ export default function EventForm({
         />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div>
-          <label className={labelClass}>Category</label>
-          <select
-            value={categoryId}
-            onChange={(e) => setCategoryId(e.target.value)}
-            required
-            className={inputClass}
-          >
-            <option value="">-- Choose --</option>
-            {categories.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-            <option value="CUSTOM">+ Custom</option>
-          </select>
-        </div>
+      <EventCoverPicker value={coverId} onChange={setCoverId} disabled={isSubmitting} />
+
+      <CategoryPicker categories={categories} value={categoryIds} onChange={setCategoryIds} disabled={isSubmitting} />
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
         <div>
           <label className={labelClass}>Start date and time</label>
@@ -246,19 +212,6 @@ export default function EventForm({
           />
         </div>
       </div>
-
-      {categoryId === "CUSTOM" && (
-        <div>
-          <label className={labelClass}>Custom category title</label>
-          <input
-            type="text"
-            value={customCategoryName}
-            onChange={(e) => setCustomCategoryName(e.target.value)}
-            required
-            className={inputClass}
-          />
-        </div>
-      )}
 
       <div>
         <label className={labelClass}>Location</label>

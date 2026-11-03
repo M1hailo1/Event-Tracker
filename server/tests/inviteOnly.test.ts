@@ -36,9 +36,7 @@ describe("Invite-only events", () => {
     invitedToken = invited.token;
     invitedId = invited.userId;
 
-    const category = await prisma.category.create({
-      data: { name: `Invite category ${Date.now()}` },
-    });
+    const category = await prisma.category.findFirstOrThrow({ where: { name: "Music", isCustom: false } });
     categoryId = category.id;
 
     const eventRes = await request(app)
@@ -66,7 +64,6 @@ describe("Invite-only events", () => {
       where: { followerId: invitedId, followingId: organizerId },
     });
     await prisma.event.deleteMany({ where: { id: eventId } });
-    await prisma.category.deleteMany({ where: { id: categoryId } });
     await prisma.user.deleteMany({
       where: { email: { in: [emailOrg, emailInvited] } },
     });

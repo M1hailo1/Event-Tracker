@@ -1,4 +1,6 @@
+import { getEventCategories } from "../utils/eventCategories";
 import ModeratorRoleModal from "../components/ModeratorRoleModal";
+import SearchableSelect from "../components/SearchableSelect";
 import { isStaff } from "../utils/roles";
 import CommentReportsTab from "../components/CommentReportsTab";
 import { useEffect, useState } from "react";
@@ -451,7 +453,7 @@ function EventsTab() {
       e.name.toLowerCase().includes(search.toLowerCase()) ||
       (e.createdBy?.name.toLowerCase().includes(search.toLowerCase()) ?? false);
 
-    const matchesCategory = categoryId === "" || e.categoryId === categoryId;
+    const matchesCategory = categoryId === "" || getEventCategories(e).some(category => category.id === categoryId);
 
     const matchesVisibility =
       visibilityFilter === "all" || e.visibility === visibilityFilter;
@@ -469,18 +471,8 @@ function EventsTab() {
           placeholder="Search by event or organizer..."
           className={inputClass}
         />
-        <select
-          value={categoryId}
-          onChange={(e) => setCategoryId(e.target.value)}
-          className={inputClass}
-        >
-          <option value="">All categories</option>
-          {categories.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
+        <SearchableSelect label="Category" hideLabel value={categoryId} onChange={setCategoryId}
+          options={[{ value: "", label: "All categories" }, ...categories.map(category => ({ value: category.id, label: category.name }))]} />
         <select
           value={visibilityFilter}
           onChange={(e) =>
@@ -527,7 +519,7 @@ function EventsTab() {
                   {e.createdBy?.name ?? "—"}
                 </td>
                 <td className="px-4 py-3 text-gray-600 dark:text-gray-400 whitespace-nowrap">
-                  {e.category?.name ?? "—"}
+                  {getEventCategories(e).map(category => category.name).join(", ") || "—"}
                 </td>
                 <td className="px-4 py-3 text-gray-500 dark:text-gray-400 whitespace-nowrap">
                   {visibilityLabels[e.visibility]}
@@ -578,7 +570,7 @@ function EventsTab() {
               {e.name}
             </Link>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-              by {e.createdBy?.name ?? "—"} · {e.category?.name ?? "—"}
+              by {e.createdBy?.name ?? "—"} · {getEventCategories(e).map(category => category.name).join(", ") || "—"}
             </p>
             <p className="text-xs text-gray-500 dark:text-gray-400">
               {formatEventDate(e.date)} · {visibilityLabels[e.visibility]}

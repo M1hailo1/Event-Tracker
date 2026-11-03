@@ -1,3 +1,5 @@
+import EventCover from "../components/EventCover";
+import { getEventCategories } from "../utils/eventCategories";
 import EventComments from "../components/EventComments";
 import { Star } from "lucide-react";
 import RatingDisplay from "../components/RatingDisplay";
@@ -159,16 +161,12 @@ export default function EventDetailsPage() {
       </button>
 
       <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-        <div className="flex items-start justify-between mb-4">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{event.name}</h1>
-          <div className="flex flex-col items-end gap-2 ml-3">
-            {event.category && (
-              <span className="text-xs font-medium bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 px-3 py-1 rounded-full whitespace-nowrap">
-                {event.category.name}
-              </span>
-            )}
+        <EventCover coverId={event.coverId} className="rounded-lg mb-5" eager />
+        <div className="flex items-start justify-between gap-4 mb-4">
+          <div className="min-w-0 flex-1 space-y-2">
+            <h1 className="min-w-0 break-words text-2xl font-bold text-gray-900 dark:text-gray-100">{event.name}</h1>
             <span
-              className={`text-xs font-medium px-3 py-1 rounded-full whitespace-nowrap ${
+              className={`inline-block text-xs font-medium px-3 py-1 rounded-full whitespace-nowrap ${
                 event.visibility === "PUBLIC"
                   ? "bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400"
                   : "bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-400"
@@ -180,6 +178,13 @@ export default function EventDetailsPage() {
                   ? "Followers only"
                   : "Invite only"}
             </span>
+          </div>
+          <div className="flex max-w-[50%] shrink-0 flex-col items-stretch gap-1">
+            {getEventCategories(event).map(category => (
+              <span key={category.id} className="max-w-full break-words rounded-full bg-indigo-50 px-3 py-1 text-center text-xs font-medium text-indigo-600 dark:bg-indigo-950 dark:text-indigo-400">
+                {category.name}
+              </span>
+            ))}
           </div>
         </div>
 

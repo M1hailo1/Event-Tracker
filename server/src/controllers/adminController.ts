@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { selectedCategoryIds, validCategorySelection, curatedCategoryWhere } from "../utils/eventCategories";
 import { Request, Response } from "express";
 import prisma from "../prisma";
 import { updateEventSchema } from "./eventController";
@@ -20,7 +21,7 @@ export async function getAdminStats(req: Request, res: Response) {
       prisma.event.count(),
       prisma.event.count({ where: { date: { gte: new Date() } } }),
       prisma.registration.count({ where: { status: "CONFIRMED" } }),
-      prisma.category.count(),
+      prisma.category.count({ where: curatedCategoryWhere }),
       prisma.user.count({ where: { role: "ADMIN" } }),
       prisma.user.count({ where: { role: "MODERATOR" } }),
     ]);
@@ -169,6 +170,7 @@ export async function getAllEventsAdmin(req: Request, res: Response) {
   const events = await prisma.event.findMany({
     include: {
       category: true,
+      categories: true,
       createdBy: { select: { id: true, name: true } },
       _count: { select: { registrations: true } },
     },
@@ -196,12 +198,16 @@ export async function updateEventAdmin(req: Request, res: Response) {
 
   const data = parseResult.data;
 
+  const categoryIds = selectedCategoryIds(data);
+  if (!await validCategorySelection(categoryIds)) return res.status(400).json({ error: "Choose categories from the collection" });
+
   const updatedEvent = await prisma.event.update({
     where: { id },
     data: {
       ...(data.name !== undefined && { name: data.name }),
+      ...(data.coverId !== undefined && { coverId: data.coverId }),
       ...(data.description !== undefined && { description: data.description }),
-      ...(data.categoryId !== undefined && { categoryId: data.categoryId }),
+      ...(categoryIds && { categoryId: categoryIds[0]!, categories: { set: categoryIds.map(id => ({ id })) } }),
       ...(data.date !== undefined && { date: new Date(data.date) }),
       ...(data.endDate !== undefined && {
         endDate: data.endDate ? new Date(data.endDate) : null,

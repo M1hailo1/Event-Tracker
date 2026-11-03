@@ -1,0 +1,102 @@
+{
+  "generator": "Built-in image_gen",
+  "output": "client/public/event-covers/*.webp",
+  "covers": [
+    {
+      "id": "arts-painting",
+      "label": "Art studio",
+      "group": "Arts & Culture",
+      "prompt": "Create ONE polished landscape event cover illustration, 1536x1024. Subject: paint brushes and a colorful abstract canvas on an easel. Cohesive editorial flat illustration, clean geometric shapes, soft peach pastel background, rich indigo teal coral golden accents, subtle paper grain. Friendly modern event discovery app. Center composition to survive wide 2:1 cropping. No text, letters, logos, watermark or border. Finished standalone cover, not a contact sheet."
+    },
+    {
+      "id": "arts-museum",
+      "label": "Museum visit",
+      "group": "Arts & Culture",
+      "prompt": "Create ONE polished landscape event cover illustration, 1536x1024. Subject: a sculpture gallery with framed art and an arched doorway. Cohesive editorial flat illustration, clean geometric shapes, soft peach pastel background, rich indigo teal coral golden accents, subtle paper grain. Friendly modern event discovery app. Center composition to survive wide 2:1 cropping. No text, letters, logos, watermark or border. Finished standalone cover, not a contact sheet."
+    },
+    {
+      "id": "nightlife-dance",
+      "label": "Dance night",
+      "group": "Nightlife",
+      "prompt": "Create ONE polished landscape event cover illustration, 1536x1024. Subject: a glowing disco ball over an empty colorful dance floor. Cohesive editorial flat illustration, clean geometric shapes, soft peach pastel background, rich indigo teal coral golden accents, subtle paper grain. Friendly modern event discovery app. Center composition to survive wide 2:1 cropping. No text, letters, logos, watermark or border. Finished standalone cover, not a contact sheet."
+    },
+    {
+      "id": "wellness-yoga",
+      "label": "Yoga",
+      "group": "Fitness & Wellness",
+      "prompt": "Create ONE polished landscape event cover illustration, 1536x1024. Subject: a yoga mat and folded towels beside a leafy plant at sunrise. Cohesive editorial flat illustration, clean geometric shapes, soft peach pastel background, rich indigo teal coral golden accents, subtle paper grain. Friendly modern event discovery app. Center composition to survive wide 2:1 cropping. No text, letters, logos, watermark or border. Finished standalone cover, not a contact sheet."
+    },
+    {
+      "id": "wellness-mindful",
+      "label": "Mindful moments",
+      "group": "Fitness & Wellness",
+      "prompt": "Create ONE polished landscape event cover illustration, 1536x1024. Subject: a tranquil zen garden with smooth stones and rippling water. Cohesive editorial flat illustration, clean geometric shapes, soft peach pastel background, rich indigo teal coral golden accents, subtle paper grain. Friendly modern event discovery app. Center composition to survive wide 2:1 cropping. No text, letters, logos, watermark or border. Finished standalone cover, not a contact sheet."
+    },
+    {
+      "id": "outdoors-camping",
+      "label": "Camping",
+      "group": "Outdoors & Adventure",
+      "prompt": "Create ONE polished landscape event cover illustration, 1536x1024. Subject: a small tent beside a mountain lake under stars. Cohesive editorial flat illustration, clean geometric shapes, soft peach pastel background, rich indigo teal coral golden accents, subtle paper grain. Friendly modern event discovery app. Center composition to survive wide 2:1 cropping. No text, letters, logos, watermark or border. Finished standalone cover, not a contact sheet."
+    },
+    {
+      "id": "outdoors-hiking",
+      "label": "Hiking",
+      "group": "Outdoors & Adventure",
+      "prompt": "Create ONE polished landscape event cover illustration, 1536x1024. Subject: hiking boots and a backpack beside a winding mountain trail. Cohesive editorial flat illustration, clean geometric shapes, soft peach pastel background, rich indigo teal coral golden accents, subtle paper grain. Friendly modern event discovery app. Center composition to survive wide 2:1 cropping. No text, letters, logos, watermark or border. Finished standalone cover, not a contact sheet."
+    },
+    {
+      "id": "workshop-pottery",
+      "label": "Pottery workshop",
+      "group": "Workshops & DIY",
+      "prompt": "Create ONE polished landscape event cover illustration, 1536x1024. Subject: a pottery wheel with clay vessels and crafting tools. Cohesive editorial flat illustration, clean geometric shapes, soft peach pastel background, rich indigo teal coral golden accents, subtle paper grain. Friendly modern event discovery app. Center composition to survive wide 2:1 cropping. No text, letters, logos, watermark or border. Finished standalone cover, not a contact sheet."
+    },
+    {
+      "id": "workshop-crafts",
+      "label": "Craft together",
+      "group": "Workshops & DIY",
+      "prompt": "Create ONE polished landscape event cover illustration, 1536x1024. Subject: paper scissors yarn and handmade decorations on a craft table. Cohesive editorial flat illustration, clean geometric shapes, soft peach pastel background, rich indigo teal coral golden accents, subtle paper grain. Friendly modern event discovery app. Center composition to survive wide 2:1 cropping. No text, letters, logos, watermark or border. Finished standalone cover, not a contact sheet."
+    },
+    {
+      "id": "tech-robotics",
+      "label": "Robotics",
+      "group": "Technology",
+      "prompt": "Create ONE polished landscape event cover illustration, 1536x1024. Subject: a friendly small robot on a desk beside electronic parts. Cohesive editorial flat illustration, clean geometric shapes, soft peach pastel background, rich indigo teal coral golden accents, subtle paper grain. Friendly modern event discovery app. Center composition to survive wide 2:1 cropping. No text, letters, logos, watermark or border. Finished standalone cover, not a contact sheet."
+    },
+    {
+      "id": "business-ideas",
+      "label": "Ideas together",
+      "group": "Business & Networking",
+      "prompt": "Create ONE polished landscape event cover illustration, 1536x1024. Subject: a meeting desk with sticky notes and a large glowing idea light bulb. Cohesive editorial flat illustration, clean geometric shapes, soft peach pastel background, rich indigo teal coral golden accents, subtle paper grain. Friendly modern event discovery app. Center composition to survive wide 2:1 cropping. No text, letters, logos, watermark or border. Finished standalone cover, not a contact sheet."
+    },
+    {
+      "id": "social-meetup",
+      "label": "Social meetup",
+      "group": "Social & Meetups",
+      "prompt": "Create ONE polished landscape event cover illustration, 1536x1024. Subject: a welcoming cafe terrace with colorful empty chairs around a table. Cohesive editorial flat illustration, clean geometric shapes, soft peach pastel background, rich indigo teal coral golden accents, subtle paper grain. Friendly modern event discovery app. Center composition to survive wide 2:1 cropping. No text, letters, logos, watermark or border. Finished standalone cover, not a contact sheet."
+    },
+    {
+      "id": "food-cooking",
+      "label": "Cooking",
+      "group": "Food & Drink",
+      "prompt": "Create ONE polished landscape event cover illustration, 1536x1024. Subject: fresh vegetables a chopping board and a steaming cooking pot. Cohesive editorial flat illustration, clean geometric shapes, soft peach pastel background, rich indigo teal coral golden accents, subtle paper grain. Friendly modern event discovery app. Center composition to survive wide 2:1 cropping. No text, letters, logos, watermark or border. Finished standalone cover, not a contact sheet."
+    },
+    {
+      "id": "food-market",
+      "label": "Food market",
+      "group": "Food & Drink",
+      "prompt": "Create ONE polished landscape event cover illustration, 1536x1024. Subject: a colorful outdoor food market stall with fruit and bread. Cohesive editorial flat illustration, clean geometric shapes, soft peach pastel background, rich indigo teal coral golden accents, subtle paper grain. Friendly modern event discovery app. Center composition to survive wide 2:1 cropping. No text, letters, logos, watermark or border. Finished standalone cover, not a contact sheet."
+    },
+    {
+      "id": "family-play",
+      "label": "Family day",
+      "group": "Family & Kids",
+      "prompt": "Create ONE polished landscape event cover illustration, 1536x1024. Subject: a cheerful playground with a slide swings and building blocks. Cohesive editorial flat illustration, clean geometric shapes, soft peach pastel background, rich indigo teal coral golden accents, subtle paper grain. Friendly modern event discovery app. Center composition to survive wide 2:1 cropping. No text, letters, logos, watermark or border. Finished standalone cover, not a contact sheet."
+    },
+    {
+      "id": "family-kites",
+      "label": "Kite day",
+      "group": "Family & Kids",
+      "prompt": "Create ONE polished landscape event cover illustration, 1536x1024. Subject: colorful kites flying above a sunny grassy park. Cohesive editorial flat illustration, clean geometric shapes, soft peach pastel background, rich indigo teal coral golden accents, subtle paper grain. Friendly modern event discovery app. Center composition to survive wide 2:1 cropping. No text, letters, logos, watermark or border. Finished standalone cover, not a contact sheet."
+    }
+  ]
+}

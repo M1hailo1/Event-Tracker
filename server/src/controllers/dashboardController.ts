@@ -4,6 +4,7 @@ import prisma from "../prisma";
 
 const eventInclude = {
   category: true,
+  categories: true,
   createdBy: { select: { id: true, name: true } },
   _count: { select: { registrations: true } },
 };

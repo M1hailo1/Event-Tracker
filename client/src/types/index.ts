@@ -21,6 +21,7 @@ export type RecurrencePattern = "DAILY" | "WEEKLY" | "MONTHLY" | "YEARLY";
 export type EventVisibility = "PUBLIC" | "FOLLOWERS_ONLY" | "INVITE_ONLY";
 
 export interface Event {
+  coverId?: string | null;
   rating?: RatingSummary;
   myRating?: number | null;
   id: string;
@@ -39,6 +40,7 @@ export interface Event {
   categoryId: string;
   createdByUserId: string;
   category?: Category;
+  categories?: Category[];
   createdBy?: { id: string; name: string };
   _count?: { registrations: number };
   registrations?: Registration[];

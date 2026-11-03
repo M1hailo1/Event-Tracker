@@ -1,4 +1,5 @@
 import { isStaff } from "../utils/roles";
+import { getEventCategories } from "../utils/eventCategories";
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getEventById, updateEvent } from "../api/eventsApi";
@@ -65,9 +66,10 @@ export default function EditEventPage() {
       )}
       <EventForm
         initialData={{
+          coverId: event.coverId ?? null,
           name: event.name,
           description: event.description,
-          categoryId: event.categoryId,
+          categoryIds: getEventCategories(event).map(category => category.id),
           date: event.date,
           endDate: event.endDate,
           location: event.location,

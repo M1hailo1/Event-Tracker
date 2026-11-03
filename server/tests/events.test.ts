@@ -30,9 +30,7 @@ describe("Events and capacity (/events)", () => {
     organizerToken = organizer.token;
     organizerId = organizer.userId;
 
-    const category = await prisma.category.create({
-      data: { name: `Test Category ${Date.now()}` },
-    });
+    const category = await prisma.category.findFirstOrThrow({ where: { name: "Music", isCustom: false } });
     categoryId = category.id;
   });
 
@@ -44,7 +42,6 @@ describe("Events and capacity (/events)", () => {
       },
     });
     await prisma.event.deleteMany({ where: { id: eventId } });
-    await prisma.category.deleteMany({ where: { id: categoryId } });
     await prisma.user.deleteMany({
       where: { email: { in: [organizerEmail, ...otherEmails] } },
     });

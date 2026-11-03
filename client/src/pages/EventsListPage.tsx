@@ -5,10 +5,11 @@ import type { EventSortOption } from "../api/eventsApi";
 import { getAllCategories } from "../api/categoriesApi";
 import type { Event, Category } from "../types";
 import { useAuth } from "../context/AuthContext";
-import EventCard from "../components/EventCard";
+import EventCardGrid from "../components/EventCardGrid";
 import EventsMap from "../components/EventsMap";
 import EventsCalendar from "../components/EventsCalendar";
 import Spinner from "../components/Spinner";
+import SearchableSelect from "../components/SearchableSelect";
 
 const inputClass =
   "w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500";
@@ -193,23 +194,8 @@ export default function EventsListPage() {
             />
           </div>
 
-          <div>
-            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
-              Category
-            </label>
-            <select
-              value={categoryId}
-              onChange={(e) => setCategoryId(e.target.value)}
-              className={inputClass}
-            >
-              <option value="">All categories</option>
-              {categories.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
-          </div>
+          <SearchableSelect label="Category" value={categoryId} onChange={setCategoryId}
+            options={[{ value: "", label: "All categories" }, ...categories.map(category => ({ value: category.id, label: category.name }))]} />
 
           <div>
             <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
@@ -275,11 +261,7 @@ export default function EventsListPage() {
         ) : view === "calendar" ? (
           <EventsCalendar events={events} />
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {events.map((event) => (
-              <EventCard key={event.id} event={event} />
-            ))}
-          </div>
+          <EventCardGrid events={events} />
         ))}
     </div>
   );

@@ -1,4 +1,6 @@
 import { isStaff } from "../utils/roles";
+import { eventCoverIds } from "../utils/eventCovers";
+import { selectedCategoryIds, validCategorySelection } from "../utils/eventCategories";
 import { Request, Response } from "express";
 import { getRatingSummary, withEventRatings } from "../utils/ratings";
 import { z } from "zod";
@@ -7,9 +9,11 @@ import { getNextDate } from "../utils/recurrence";
 import { createNotification } from "../utils/createNotification";
 
 export const baseEventSchema = z.object({
+  coverId: z.enum(eventCoverIds).nullable().optional(),
   name: z.string().min(2),
   description: z.string().optional(),
-  categoryId: z.string().uuid(),
+  categoryId: z.string().uuid().optional(),
+  categoryIds: z.array(z.string().uuid()).min(1).max(3).refine(ids => new Set(ids).size === ids.length, "Choose distinct categories").optional(),
   date: z.string().datetime(),
   endDate: z.string().datetime().optional(),
   location: z.string().min(2),
@@ -27,6 +31,8 @@ export const baseEventSchema = z.object({
 });
 
 const createEventSchema = baseEventSchema
+  .refine(data => !!selectedCategoryIds(data)?.length, { message: "Choose 1 to 3 categories", path: ["categoryIds"] })
+  .refine(data => !data.categoryIds || !data.categoryId || data.categoryIds[0] === data.categoryId, { message: "Primary category must be first", path: ["categoryIds"] })
   .refine((data) => new Date(data.date) > new Date(), {
     message: "Event date must be in the future",
     path: ["date"],
@@ -45,11 +51,16 @@ export async function createEvent(req: Request, res: Response) {
 
   const data = parseResult.data;
 
+  const categoryIds = selectedCategoryIds(data)!;
+  if (!await validCategorySelection(categoryIds)) return res.status(400).json({ error: "Choose categories from the collection" });
+
   const event = await prisma.event.create({
     data: {
       name: data.name,
+      coverId: data.coverId ?? null,
       description: data.description ?? null,
-      categoryId: data.categoryId,
+      categoryId: categoryIds[0]!,
+      categories: { connect: categoryIds.map(id => ({ id })) },
       date: new Date(data.date),
       endDate: data.endDate ? new Date(data.endDate) : null,
       location: data.location,
@@ -151,7 +162,7 @@ export async function getAllEvents(req: Request, res: Response) {
   ];
 
   if (categoryId) {
-    filters.push({ categoryId });
+    filters.push({ OR: [{ categoryId }, { categories: { some: { id: categoryId } } }] });
   }
   if (city) {
     filters.push({ location: { contains: city, mode: "insensitive" } });
@@ -177,6 +188,7 @@ export async function getAllEvents(req: Request, res: Response) {
     where: { AND: filters },
     include: {
       category: true,
+      categories: true,
       createdBy: { select: { id: true, name: true } },
       _count: { select: { registrations: true } },
     },
@@ -197,6 +209,7 @@ export async function getEventById(req: Request, res: Response) {
     where: { id },
     include: {
       category: true,
+      categories: true,
       createdBy: {
         select: { id: true, name: true },
       },
@@ -277,6 +290,7 @@ export const updateEventSchema = baseEventSchema
     isRecurring: z.boolean().optional(),
   })
   .partial()
+  .refine(data => !data.categoryIds || !data.categoryId || data.categoryIds[0] === data.categoryId, { message: "Primary category must be first", path: ["categoryIds"] })
   .refine((data) => !data.date || new Date(data.date) > new Date(), {
     message: "Event date must be in the future",
     path: ["date"],
@@ -312,12 +326,16 @@ export async function updateEvent(req: Request, res: Response) {
 
   const data = parseResult.data;
 
+  const categoryIds = selectedCategoryIds(data);
+  if (!await validCategorySelection(categoryIds)) return res.status(400).json({ error: "Choose categories from the collection" });
+
   const updatedEvent = await prisma.event.update({
     where: { id },
     data: {
       ...(data.name !== undefined && { name: data.name }),
+      ...(data.coverId !== undefined && { coverId: data.coverId }),
       ...(data.description !== undefined && { description: data.description }),
-      ...(data.categoryId !== undefined && { categoryId: data.categoryId }),
+      ...(categoryIds && { categoryId: categoryIds[0]!, categories: { set: categoryIds.map(id => ({ id })) } }),
       ...(data.date !== undefined && { date: new Date(data.date) }),
       ...(data.endDate !== undefined && {
         endDate: data.endDate ? new Date(data.endDate) : null,
@@ -412,6 +430,7 @@ export async function deleteEvent(req: Request, res: Response) {
 
 async function generateMissingRecurringInstances() {
   const expiredRecurring = await prisma.event.findMany({
+    include: { categories: true },
     where: {
       isRecurring: true,
       date: { lt: new Date() },
@@ -431,8 +450,10 @@ async function generateMissingRecurringInstances() {
     await prisma.event.create({
       data: {
         name: event.name,
+        coverId: event.coverId,
         description: event.description,
         categoryId: event.categoryId,
+        categories: { connect: (event.categories?.length ? event.categories : [{ id: event.categoryId }]).map(category => ({ id: category.id })) },
         date: nextDate,
         location: event.location,
         latitude: event.latitude,

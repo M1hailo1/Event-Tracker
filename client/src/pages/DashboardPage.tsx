@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getMyDashboard } from "../api/userApi";
 import type { DashboardData } from "../types";
-import EventCard from "../components/EventCard";
+import EventCardGrid from "../components/EventCardGrid";
 import { useAuth } from "../context/AuthContext";
 import LoadingBlock from "../components/LoadingBlock";
 
@@ -31,11 +31,7 @@ function DashboardSection({
           {emptyText}
         </p>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {events.map((event) => (
-            <EventCard key={event.id} event={event} />
-          ))}
-        </div>
+        <EventCardGrid events={events} />
       )}
     </section>
   );

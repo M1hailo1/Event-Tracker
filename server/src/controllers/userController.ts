@@ -33,7 +33,7 @@ export async function getMyStats(req: Request, res: Response) {
         ],
       },
     },
-    include: { event: { include: { category: true } } },
+    include: { event: { include: { category: true, categories: true } } },
   });
 
   const categoryCounts: Record<
@@ -42,15 +42,13 @@ export async function getMyStats(req: Request, res: Response) {
   > = {};
 
   for (const reg of registrations) {
-    const catId = reg.event.categoryId;
-    if (!categoryCounts[catId]) {
-      categoryCounts[catId] = {
-        categoryId: catId,
-        name: reg.event.category.name,
-        count: 0,
-      };
+    for (const category of reg.event.categories.length ? reg.event.categories : [reg.event.category]) {
+      const catId = category.id;
+      if (!categoryCounts[catId]) {
+        categoryCounts[catId] = { categoryId: catId, name: category.name, count: 0 };
+      }
+      categoryCounts[catId].count++;
     }
-    categoryCounts[catId].count++;
   }
 
   const sorted = Object.values(categoryCounts).sort(

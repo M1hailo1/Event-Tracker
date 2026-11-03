@@ -37,9 +37,10 @@ export async function getEventById(id: string): Promise<Event> {
 }
 
 export interface CreateEventPayload {
+  coverId?: string | null;
   name: string;
   description?: string;
-  categoryId: string;
+  categoryIds: string[];
   date: string;
   location: string;
   latitude: number;

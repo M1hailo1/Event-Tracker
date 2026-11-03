@@ -21,7 +21,6 @@ export const followLimiter = actionLimiter(20, "follow/unfollow actions");
 export const registrationLimiter = actionLimiter(20, "join/leave actions");
 export const inviteLimiter = actionLimiter(20, "invitations");
 export const eventWriteLimiter = actionLimiter(10, "event changes");
-export const categoryWriteLimiter = actionLimiter(10, "category creations");
 
 export const commentWriteLimiter = actionLimiter(20, "comment changes");
 

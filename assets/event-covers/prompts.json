@@ -1,0 +1,150 @@
+{
+  "generator": "Built-in image_gen",
+  "output": "client/public/event-covers/*.webp",
+  "covers": [
+    {
+      "id": "music-live",
+      "label": "Live music",
+      "group": "Music",
+      "prompt": "Create ONE polished landscape event cover illustration, 1536x1024. Subject: a small outdoor stage with guitar, microphone and warm spotlights. Cohesive editorial flat illustration, clean confident geometric forms, soft pastel background, rich indigo teal coral and golden accents, subtle paper grain, generous breathing room. Friendly modern event discovery app. Entire scene centered and composed to survive wide 2:1 cropping. No text, no lettering, no logos, no watermark, no border. This is a finished standalone cover, not a contact sheet."
+    },
+    {
+      "id": "music-dj",
+      "label": "DJ night",
+      "group": "Music",
+      "prompt": "Create ONE polished landscape event cover illustration, 1536x1024. Subject: a DJ turntable with headphones and flowing sound waves. Cohesive editorial flat illustration, clean confident geometric forms, soft pastel background, rich indigo teal coral and golden accents, subtle paper grain, generous breathing room. Friendly modern event discovery app. Entire scene centered and composed to survive wide 2:1 cropping. No text, no lettering, no logos, no watermark, no border. This is a finished standalone cover, not a contact sheet."
+    },
+    {
+      "id": "music-acoustic",
+      "label": "Acoustic session",
+      "group": "Music",
+      "prompt": "Create ONE polished landscape event cover illustration, 1536x1024. Subject: an acoustic guitar beside a cozy stool and potted plant. Cohesive editorial flat illustration, clean confident geometric forms, soft pastel background, rich indigo teal coral and golden accents, subtle paper grain, generous breathing room. Friendly modern event discovery app. Entire scene centered and composed to survive wide 2:1 cropping. No text, no lettering, no logos, no watermark, no border. This is a finished standalone cover, not a contact sheet."
+    },
+    {
+      "id": "sport-football",
+      "label": "Football",
+      "group": "Sport",
+      "prompt": "Create ONE polished landscape event cover illustration, 1536x1024. Subject: a football on a green pitch with goal posts. Cohesive editorial flat illustration, clean confident geometric forms, soft pastel background, rich indigo teal coral and golden accents, subtle paper grain, generous breathing room. Friendly modern event discovery app. Entire scene centered and composed to survive wide 2:1 cropping. No text, no lettering, no logos, no watermark, no border. This is a finished standalone cover, not a contact sheet."
+    },
+    {
+      "id": "sport-running",
+      "label": "Running club",
+      "group": "Sport",
+      "prompt": "Create ONE polished landscape event cover illustration, 1536x1024. Subject: running shoes on a curving park track under a morning sun. Cohesive editorial flat illustration, clean confident geometric forms, soft pastel background, rich indigo teal coral and golden accents, subtle paper grain, generous breathing room. Friendly modern event discovery app. Entire scene centered and composed to survive wide 2:1 cropping. No text, no lettering, no logos, no watermark, no border. This is a finished standalone cover, not a contact sheet."
+    },
+    {
+      "id": "sport-fitness",
+      "label": "Fitness",
+      "group": "Sport",
+      "prompt": "Create ONE polished landscape event cover illustration, 1536x1024. Subject: dumbbells, exercise mat and water bottle. Cohesive editorial flat illustration, clean confident geometric forms, soft pastel background, rich indigo teal coral and golden accents, subtle paper grain, generous breathing room. Friendly modern event discovery app. Entire scene centered and composed to survive wide 2:1 cropping. No text, no lettering, no logos, no watermark, no border. This is a finished standalone cover, not a contact sheet."
+    },
+    {
+      "id": "education-books",
+      "label": "Book club",
+      "group": "Education",
+      "prompt": "Create ONE polished landscape event cover illustration, 1536x1024. Subject: a welcoming stack of open books with a reading lamp. Cohesive editorial flat illustration, clean confident geometric forms, soft pastel background, rich indigo teal coral and golden accents, subtle paper grain, generous breathing room. Friendly modern event discovery app. Entire scene centered and composed to survive wide 2:1 cropping. No text, no lettering, no logos, no watermark, no border. This is a finished standalone cover, not a contact sheet."
+    },
+    {
+      "id": "education-workshop",
+      "label": "Workshop",
+      "group": "Education",
+      "prompt": "Create ONE polished landscape event cover illustration, 1536x1024. Subject: a creative workspace with notebook pencils and colorful paper. Cohesive editorial flat illustration, clean confident geometric forms, soft pastel background, rich indigo teal coral and golden accents, subtle paper grain, generous breathing room. Friendly modern event discovery app. Entire scene centered and composed to survive wide 2:1 cropping. No text, no lettering, no logos, no watermark, no border. This is a finished standalone cover, not a contact sheet."
+    },
+    {
+      "id": "education-science",
+      "label": "Science meetup",
+      "group": "Education",
+      "prompt": "Create ONE polished landscape event cover illustration, 1536x1024. Subject: a telescope and tiny planets with gentle stars. Cohesive editorial flat illustration, clean confident geometric forms, soft pastel background, rich indigo teal coral and golden accents, subtle paper grain, generous breathing room. Friendly modern event discovery app. Entire scene centered and composed to survive wide 2:1 cropping. No text, no lettering, no logos, no watermark, no border. This is a finished standalone cover, not a contact sheet."
+    },
+    {
+      "id": "fun-games",
+      "label": "Game night",
+      "group": "Fun",
+      "prompt": "Create ONE polished landscape event cover illustration, 1536x1024. Subject: board game pieces dice and playing cards on a table. Cohesive editorial flat illustration, clean confident geometric forms, soft pastel background, rich indigo teal coral and golden accents, subtle paper grain, generous breathing room. Friendly modern event discovery app. Entire scene centered and composed to survive wide 2:1 cropping. No text, no lettering, no logos, no watermark, no border. This is a finished standalone cover, not a contact sheet."
+    },
+    {
+      "id": "fun-cinema",
+      "label": "Movie night",
+      "group": "Fun",
+      "prompt": "Create ONE polished landscape event cover illustration, 1536x1024. Subject: a cinema projector popcorn and a blank projection screen. Cohesive editorial flat illustration, clean confident geometric forms, soft pastel background, rich indigo teal coral and golden accents, subtle paper grain, generous breathing room. Friendly modern event discovery app. Entire scene centered and composed to survive wide 2:1 cropping. No text, no lettering, no logos, no watermark, no border. This is a finished standalone cover, not a contact sheet."
+    },
+    {
+      "id": "fun-picnic",
+      "label": "Picnic",
+      "group": "Fun",
+      "prompt": "Create ONE polished landscape event cover illustration, 1536x1024. Subject: a picnic blanket with fruit basket under leafy trees. Cohesive editorial flat illustration, clean confident geometric forms, soft pastel background, rich indigo teal coral and golden accents, subtle paper grain, generous breathing room. Friendly modern event discovery app. Entire scene centered and composed to survive wide 2:1 cropping. No text, no lettering, no logos, no watermark, no border. This is a finished standalone cover, not a contact sheet."
+    },
+    {
+      "id": "birthday-cake",
+      "label": "Birthday cake",
+      "group": "Birthday",
+      "prompt": "Create ONE polished landscape event cover illustration, 1536x1024. Subject: a birthday cake with candles and floating confetti. Cohesive editorial flat illustration, clean confident geometric forms, soft pastel background, rich indigo teal coral and golden accents, subtle paper grain, generous breathing room. Friendly modern event discovery app. Entire scene centered and composed to survive wide 2:1 cropping. No text, no lettering, no logos, no watermark, no border. This is a finished standalone cover, not a contact sheet."
+    },
+    {
+      "id": "birthday-balloons",
+      "label": "Birthday party",
+      "group": "Birthday",
+      "prompt": "Create ONE polished landscape event cover illustration, 1536x1024. Subject: a cluster of colorful balloons and wrapped presents. Cohesive editorial flat illustration, clean confident geometric forms, soft pastel background, rich indigo teal coral and golden accents, subtle paper grain, generous breathing room. Friendly modern event discovery app. Entire scene centered and composed to survive wide 2:1 cropping. No text, no lettering, no logos, no watermark, no border. This is a finished standalone cover, not a contact sheet."
+    },
+    {
+      "id": "birthday-celebration",
+      "label": "Celebration",
+      "group": "Birthday",
+      "prompt": "Create ONE polished landscape event cover illustration, 1536x1024. Subject: party hats streamers and a star shaped pinata. Cohesive editorial flat illustration, clean confident geometric forms, soft pastel background, rich indigo teal coral and golden accents, subtle paper grain, generous breathing room. Friendly modern event discovery app. Entire scene centered and composed to survive wide 2:1 cropping. No text, no lettering, no logos, no watermark, no border. This is a finished standalone cover, not a contact sheet."
+    },
+    {
+      "id": "conference-talk",
+      "label": "Conference",
+      "group": "Conference",
+      "prompt": "Create ONE polished landscape event cover illustration, 1536x1024. Subject: a conference podium and rows of seats with a blank presentation screen. Cohesive editorial flat illustration, clean confident geometric forms, soft pastel background, rich indigo teal coral and golden accents, subtle paper grain, generous breathing room. Friendly modern event discovery app. Entire scene centered and composed to survive wide 2:1 cropping. No text, no lettering, no logos, no watermark, no border. This is a finished standalone cover, not a contact sheet."
+    },
+    {
+      "id": "conference-network",
+      "label": "Networking",
+      "group": "Conference",
+      "prompt": "Create ONE polished landscape event cover illustration, 1536x1024. Subject: a round meeting table with coffee cups notebooks and connected abstract circles. Cohesive editorial flat illustration, clean confident geometric forms, soft pastel background, rich indigo teal coral and golden accents, subtle paper grain, generous breathing room. Friendly modern event discovery app. Entire scene centered and composed to survive wide 2:1 cropping. No text, no lettering, no logos, no watermark, no border. This is a finished standalone cover, not a contact sheet."
+    },
+    {
+      "id": "conference-tech",
+      "label": "Tech meetup",
+      "group": "Conference",
+      "prompt": "Create ONE polished landscape event cover illustration, 1536x1024. Subject: an open laptop with abstract code blocks and connected devices. Cohesive editorial flat illustration, clean confident geometric forms, soft pastel background, rich indigo teal coral and golden accents, subtle paper grain, generous breathing room. Friendly modern event discovery app. Entire scene centered and composed to survive wide 2:1 cropping. No text, no lettering, no logos, no watermark, no border. This is a finished standalone cover, not a contact sheet."
+    },
+    {
+      "id": "charity-hands",
+      "label": "Helping hands",
+      "group": "Charity",
+      "prompt": "Create ONE polished landscape event cover illustration, 1536x1024. Subject: two welcoming hands holding a heart with small leaves. Cohesive editorial flat illustration, clean confident geometric forms, soft pastel background, rich indigo teal coral and golden accents, subtle paper grain, generous breathing room. Friendly modern event discovery app. Entire scene centered and composed to survive wide 2:1 cropping. No text, no lettering, no logos, no watermark, no border. This is a finished standalone cover, not a contact sheet."
+    },
+    {
+      "id": "charity-nature",
+      "label": "Community garden",
+      "group": "Charity",
+      "prompt": "Create ONE polished landscape event cover illustration, 1536x1024. Subject: small young plants growing in a shared garden with watering can. Cohesive editorial flat illustration, clean confident geometric forms, soft pastel background, rich indigo teal coral and golden accents, subtle paper grain, generous breathing room. Friendly modern event discovery app. Entire scene centered and composed to survive wide 2:1 cropping. No text, no lettering, no logos, no watermark, no border. This is a finished standalone cover, not a contact sheet."
+    },
+    {
+      "id": "charity-community",
+      "label": "Community",
+      "group": "Charity",
+      "prompt": "Create ONE polished landscape event cover illustration, 1536x1024. Subject: a row of colorful friendly little houses around a shared tree. Cohesive editorial flat illustration, clean confident geometric forms, soft pastel background, rich indigo teal coral and golden accents, subtle paper grain, generous breathing room. Friendly modern event discovery app. Entire scene centered and composed to survive wide 2:1 cropping. No text, no lettering, no logos, no watermark, no border. This is a finished standalone cover, not a contact sheet."
+    },
+    {
+      "id": "general-sunset",
+      "label": "Outdoors",
+      "group": "General",
+      "prompt": "Create ONE polished landscape event cover illustration, 1536x1024. Subject: layered rolling hills beneath a warm sunset with a winding path. Cohesive editorial flat illustration, clean confident geometric forms, soft pastel background, rich indigo teal coral and golden accents, subtle paper grain, generous breathing room. Friendly modern event discovery app. Entire scene centered and composed to survive wide 2:1 cropping. No text, no lettering, no logos, no watermark, no border. This is a finished standalone cover, not a contact sheet."
+    },
+    {
+      "id": "general-coffee",
+      "label": "Coffee meetup",
+      "group": "General",
+      "prompt": "Create ONE polished landscape event cover illustration, 1536x1024. Subject: two ceramic coffee cups on a cafe table with a leafy plant. Cohesive editorial flat illustration, clean confident geometric forms, soft pastel background, rich indigo teal coral and golden accents, subtle paper grain, generous breathing room. Friendly modern event discovery app. Entire scene centered and composed to survive wide 2:1 cropping. No text, no lettering, no logos, no watermark, no border. This is a finished standalone cover, not a contact sheet."
+    },
+    {
+      "id": "general-gathering",
+      "label": "Get together",
+      "group": "General",
+      "prompt": "Create ONE polished landscape event cover illustration, 1536x1024. Subject: a festive courtyard table with chairs string lights and leafy plants. Cohesive editorial flat illustration, clean confident geometric forms, soft pastel background, rich indigo teal coral and golden accents, subtle paper grain, generous breathing room. Friendly modern event discovery app. Entire scene centered and composed to survive wide 2:1 cropping. No text, no lettering, no logos, no watermark, no border. This is a finished standalone cover, not a contact sheet."
+    }
+  ]
+}

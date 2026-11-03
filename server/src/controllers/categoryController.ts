@@ -1,14 +1,15 @@
 import { Request, Response } from "express";
-import { z } from "zod";
+import { curatedCategoryWhere } from "../utils/eventCategories";
 import prisma from "../prisma";
 
 export async function getAllCategories(req: Request, res: Response) {
   const categories = await prisma.category.findMany({
-    where: { isCustom: false },
+    where: curatedCategoryWhere,
     orderBy: { name: "asc" },
   });
 
-  res.status(200).json(categories);
+  const ordered = [...categories.filter(category => category.name !== "Other"), ...categories.filter(category => category.name === "Other")];
+  res.status(200).json(ordered);
 }
 
 export async function getCategoryById(req: Request, res: Response) {
@@ -17,33 +18,9 @@ export async function getCategoryById(req: Request, res: Response) {
     return res.status(400).json({ error: "Invalid ID" });
   }
 
-  const category = await prisma.category.findUnique({ where: { id } });
+  const category = await prisma.category.findFirst({ where: { ...curatedCategoryWhere, id } });
   if (!category) {
     return res.status(404).json({ error: "Category not found" });
   }
   res.status(200).json(category);
-}
-
-const createCategorySchema = z.object({
-  name: z.string().min(2),
-});
-
-export async function createCategory(req: Request, res: Response) {
-  const parseResult = createCategorySchema.safeParse(req.body);
-
-  if (!parseResult.success) {
-    return res.status(400).json({ error: parseResult.error.flatten() });
-  }
-
-  const { name } = parseResult.data;
-
-  const category = await prisma.category.create({
-    data: {
-      name,
-      isCustom: true,
-      createdByUserId: req.userId!,
-    },
-  });
-
-  res.status(201).json(category);
 }
