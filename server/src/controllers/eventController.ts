@@ -1,4 +1,5 @@
 import { readPagination, paged } from "../utils/pagination";
+import { savedEventsWhere } from "../utils/savedEvents";
 import { isStaff } from "../utils/roles";
 import { lockEventSeries } from "../utils/eventSeries";
 import { activeEventsWhere, endedEventsWhere, validUpdatedDates } from "../utils/eventLifecycle";
@@ -178,6 +179,7 @@ export async function getAllEvents(req: Request, res: Response) {
   const scope = req.query.scope;
   if (scope && !userId) return res.status(401).json({ error: "Sign in required" });
   if (scope === "organized") filters.push({ createdByUserId: userId });
+  if (scope === "saved") filters.push(savedEventsWhere(userId!));
   if (scope === "registered") filters.push({ createdByUserId: { not: userId }, registrations: { some: { userId, status: "CONFIRMED" } } });
   if (scope === "following") filters.push({ createdBy: { followers: { some: { followerId: userId } } }, registrations: { none: { userId } } });
   if (typeof req.query.from === "string" && typeof req.query.to === "string") {

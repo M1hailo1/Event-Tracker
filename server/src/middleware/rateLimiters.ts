@@ -26,6 +26,7 @@ export function createActionLimiter(limit: number, action: string) {
 }
 
 export const followLimiter = createActionLimiter(20, "follow/unfollow actions");
+export const saveEventLimiter = createActionLimiter(20, "save/unsave actions");
 export const registrationLimiter = createActionLimiter(20, "join/leave actions");
 export const inviteLimiter = createActionLimiter(20, "invitations");
 export const eventWriteLimiter = createActionLimiter(10, "event changes");

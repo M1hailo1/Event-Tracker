@@ -32,7 +32,7 @@ export default function Navbar() {
           <span>EventTracker</span>
         </Link>
 
-        <div className="hidden md:flex items-center gap-4">
+        <div className="hidden lg:flex items-center gap-4">
           {user ? (
             <>
               <Link
@@ -40,6 +40,10 @@ export default function Navbar() {
                 className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400"
               >
                 Dashboard
+              </Link>
+              <Link to="/saved" onClick={handleLinkClick}
+                className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400">
+                Saved events
               </Link>
               <Link
                 to="/events/new"
@@ -87,7 +91,7 @@ export default function Navbar() {
           )}
         </div>
 
-        <div className="md:hidden flex items-center gap-4">
+        <div className="lg:hidden flex items-center gap-4">
           {user && <NotificationBell />}
           <button
             className="text-gray-700 dark:text-gray-300"
@@ -100,7 +104,7 @@ export default function Navbar() {
       </div>
 
       {isMenuOpen && (
-        <div className="md:hidden max-w-5xl mx-auto mt-4 flex flex-col gap-3 pb-2">
+        <div className="lg:hidden max-w-5xl mx-auto mt-4 flex flex-col gap-3 pb-2">
           {user ? (
             <>
               <Link
@@ -109,6 +113,10 @@ export default function Navbar() {
                 className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400"
               >
                 Dashboard
+              </Link>
+              <Link to="/saved" onClick={handleLinkClick}
+                className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400">
+                Saved events
               </Link>
               <Link
                 to="/events/new"

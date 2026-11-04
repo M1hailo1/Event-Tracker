@@ -1,4 +1,6 @@
 import { getEventSharePreview } from "../controllers/eventShareController";
+import { getSavedEventIds, saveEvent, unsaveEvent } from "../controllers/savedEventController";
+import { saveEventLimiter } from "../middleware/rateLimiters";
 import { reportComment } from "../controllers/commentReportController";
 import { cancelEvent } from "../controllers/eventCancellationController";
 import { requireCommentAccess, getComments, createComment, updateComment, deleteComment } from "../controllers/commentController";
@@ -22,6 +24,9 @@ import { eventWriteLimiter, inviteLimiter, commentWriteLimiter, commentPostLimit
 import { rateEvent } from "../controllers/ratingController";
 
 const router = Router();
+router.get("/saved-ids", requireAuth, getSavedEventIds);
+router.put("/:id/save", requireAuth, saveEventLimiter, saveEvent);
+router.delete("/:id/save", requireAuth, saveEventLimiter, unsaveEvent);
 router.post("/:id/comments/:commentId/reports", requireAuth, commentReportLimiter, requireCommentAccess, reportComment);
 router.get("/:id/comments", optionalAuth, requireCommentAccess, getComments);
 router.post("/:id/comments", requireAuth, commentPostLimiter, commentWriteLimiter, requireCommentAccess, createComment);

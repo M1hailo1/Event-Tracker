@@ -4,6 +4,7 @@ import { getMyDashboard } from "../api/userApi";
 import type { DashboardData } from "../types";
 import EventCardGrid from "../components/EventCardGrid";
 import { useAuth } from "../context/AuthContext";
+import { useSavedEvents } from "../context/SavedEventsContext";
 import { EventCardsSkeleton } from "../components/Skeleton";
 import { useEventClock } from "../utils/eventLifecycle";
 
@@ -48,29 +49,33 @@ function DashboardSection({
 
 export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
-  const lifecycleClock = useEventClock(data ? [...data.myUpcomingEvents, ...data.registeredUpcomingEvents, ...data.followingUpcomingEvents] : []);
+  const { revision } = useSavedEvents();
+  const lifecycleClock = useEventClock(data ? [...data.myUpcomingEvents, ...data.registeredUpcomingEvents, ...data.followingUpcomingEvents, ...(data.savedUpcomingEvents ?? [])] : []);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const { user, isLoading: authLoading } = useAuth();
 
   useEffect(() => {
     if (!user) return;
+    let active = true;
 
     async function loadDashboard() {
       setIsLoading(true);
+      setError("");
       try {
         const dashboardData = await getMyDashboard();
-        setData(dashboardData);
+        if (active) setData(dashboardData);
       } catch (err) {
-        setError("Failed to load dashboard");
+        if (active) setError("Failed to load dashboard");
         console.error(err);
       } finally {
-        setIsLoading(false);
+        if (active) setIsLoading(false);
       }
     }
 
     loadDashboard();
-  }, [user, lifecycleClock]);
+    return () => { active = false; };
+  }, [user, lifecycleClock, revision]);
 
   if (authLoading && !user) return <EventCardsSkeleton />;
   if (!user) {
@@ -96,6 +101,15 @@ export default function DashboardPage() {
           Create event
         </Link>
       </div>
+
+      <DashboardSection
+        hasMore={data.hasMore?.savedUpcomingEvents ?? false}
+        viewAllTo="/saved"
+        title="Saved events"
+        subtitle="Events you've bookmarked for later"
+        events={data.savedUpcomingEvents ?? []}
+        emptyText="You haven't saved any upcoming or ongoing events."
+      />
 
       <DashboardSection
         hasMore={data.hasMore?.registeredUpcomingEvents ?? false}

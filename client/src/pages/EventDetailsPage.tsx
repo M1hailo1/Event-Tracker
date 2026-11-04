@@ -20,6 +20,7 @@ import {
 } from "../api/eventsApi";
 import type { Event } from "../types";
 import { useAuth } from "../context/AuthContext";
+import SaveEventButton from "../components/SaveEventButton";
 import LocationPicker from "../components/LocationPicker";
 import EventInviteManager from "../components/EventInviteManager";
 import { formatEventDate } from "../utils/formatDate";
@@ -202,6 +203,7 @@ export default function EventDetailsPage() {
           </div>
         </div>
 
+        <div className="mb-4 flex justify-end"><SaveEventButton eventId={event.id} /></div>
         {event.description && (
           <p className="text-gray-600 dark:text-gray-400 mb-4">{event.description}</p>
         )}

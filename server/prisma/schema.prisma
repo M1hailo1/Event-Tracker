@@ -41,6 +41,7 @@ model User {
   ratings       EventRating[]
   comments      EventComment[]
   commentReports CommentReport[]
+  savedEvents SavedEvent[]
 }
 
 model Category {
@@ -103,10 +104,22 @@ model Event {
   invites       EventInvite[]
   ratings       EventRating[]
   comments      EventComment[]
+  savedBy       SavedEvent[]
 
   parentEventId String?
   parentEvent   Event?  @relation("EventSeries", fields: [parentEventId], references: [id])
   nextInstances Event[] @relation("EventSeries")
+}
+
+model SavedEvent {
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  eventId String
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@id([userId, eventId])
+  @@index([eventId])
 }
 
 model EventInvite {

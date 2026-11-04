@@ -34,7 +34,7 @@ describe("Mark event notifications as read", () => {
     expect(response.status).toBe(200);
     expect(prisma.notification.updateMany).toHaveBeenCalledWith({
       where: { userId: "current-user", eventId: "event-123", isRead: false },
-      data: { isRead: true },
+      data: { isRead: true, groupKey: null },
     });
   });
 

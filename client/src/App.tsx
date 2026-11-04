@@ -10,15 +10,19 @@ import DashboardPage from "./pages/DashboardPage";
 import Navbar from "./components/Navbar";
 import UserProfilePage from "./pages/UserProfilePage";
 import AdminPage from "./pages/AdminPage";
+import SavedEventsPage from "./pages/SavedEventsPage";
+import { SavedEventsProvider } from "./context/SavedEventsContext";
 
 function App() {
   return (
     <BrowserRouter>
+      <SavedEventsProvider>
       <Navbar />
       <div className="max-w-5xl mx-auto px-6 py-8">
         <Routes>
           <Route path="/" element={<EventsListPage />} />
           <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/saved" element={<SavedEventsPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/events/:id" element={<EventDetailsPage />} />
@@ -29,6 +33,7 @@ function App() {
           <Route path="/admin" element={<AdminPage />} />
         </Routes>
       </div>
+      </SavedEventsProvider>
     </BrowserRouter>
   );
 }

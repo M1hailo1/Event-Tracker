@@ -7,6 +7,7 @@ import { getEventCover } from "../data/eventCovers";
 import { getEventCategories } from "../utils/eventCategories";
 import CategoryIcon from "./CategoryIcon";
 import Availability from "./Availability";
+import SaveEventButton from "./SaveEventButton";
 import { useEventState } from "../utils/eventLifecycle";
 
 interface EventCardProps {
@@ -31,10 +32,10 @@ export default function EventCard({ event }: EventCardProps) {
         </h3>
       </div>
 
-      <p title={dateLabel} className="shrink-0 truncate text-sm text-gray-500 dark:text-gray-400 mb-1">
+      <p title={dateLabel} className={`shrink-0 truncate text-sm text-gray-500 dark:text-gray-400 mb-1 ${!hasCover ? "pr-10" : ""}`}>
         {dateLabel}
       </p>
-      <p title={event.location} className="shrink-0 truncate text-sm text-gray-500 dark:text-gray-400 mb-1">
+      <p title={event.location} className={`shrink-0 truncate text-sm text-gray-500 dark:text-gray-400 mb-1 ${!hasCover ? "pr-10" : ""}`}>
         {event.location}
       </p>
 
@@ -50,6 +51,9 @@ export default function EventCard({ event }: EventCardProps) {
         <Availability event={event} />
       </p>
     </Link>
+    <div className={`absolute z-10 ${hasCover ? "right-5 top-[108px]" : "right-4 top-16"}`}>
+      <SaveEventButton eventId={event.id} compact />
+    </div>
     <div role="group" aria-label="Event categories" className="absolute right-5 top-5 flex gap-1">
       {categories.map(category => <CategoryIcon key={category.id} name={category.name} />)}
     </div>

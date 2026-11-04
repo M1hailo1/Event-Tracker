@@ -84,7 +84,8 @@ export interface UserStats {
 }
 
 export interface DashboardData {
-  hasMore: { myUpcomingEvents: boolean; registeredUpcomingEvents: boolean; followingUpcomingEvents: boolean };
+  hasMore: { myUpcomingEvents: boolean; registeredUpcomingEvents: boolean; followingUpcomingEvents: boolean; savedUpcomingEvents: boolean };
+  savedUpcomingEvents: Event[];
   myUpcomingEvents: Event[];
   registeredUpcomingEvents: Event[];
   followingUpcomingEvents: Event[];

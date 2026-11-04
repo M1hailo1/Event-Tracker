@@ -24,7 +24,7 @@ function run(entry, args) {
   try {
     await admin.$executeRawUnsafe(`CREATE DATABASE "${databaseName}"`); created = true;
     run('prisma/build/index.js', ['migrate', 'deploy']);
-    run('jest/bin/jest', ['--runInBand', '--runTestsByPath', 'tests/eventReliability.integration.test.ts', 'tests/eventCancellation.integration.test.ts', 'tests/pagination.integration.test.ts', 'tests/eventParticipationNotifications.integration.test.ts']);
+    run('jest/bin/jest', ['--runInBand', '--runTestsByPath', 'tests/eventReliability.integration.test.ts', 'tests/eventCancellation.integration.test.ts', 'tests/pagination.integration.test.ts', 'tests/eventParticipationNotifications.integration.test.ts', 'tests/savedEvents.integration.test.ts']);
   } finally {
     if (created) { await admin.$executeRawUnsafe(`DROP DATABASE "${databaseName}"`); console.log('Removed disposable local test database.'); }
     await admin.$disconnect();
