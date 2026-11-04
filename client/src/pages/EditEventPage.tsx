@@ -7,7 +7,7 @@ import type { CreateEventPayload } from "../api/eventsApi";
 import { updateEventAdmin } from "../api/adminApi";
 import type { Event } from "../types";
 import EventForm from "../components/EventForm";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/useAuth";
 import { PageSkeleton } from "../components/Skeleton";
 
 export default function EditEventPage() {

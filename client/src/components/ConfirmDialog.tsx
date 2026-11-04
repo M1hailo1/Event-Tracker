@@ -2,7 +2,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { isAxiosError } from "axios";
 
-interface Confirmation {
+export interface Confirmation {
   title: string;
   message: ReactNode;
   action: () => Promise<void>;
@@ -33,9 +33,4 @@ export function ConfirmDialog({ title, message, action, confirmLabel = "Yes", da
       </div>
     </div>
   </dialog>;
-}
-
-export function useConfirmAction() {
-  const [confirmation, setConfirmation] = useState<Confirmation | null>(null);
-  return { confirm: setConfirmation, confirmationDialog: confirmation && <ConfirmDialog {...confirmation} onCancel={() => setConfirmation(null)} /> };
 }

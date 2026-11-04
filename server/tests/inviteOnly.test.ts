@@ -55,15 +55,17 @@ describe("Invite-only events", () => {
   });
 
   afterAll(async () => {
-    await prisma.registration.deleteMany({ where: { eventId } });
-    await prisma.eventInvite.deleteMany({ where: { eventId } });
+    if (eventId) {
+      await prisma.registration.deleteMany({ where: { eventId } });
+      await prisma.eventInvite.deleteMany({ where: { eventId } });
+      await prisma.event.deleteMany({ where: { id: eventId } });
+    }
     await prisma.notification.deleteMany({
-      where: { userId: { in: [organizerId, invitedId] } },
+      where: { userId: { in: [organizerId, invitedId].filter((id): id is string => !!id) } },
     });
-    await prisma.follow.deleteMany({
+    if (invitedId && organizerId) await prisma.follow.deleteMany({
       where: { followerId: invitedId, followingId: organizerId },
     });
-    await prisma.event.deleteMany({ where: { id: eventId } });
     await prisma.user.deleteMany({
       where: { email: { in: [emailOrg, emailInvited] } },
     });

@@ -7,7 +7,7 @@ import { getEventCategories } from "../utils/eventCategories";
 import EventComments from "../components/EventComments";
 import { Star } from "lucide-react";
 import RatingDisplay from "../components/RatingDisplay";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { isAxiosError } from "axios";
 import {
@@ -19,14 +19,14 @@ import {
   cancelEvent,
 } from "../api/eventsApi";
 import type { Event } from "../types";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/useAuth";
 import SaveEventButton from "../components/SaveEventButton";
 import LocationPicker from "../components/LocationPicker";
 import EventInviteManager from "../components/EventInviteManager";
 import { formatEventDate } from "../utils/formatDate";
 import { PageSkeleton } from "../components/Skeleton";
 import Availability from "../components/Availability";
-import { useConfirmAction } from "../components/ConfirmDialog";
+import { useConfirmAction } from "../components/useConfirmAction";
 import { markEventAsRead } from "../api/notificationsApi";
 
 export default function EventDetailsPage() {
@@ -34,17 +34,24 @@ export default function EventDetailsPage() {
   const [event, setEvent] = useState<Event | null>(null);
   const [cancelling, setCancelling] = useState(false);
   const { confirm, confirmationDialog } = useConfirmAction();
-  const eventState = useEventState(event ?? { date: "9999-01-01T00:00:00.000Z", endDate: null });
+  const eventTiming = useEventState(event ? { ...event, cancelledAt: null } : { date: "9999-01-01T00:00:00.000Z", endDate: null });
+  const eventState = event?.cancelledAt ? "CANCELLED" : eventTiming;
   const [hoveredRating, setHoveredRating] = useState(0);
   const [selectedRating, setSelectedRating] = useState(0);
   const [ratingMessage, setRatingMessage] = useState("");
   const [isRatingLoading, setIsRatingLoading] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [completedRequest, setCompletedRequest] = useState("");
+  const [requestError, setError] = useState("");
   const [actionError, setActionError] = useState("");
   const [isActionLoading, setIsActionLoading] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
+  const viewerId = user?.id;
+  const requestKey = JSON.stringify([id, viewerId]);
+  const isLoading = completedRequest !== requestKey;
+  const error = isLoading ? "" : requestError;
+  const generation = useRef(0);
+  const cancelRequests = useCallback(() => { ++generation.current; }, []);
 
   function handleBack() {
     const canGoBack =
@@ -66,36 +73,32 @@ export default function EventDetailsPage() {
     } });
   }
 
-  useEffect(() => {
-    if (!id) return;
-    loadEvent(id);
-  }, [id, user?.id]);
 
-  async function loadEvent(eventId: string) {
-    setIsLoading(true);
-    setError("");
-    try {
-      const data = await getEventById(eventId);
+  const loadEvent = useCallback((eventId: string) => {
+    const request = ++generation.current;
+    return getEventById(eventId).then(data => {
+      if (request !== generation.current) return;
+      setError("");
       setEvent(data);
       setSelectedRating(data.myRating ?? 0);
       setHoveredRating(0);
-      if (user) {
-        markEventAsRead(eventId).catch((err) =>
-          console.error("Failed to mark event notifications as read", err),
-        );
+      if (viewerId) {
+        markEventAsRead(eventId).catch(err => console.error("Failed to mark event notifications as read", err));
       }
-    } catch (err) {
-      if (isAxiosError(err) && err.response?.status === 403) {
-        setError("You don't have access to this event.");
-      } else {
-        setError("Mistake while loading event");
-      }
+    }).catch(err => {
+      if (request !== generation.current) return;
+      setError(isAxiosError(err) && err.response?.status === 403 ? "You don't have access to this event." : "Mistake while loading event");
       setEvent(null);
       console.error(err);
-    } finally {
-      setIsLoading(false);
-    }
-  }
+    }).finally(() => {
+      if (request === generation.current) setCompletedRequest(requestKey);
+    });
+  }, [requestKey, viewerId]);
+
+  useEffect(() => {
+    if (id) void loadEvent(id);
+    return cancelRequests;
+  }, [id, loadEvent, cancelRequests]);
 
   const isRegistered = event?.registrations?.some((r) => r.userId === user?.id);
 
@@ -152,7 +155,7 @@ export default function EventDetailsPage() {
   const isFull =
     event.maxCapacity !== null &&
     (event._count?.registrations ?? 0) >= event.maxCapacity;
-  const hasStarted = new Date(event.date).getTime() <= Date.now();
+  const hasStarted = eventTiming !== "UPCOMING";
   const canManage = user?.id === event.createdByUserId;
 
   return (

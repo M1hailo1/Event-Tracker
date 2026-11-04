@@ -2,7 +2,7 @@ import { isStaff } from "../utils/roles";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { CalendarDays, Menu, X } from "lucide-react";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/useAuth";
 import NotificationBell from "./NotificationBell";
 
 export default function Navbar() {

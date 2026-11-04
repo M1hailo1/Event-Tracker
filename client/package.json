@@ -8,7 +8,10 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test:share": "node --test share/event-preview.test.mjs"
+    "test:share": "node --test share/event-preview.test.mjs",
+    "test:browser": "playwright test",
+    "typecheck:tests": "tsc -p tsconfig.test.json",
+    "measure:demo": "node ../scripts/measure-demo.mjs"
   },
   "dependencies": {
     "@react-oauth/google": "^0.13.5",
@@ -22,8 +25,20 @@
     "react-router-dom": "^7.18.2",
     "tailwindcss": "^4.3.3"
   },
+  "overrides": {
+    "eslint": {
+      "minimatch": "11.0.1"
+    },
+    "@eslint/config-array": {
+      "minimatch": "11.0.1"
+    },
+    "@typescript-eslint/typescript-estree": {
+      "minimatch": "11.0.1"
+    }
+  },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.64.1",
     "@types/leaflet": "^1.9.22",
     "@types/node": "^24.13.3",
     "@types/react": "^19.2.17",

@@ -6,31 +6,35 @@ import Pagination, { type PageResult } from "../components/Pagination";
 import EventCardGrid from "../components/EventCardGrid";
 import { EventCardsSkeleton } from "../components/Skeleton";
 import { useEventClock } from "../utils/eventLifecycle";
-import { useAuth } from "../context/AuthContext";
-import { useSavedEvents } from "../context/SavedEventsContext";
+import { useAuth } from "../context/useAuth";
+import { useSavedEvents } from "../context/useSavedEvents";
 
 export default function SavedEventsPage() {
   const { user, isLoading: authLoading } = useAuth();
+  const viewerId = user?.id;
   const { revision } = useSavedEvents();
   const [past, setPast] = useState(false);
   const [page, setPage] = useState(1);
   const [data, setData] = useState<PageResult<Event> | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [completedRequest, setCompletedRequest] = useState("");
+  const [requestError, setError] = useState("");
   const [retry, setRetry] = useState(0);
   const clock = useEventClock(data?.items ?? []);
+  const requestKey = JSON.stringify([viewerId, past, page, revision, retry, clock]);
+  const loading = completedRequest !== requestKey;
+  const error = loading ? "" : requestError;
   useEffect(() => {
-    if (!user) return;
+    if (!viewerId) return;
     let active = true;
-    setLoading(true); setError("");
     getEventPage({ scope: "saved", includePast: past }, page).then(result => {
       if (!active) return;
+      setError("");
       const last = Math.max(1, result.totalPages);
       if (page > last) setPage(last); else setData(result);
     }).catch(() => { if (active) setError("Unable to load saved events."); })
-      .finally(() => { if (active) setLoading(false); });
+      .finally(() => { if (active) setCompletedRequest(requestKey); });
     return () => { active = false; };
-  }, [user, past, page, revision, retry, clock]);
+  }, [viewerId, past, page, revision, retry, clock, requestKey]);
   if (authLoading && !user) return <EventCardsSkeleton />;
   if (!user) return <p className="text-gray-600 dark:text-gray-300"><Link className="text-indigo-600 dark:text-indigo-400" to="/login">Sign in</Link> to save events and view your list.</p>;
   return <div>

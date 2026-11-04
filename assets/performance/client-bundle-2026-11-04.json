@@ -1,0 +1,16 @@
+{
+  "measuredAt": "2026-11-04",
+  "methodology": "Comparison of the pre-splitting and final production builds in this change set, using the same dependency versions. The final build also includes additional cached-session validation. Initial JavaScript counts the entry and all JavaScript module-preload links in dist/index.html. Excludes CSS, images and dynamically loaded routes. Gzip sizes use Node gzipSync defaults and can differ slightly from Vite reporting. These local sizes do not measure live server wake-up time.",
+  "before": {
+    "entryBytes": 596683,
+    "initialJavaScriptBytes": 596683,
+    "initialJavaScriptGzipBytes": 179363
+  },
+  "after": {
+    "entryBytes": 242973,
+    "initialJavaScriptBytes": 346902,
+    "initialJavaScriptGzipBytes": 112927
+  },
+  "initialJavaScriptReductionPercent": 41.9,
+  "initialGzipReductionPercent": 37
+}

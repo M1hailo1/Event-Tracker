@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Bookmark } from "lucide-react";
-import { useAuth } from "../context/AuthContext";
-import { useSavedEvents } from "../context/SavedEventsContext";
+import { useAuth } from "../context/useAuth";
+import { useSavedEvents } from "../context/useSavedEvents";
 
 export default function SaveEventButton({ eventId, compact = false }: { eventId: string; compact?: boolean }) {
   const { user } = useAuth();

@@ -2,6 +2,8 @@ node_modules/
 dist/
 .env
 *.log
+client/playwright-report/
+client/test-results/
 
 # Local assistant instructions and session notes
 /AGENTS.md

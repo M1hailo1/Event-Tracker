@@ -35,11 +35,12 @@ describe("Follow system (/users/:userId/follow)", () => {
   });
 
   afterAll(async () => {
+    const userIds = [userAId, userBId].filter((id): id is string => !!id);
     await prisma.notification.deleteMany({
-      where: { userId: { in: [userAId, userBId] } },
+      where: { userId: { in: userIds } },
     });
     await prisma.follow.deleteMany({
-      where: { OR: [{ followerId: userAId }, { followerId: userBId }] },
+      where: { followerId: { in: userIds } },
     });
     await prisma.user.deleteMany({
       where: { email: { in: [emailA, emailB] } },

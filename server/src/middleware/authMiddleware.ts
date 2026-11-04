@@ -21,30 +21,36 @@ export async function requireAuth(
     return res.status(401).json({ error: "Token missing" });
   }
 
+  let payload: { userId: string };
   try {
-    const payload = verifyToken(token);
+    payload = verifyToken(token);
+  } catch {
+    return res.status(401).json({ error: "Invalid or expired token" });
+  }
 
-    const user = req.currentUser?.id === payload.userId ? req.currentUser : await prisma.user.findUnique({
+  let user;
+  try {
+    user = req.currentUser?.id === payload.userId ? req.currentUser : await prisma.user.findUnique({
       where: { id: payload.userId },
       select: { id: true, role: true, bannedUntil: true, banReason: true },
     });
+  } catch {
+    return res.status(503).json({ error: "Sign-in verification is temporarily unavailable. Please try again." });
+  }
 
-    if (!user) {
-      return res.status(401).json({ error: "Invalid or expired token" });
-    }
-
-    if (isCurrentlyBanned(user.bannedUntil)) {
-      return res
-        .status(403)
-        .json({ error: formatBanMessage(user.bannedUntil, user.banReason) });
-    }
-
-    req.userId = payload.userId;
-    req.currentUser = user;
-    next();
-  } catch (err) {
+  if (!user) {
     return res.status(401).json({ error: "Invalid or expired token" });
   }
+
+  if (isCurrentlyBanned(user.bannedUntil)) {
+    return res
+      .status(403)
+      .json({ error: formatBanMessage(user.bannedUntil, user.banReason) });
+  }
+
+  req.userId = payload.userId;
+  req.currentUser = user;
+  next();
 }
 
 export async function requireAdmin(

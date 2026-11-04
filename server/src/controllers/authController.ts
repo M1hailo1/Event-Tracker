@@ -5,10 +5,11 @@ import prisma from "../prisma";
 import { generateToken } from "../utils/jwt";
 import { OAuth2Client } from "google-auth-library";
 import { isCurrentlyBanned, formatBanMessage } from "../utils/banDuration";
+import { loginPasswordSchema, registrationPasswordSchema } from "../utils/passwordValidation";
 
 const registerSchema = z.object({
   email: z.string().email(),
-  password: z.string().min(6),
+  password: registrationPasswordSchema,
   name: z.string().min(2),
 });
 
@@ -113,7 +114,7 @@ export async function googleAuth(req: Request, res: Response) {
 
 const loginSchema = z.object({
   email: z.string().email(),
-  password: z.string().min(1),
+  password: loginPasswordSchema,
 });
 
 export async function login(req: Request, res: Response) {

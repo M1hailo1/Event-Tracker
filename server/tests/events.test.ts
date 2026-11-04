@@ -35,13 +35,11 @@ describe("Events and capacity (/events)", () => {
   });
 
   afterAll(async () => {
-    await prisma.registration.deleteMany({ where: { eventId } });
-    await prisma.notification.deleteMany({
-      where: {
-        userId: { in: [organizerId, ...(otherEmails.length ? [] : [])] },
-      },
-    });
-    await prisma.event.deleteMany({ where: { id: eventId } });
+    if (eventId) {
+      await prisma.registration.deleteMany({ where: { eventId } });
+      await prisma.event.deleteMany({ where: { id: eventId } });
+    }
+    if (organizerId) await prisma.notification.deleteMany({ where: { userId: organizerId } });
     await prisma.user.deleteMany({
       where: { email: { in: [organizerEmail, ...otherEmails] } },
     });

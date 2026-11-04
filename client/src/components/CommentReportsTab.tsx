@@ -1,12 +1,12 @@
 ﻿import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { isAxiosError } from "axios";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/useAuth";
 import { getCommentReports, reviewCommentReport, banUserAdmin } from "../api/adminApi";
 import type { CommentReport, ReportStatus } from "../api/adminApi";
 import BanUserModal from "./BanUserModal";
 import LoadingBlock from "./LoadingBlock";
-import { useConfirmAction } from "./ConfirmDialog";
+import { useConfirmAction } from "./useConfirmAction";
 
 export default function CommentReportsTab() {
   const { confirm, confirmationDialog } = useConfirmAction();
@@ -20,7 +20,6 @@ export default function CommentReportsTab() {
   const [banning, setBanning] = useState<CommentReport["comment"]["user"] | null>(null);
   useEffect(() => {
     let active = true;
-    setLoading(true); setReports([]); setCursor(null); setError("");
     getCommentReports(status).then(page => { if (active) { setReports(page.reports); setCursor(page.nextCursor); } })
       .catch(() => { if (active) setError("Failed to load reports"); }).finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
@@ -49,7 +48,7 @@ export default function CommentReportsTab() {
   return <div className="space-y-4">
     {confirmationDialog}
     <div className="flex flex-wrap items-center gap-3">
-      <label className="text-sm text-gray-700 dark:text-gray-300">Report status <select value={status} disabled={busy || loading} onChange={e => setStatus(e.target.value as ReportStatus)} className="ml-2 rounded-lg border border-gray-300 bg-white p-2 dark:border-gray-600 dark:bg-gray-800">
+      <label className="text-sm text-gray-700 dark:text-gray-300">Report status <select value={status} disabled={busy || loading} onChange={e => { setStatus(e.target.value as ReportStatus); setReports([]); setCursor(null); setError(""); setLoading(true); }} className="ml-2 rounded-lg border border-gray-300 bg-white p-2 dark:border-gray-600 dark:bg-gray-800">
         <option value="OPEN">Open</option><option value="DISMISSED">Dismissed</option><option value="REMOVED">Removed</option>
       </select></label>
       <p className="text-xs text-gray-500">Reviewing a comment resolves all its open reports.</p>

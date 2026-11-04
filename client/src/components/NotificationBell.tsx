@@ -31,7 +31,7 @@ export default function NotificationBell() {
     try {
       const count = await getUnreadCount();
       setUnreadCount(count);
-    } catch {}
+    } catch { return; }
   }
 
   useEffect(() => {
@@ -124,15 +124,14 @@ export default function NotificationBell() {
 
   async function handleNotificationClick(notification: Notification) {
     if (!notification.isRead) {
-      try {
-        await markAsRead(notification.id);
+      await markAsRead(notification.id).then(() => {
         setNotifications((prev) =>
           prev.map((n) =>
             n.id === notification.id ? { ...n, isRead: true } : n,
           ),
         );
         setUnreadCount((prev) => Math.max(0, prev - 1));
-      } catch {}
+      }).catch(() => undefined);
     }
 
     setIsOpen(false);
@@ -146,7 +145,7 @@ export default function NotificationBell() {
       await markAllAsRead();
       setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
       setUnreadCount(0);
-    } catch {}
+    } catch { return; }
   }
 
   return (

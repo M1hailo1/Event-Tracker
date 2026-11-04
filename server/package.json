@@ -7,8 +7,9 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "test": "dotenv -e .env.test -- jest --runInBand",
-    "test:reliability": "node scripts/test-event-reliability.cjs"
+    "test": "node scripts/run-tests.cjs",
+    "test:reliability": "node scripts/test-event-reliability.cjs",
+    "test:safety": "node --test scripts/test-database-safety.test.cjs"
   },
   "keywords": [],
   "author": "",

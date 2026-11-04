@@ -1,17 +1,7 @@
-import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
-import { useAuth } from "./AuthContext";
+import { SavedContext } from "./useSavedEvents";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { useAuth } from "./useAuth";
 import axiosInstance from "../api/axiosInstance";
-
-interface SavedState {
-  ids: Set<string>;
-  pending: Set<string>;
-  loading: boolean;
-  loadError: boolean;
-  revision: number;
-  reload: () => void;
-  toggle: (id: string) => Promise<void>;
-}
-const SavedContext = createContext<SavedState | null>(null);
 
 export function SavedEventsProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
@@ -42,11 +32,12 @@ function AccountSavedEvents({ children, signedIn }: { children: ReactNode; signe
       if (request === generation.current) setLoading(false);
     });
   }, [signedIn]);
+  const cancelRequests = useCallback(() => { ++generation.current; }, []);
   useEffect(() => {
     reload();
     window.addEventListener("focus", reload);
-    return () => { ++generation.current; window.removeEventListener("focus", reload); };
-  }, [reload]);
+    return () => { cancelRequests(); window.removeEventListener("focus", reload); };
+  }, [reload, cancelRequests]);
 
   async function toggle(id: string) {
     if (!signedIn || loading || loadError || pendingRef.current.has(id)) return;
@@ -67,10 +58,4 @@ function AccountSavedEvents({ children, signedIn }: { children: ReactNode; signe
     }
   }
   return <SavedContext.Provider value={{ ids, pending, loading, loadError, revision, reload, toggle }}>{children}</SavedContext.Provider>;
-}
-
-export function useSavedEvents() {
-  const context = useContext(SavedContext);
-  if (!context) throw new Error("SavedEventsProvider required");
-  return context;
 }

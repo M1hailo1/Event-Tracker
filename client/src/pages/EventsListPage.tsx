@@ -1,19 +1,22 @@
 import Pagination from "../components/Pagination";
 import { useSearchParams } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { Link } from "react-router-dom";
 import { Map, LayoutGrid, Calendar as CalendarIcon } from "lucide-react";
 import { getAllEvents, getEventPage } from "../api/eventsApi";
 import type { EventSortOption } from "../api/eventsApi";
 import { getAllCategories } from "../api/categoriesApi";
 import type { Event, Category } from "../types";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/useAuth";
 import EventCardGrid from "../components/EventCardGrid";
-import EventsMap from "../components/EventsMap";
-import EventsCalendar from "../components/EventsCalendar";
-import { EventCardsSkeleton } from "../components/Skeleton";
+
+
+import { EventCardsSkeleton, PageSkeleton } from "../components/Skeleton";
 import SearchableSelect from "../components/SearchableSelect";
 import { useEventClock } from "../utils/eventLifecycle";
+
+const EventsMap = lazy(() => import("../components/EventsMap"));
+const EventsCalendar = lazy(() => import("../components/EventsCalendar"));
 
 const inputClass =
   "w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500";
@@ -28,6 +31,10 @@ const sortOptions: { value: EventSortOption; label: string }[] = [
 export default function EventsListPage() {
   const [params] = useSearchParams();
   const scope = params.get("scope") || undefined;
+  return <EventsList key={scope ?? "all"} scope={scope} />;
+}
+
+function EventsList({ scope }: { scope: string | undefined }) {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const [month, setMonth] = useState(() => new Date(new Date().getFullYear(), new Date().getMonth(), 1));
@@ -36,6 +43,8 @@ export default function EventsListPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const [categoryError, setCategoryError] = useState(false);
+  const [retry, setRetry] = useState(0);
   const [showPast, setShowPast] = useState(false);
 
   const [categoryId, setCategoryId] = useState("");
@@ -50,24 +59,23 @@ export default function EventsListPage() {
   const [showSlowHint, setShowSlowHint] = useState(false);
 
   useEffect(() => {
-    if (!isLoading) {
-      setShowSlowHint(false);
-      return;
-    }
+    if (!isLoading) return;
     const timer = setTimeout(() => setShowSlowHint(true), 4000);
     return () => clearTimeout(timer);
   }, [isLoading]);
 
   useEffect(() => {
-    getAllCategories()
-      .then(setCategories)
-      .catch((err) => console.error("Failed to load categories", err));
-  }, []);
+    const controller = new AbortController();
+    getAllCategories(controller.signal)
+      .then(data => { if (!controller.signal.aborted) { setCategories(data); setCategoryError(false); } })
+      .catch(() => { if (!controller.signal.aborted) setCategoryError(true); });
+    return () => controller.abort();
+  }, [retry]);
 
-  useEffect(() => { setPage(1); }, [showPast, categoryId, city, search, sortBy, historyScope, scope]);
 
   useEffect(() => {
     let active = true;
+    const controller = new AbortController();
     const timeoutId = setTimeout(() => {
       async function fetchEvents() {
         setIsLoading(true);
@@ -84,25 +92,25 @@ export default function EventsListPage() {
             ...(view === "calendar" ? { from: new Date(month.getFullYear(), month.getMonth(), 1 - ((month.getDay() + 6) % 7)).toISOString(), to: new Date(month.getFullYear(), month.getMonth(), 43 - ((month.getDay() + 6) % 7)).toISOString() } : {}),
           };
           if (view === "list") {
-            const data = await getEventPage(filters, page);
+            const data = await getEventPage(filters, page, controller.signal);
             if (!active) return;
             if (page > Math.max(1, data.totalPages)) setPage(Math.max(1, data.totalPages));
             else { setEvents(data.items); setTotalPages(data.totalPages); }
-          } else { const data = await getAllEvents(filters); if (active) setEvents(data); }
-        } catch (err) {
-          if (active) setError("Error loading events");
-          console.error(err);
+          } else { const data = await getAllEvents(filters, controller.signal); if (active) setEvents(data); }
+        } catch {
+          if (active && !controller.signal.aborted) setError("Unable to load events. The server may be unavailable or your connection may have been interrupted.");
         } finally {
-          if (active) setIsLoading(false);
+          if (active) { setIsLoading(false); setShowSlowHint(false); }
         }
       }
       fetchEvents();
     }, 300);
 
-    return () => { active = false; clearTimeout(timeoutId); };
-  }, [showPast, categoryId, city, search, sortBy, historyScope, user?.id, lifecycleClock, page, view, month, scope]);
+    return () => { active = false; controller.abort(); clearTimeout(timeoutId); };
+  }, [showPast, categoryId, city, search, sortBy, historyScope, user?.id, lifecycleClock, page, view, month, scope, retry]);
 
   function handleResetFilters() {
+    setPage(1);
     setCategoryId("");
     setCity("");
     setSearch("");
@@ -154,7 +162,7 @@ export default function EventsListPage() {
             </button>
           </div>
           <button
-            onClick={() => setShowPast(!showPast)}
+            onClick={() => { setShowPast(!showPast); setPage(1); }}
             className="text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300"
           >
             {showPast ? "Show active events" : "Show history"}
@@ -165,7 +173,7 @@ export default function EventsListPage() {
       {showPast && (
         <div className="flex items-center bg-gray-100 dark:bg-gray-700 rounded-lg p-1 w-fit mb-4">
           <button
-            onClick={() => setHistoryScope("all")}
+            onClick={() => { setHistoryScope("all"); setPage(1); }}
             className={`px-3 py-1.5 rounded-md text-sm font-medium ${
               historyScope === "all"
                 ? "bg-white dark:bg-gray-800 text-indigo-600 dark:text-indigo-400 shadow-sm"
@@ -175,7 +183,7 @@ export default function EventsListPage() {
             All history
           </button>
           <button
-            onClick={() => setHistoryScope("mine")}
+            onClick={() => { setHistoryScope("mine"); setPage(1); }}
             className={`px-3 py-1.5 rounded-md text-sm font-medium ${
               historyScope === "mine"
                 ? "bg-white dark:bg-gray-800 text-indigo-600 dark:text-indigo-400 shadow-sm"
@@ -196,7 +204,7 @@ export default function EventsListPage() {
             <input
               type="text"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => { setSearch(e.target.value); setPage(1); }}
               placeholder="Search by name..."
               className={inputClass}
             />
@@ -209,13 +217,13 @@ export default function EventsListPage() {
             <input
               type="text"
               value={city}
-              onChange={(e) => setCity(e.target.value)}
+              onChange={(e) => { setCity(e.target.value); setPage(1); }}
               placeholder="e.g. Belgrade"
               className={inputClass}
             />
           </div>
 
-          <SearchableSelect label="Category" value={categoryId} onChange={setCategoryId}
+          <SearchableSelect label="Category" value={categoryId} onChange={value => { setCategoryId(value); setPage(1); }}
             options={[{ value: "", label: "All categories" }, ...categories.map(category => ({ value: category.id, label: category.name }))]} />
 
           <div>
@@ -224,7 +232,7 @@ export default function EventsListPage() {
             </label>
             <select
               value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as EventSortOption)}
+              onChange={(e) => { setSortBy(e.target.value as EventSortOption); setPage(1); }}
               className={inputClass}
             >
               {sortOptions.map((opt) => (
@@ -246,7 +254,15 @@ export default function EventsListPage() {
         )}
       </div>
 
-      {error && <p className="text-red-600 dark:text-red-400 mb-4">{error}</p>}
+      {categoryError && <div role="status" className="mb-4 rounded-lg border border-amber-200 p-4 text-sm text-amber-800 dark:border-amber-800 dark:text-amber-200">
+        Categories are temporarily unavailable. You can still browse events. <button type="button" onClick={() => setRetry(value => value + 1)} className="font-semibold underline">Retry categories</button>
+      </div>}
+      {error && <div role="alert" className="mb-4 rounded-lg border border-red-200 p-4 text-sm text-red-700 dark:border-red-900 dark:text-red-300">
+        <p>{error}</p>
+        {events.length > 0 && <p className="mt-1">Showing the last loaded results.</p>}
+        <button type="button" disabled={isLoading} onClick={() => setRetry(value => value + 1)} className="mt-3 rounded-lg bg-indigo-600 px-4 py-2 font-medium text-white disabled:opacity-50">Try again</button>
+      </div>}
+      {isLoading && events.length > 0 && <p role="status" className="mb-4 text-sm text-gray-500 dark:text-gray-400">Updating events...</p>}
 
       {isLoading && events.length === 0 && (
         <div className="w-full space-y-4">
@@ -255,9 +271,8 @@ export default function EventsListPage() {
             Loading events...
           </p>
           {showSlowHint && (
-            <p className="text-xs text-gray-400 dark:text-gray-500 max-w-xs text-center">
-              The server may be waking up from sleep — this can take up to a
-              minute on the first request.
+            <p role="status" className="max-w-lg text-sm text-gray-500 dark:text-gray-400">
+              Still loading. This demo uses free hosting, so the first request may take longer while the server wakes up. You can keep this page open.
             </p>
           )}
         </div>
@@ -271,11 +286,12 @@ export default function EventsListPage() {
             : "There are no events currently."}
         </p>
         {hasActiveFilters ? <button onClick={handleResetFilters} className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">Clear filters</button>
-          : showPast ? <button onClick={() => setShowPast(false)} className="text-sm font-medium text-indigo-600 dark:text-indigo-400">Explore active events</button>
+          : showPast ? <button onClick={() => { setShowPast(false); setPage(1); }} className="text-sm font-medium text-indigo-600 dark:text-indigo-400">Explore active events</button>
           : <Link to={user ? "/events/new" : "/login"} className="text-sm font-medium text-indigo-600 dark:text-indigo-400">{user ? "Create an event" : "Sign in to create an event"}</Link>}
         </div>
       )}
 
+      <Suspense fallback={<PageSkeleton />}>
       {(events.length > 0 || view === "calendar") &&
         (view === "map" ? (
           <div>
@@ -289,6 +305,7 @@ export default function EventsListPage() {
         ) : (
           <EventCardGrid events={events} />
         ))}
+      </Suspense>
       {view === "list" && !error && <Pagination page={page} totalPages={totalPages} onChange={setPage} disabled={isLoading} />}
     </div>
   );

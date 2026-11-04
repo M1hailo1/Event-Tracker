@@ -6,13 +6,13 @@ import CancelEventModal from "../components/CancelEventModal";
 import Availability from "../components/Availability";
 import { cancelEventAdmin } from "../api/adminApi";
 import { getEventState } from "../utils/eventLifecycle";
-import { useConfirmAction } from "../components/ConfirmDialog";
+import { useConfirmAction } from "../components/useConfirmAction";
 import SearchableSelect from "../components/SearchableSelect";
 import { isStaff } from "../utils/roles";
 import CommentReportsTab from "../components/CommentReportsTab";
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/useAuth";
 import {
   getAdminStats,
   setModeratorRole,
@@ -130,8 +130,8 @@ function UsersTab() {
   const [totalPages, setTotalPages] = useState(0);
   const [refresh, setRefresh] = useState(0);
   const [users, setUsers] = useState<AdminUser[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [completedRequest, setCompletedRequest] = useState("");
+  const [requestError, setError] = useState("");
   const [banningUser, setBanningUser] = useState<AdminUser | null>(null);
   const [changingRole, setChangingRole] = useState<string | null>(null);
   const [roleTarget, setRoleTarget] = useState<AdminUser | null>(null);
@@ -140,15 +140,17 @@ function UsersTab() {
   const [roleFilter, setRoleFilter] = useState<RoleFilter>("all");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
 
-  useEffect(() => { setPage(1); }, [search, roleFilter, statusFilter]);
+  const requestKey = JSON.stringify([page, search, roleFilter, statusFilter, refresh]);
+  const isLoading = completedRequest !== requestKey;
+  const error = isLoading ? "" : requestError;
   useEffect(() => {
-    let active = true; setIsLoading(true); setError("");
+    let active = true;
     const timer = setTimeout(() => { getAdminUserPage({ page, search, role: roleFilter, status: statusFilter })
-      .then(data => { if (!active) return; if (page > Math.max(1, data.totalPages)) setPage(Math.max(1, data.totalPages)); else { setUsers(data.items); setTotalPages(data.totalPages); } })
+      .then(data => { if (!active) return; setError(""); if (page > Math.max(1, data.totalPages)) setPage(Math.max(1, data.totalPages)); else { setUsers(data.items); setTotalPages(data.totalPages); } })
       .catch(() => { if (active) setError("Failed to load users"); })
-      .finally(() => { if (active) setIsLoading(false); }); }, 250);
+      .finally(() => { if (active) setCompletedRequest(requestKey); }); }, 250);
     return () => { active = false; clearTimeout(timer); };
-  }, [page, search, roleFilter, statusFilter, refresh]);
+  }, [page, search, roleFilter, statusFilter, refresh, requestKey]);
 
   async function handleBanConfirm(duration: BanDuration, reason: string) {
     if (!banningUser) return;
@@ -216,13 +218,13 @@ function UsersTab() {
         <input
           type="text"
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => { setSearch(e.target.value); setPage(1); }}
           placeholder="Search by name or email..."
           className={inputClass}
         />
         <select
           value={roleFilter}
-          onChange={(e) => setRoleFilter(e.target.value as RoleFilter)}
+          onChange={(e) => { setRoleFilter(e.target.value as RoleFilter); setPage(1); }}
           className={inputClass}
         >
           <option value="all">All roles</option>
@@ -232,7 +234,7 @@ function UsersTab() {
         </select>
         <select
           value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
+          onChange={(e) => { setStatusFilter(e.target.value as StatusFilter); setPage(1); }}
           className={inputClass}
         >
           <option value="all">All statuses</option>
@@ -388,8 +390,13 @@ function UsersTab() {
 type VisibilityFilter = "all" | EventVisibility;
 
 function EventsTab() {
-  const [params, setParams] = useSearchParams();
+  const [params] = useSearchParams();
   const selectedEventId = params.get("event") ?? "";
+  return <EventList key={selectedEventId} selectedEventId={selectedEventId} />;
+}
+
+function EventList({ selectedEventId }: { selectedEventId: string }) {
+  const [, setParams] = useSearchParams();
   const [cancellingEvent, setCancellingEvent] = useState<Event | null>(null);
   const { confirm, confirmationDialog } = useConfirmAction();
   const [page, setPage] = useState(1);
@@ -397,24 +404,25 @@ function EventsTab() {
   const [refresh, setRefresh] = useState(0);
   const [events, setEvents] = useState<Event[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [completedRequest, setCompletedRequest] = useState("");
+  const [requestError, setError] = useState("");
 
   const [search, setSearch] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [visibilityFilter, setVisibilityFilter] =
     useState<VisibilityFilter>("all");
-  useEffect(() => { setSearch(""); setCategoryId(""); setVisibilityFilter("all"); }, [selectedEventId]);
 
-  useEffect(() => { setPage(1); }, [search, categoryId, visibilityFilter, selectedEventId]);
+  const requestKey = JSON.stringify([page, search, categoryId, visibilityFilter, selectedEventId, refresh]);
+  const isLoading = completedRequest !== requestKey;
+  const error = isLoading ? "" : requestError;
   useEffect(() => {
-    let active = true; setIsLoading(true); setError("");
+    let active = true;
     const timer = setTimeout(() => { getAdminEventPage({ page, search, categoryId, visibility: visibilityFilter, event: selectedEventId ?? "" })
-      .then(data => { if (!active) return; if (page > Math.max(1, data.totalPages)) setPage(Math.max(1, data.totalPages)); else { setEvents(data.items); setTotalPages(data.totalPages); } })
+      .then(data => { if (!active) return; setError(""); if (page > Math.max(1, data.totalPages)) setPage(Math.max(1, data.totalPages)); else { setEvents(data.items); setTotalPages(data.totalPages); } })
       .catch(() => { if (active) setError("Failed to load events"); })
-      .finally(() => { if (active) setIsLoading(false); }); }, 250);
+      .finally(() => { if (active) setCompletedRequest(requestKey); }); }, 250);
     return () => { active = false; clearTimeout(timer); };
-  }, [page, search, categoryId, visibilityFilter, selectedEventId, refresh]);
+  }, [page, search, categoryId, visibilityFilter, selectedEventId, refresh, requestKey]);
   useEffect(() => { getAllCategories().then(setCategories).catch(() => setError("Failed to load categories")); }, []);
 
   async function handleDelete(id: string, name: string) {
@@ -452,17 +460,15 @@ function EventsTab() {
         <input
           type="text"
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => { setSearch(e.target.value); setPage(1); }}
           placeholder="Search by event or organizer..."
           className={inputClass}
         />
-        <SearchableSelect label="Category" hideLabel value={categoryId} onChange={setCategoryId}
+        <SearchableSelect label="Category" hideLabel value={categoryId} onChange={value => { setCategoryId(value); setPage(1); }}
           options={[{ value: "", label: "All categories" }, ...categories.map(category => ({ value: category.id, label: category.name }))]} />
         <select
           value={visibilityFilter}
-          onChange={(e) =>
-            setVisibilityFilter(e.target.value as VisibilityFilter)
-          }
+          onChange={(e) => { setVisibilityFilter(e.target.value as VisibilityFilter); setPage(1); }}
           className={inputClass}
         >
           <option value="all">All visibilities</option>

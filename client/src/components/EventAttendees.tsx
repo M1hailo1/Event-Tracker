@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
-import { usePagedList, ListMore } from "./usePagedList";
+import { usePagedList } from "./usePagedList";
+import { ListMore } from "./ListMore";
 
 type Attendee = { id: string; user: { id: string; name: string } };
 

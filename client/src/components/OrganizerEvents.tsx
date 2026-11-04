@@ -5,7 +5,7 @@ import Pagination, { type PageResult } from "./Pagination";
 import EventCardGrid from "./EventCardGrid";
 import { EventCardsSkeleton } from "./Skeleton";
 import { useEventClock } from "../utils/eventLifecycle";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/useAuth";
 
 export default function OrganizerEvents({ userId, name, refreshKey = 0 }: {
   userId: string;
@@ -15,26 +15,28 @@ export default function OrganizerEvents({ userId, name, refreshKey = 0 }: {
   const [past, setPast] = useState(false);
   const [page, setPage] = useState(1);
   const [data, setData] = useState<PageResult<Event> | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [completedRequest, setCompletedRequest] = useState("");
+  const [requestError, setError] = useState("");
   const [retry, setRetry] = useState(0);
   const { user } = useAuth();
   const clock = useEventClock(data?.items ?? []);
 
+  const requestKey = JSON.stringify([userId, past, page, user?.id, refreshKey, clock, retry]);
+  const loading = completedRequest !== requestKey;
+  const error = loading ? "" : requestError;
   useEffect(() => {
     let active = true;
-    setLoading(true);
-    setError("");
     getEventPage({ organizerId: userId, includePast: past }, page)
       .then(result => {
         if (!active) return;
+        setError("");
         if (page > Math.max(1, result.totalPages)) setPage(Math.max(1, result.totalPages));
         else setData(result);
       })
       .catch(() => { if (active) setError("Unable to load organized events."); })
-      .finally(() => { if (active) setLoading(false); });
+      .finally(() => { if (active) setCompletedRequest(requestKey); });
     return () => { active = false; };
-  }, [userId, past, page, user?.id, refreshKey, clock, retry]);
+  }, [userId, past, page, user?.id, refreshKey, clock, retry, requestKey]);
 
   return (
     <section className="mb-6" aria-label="Organized events">

@@ -1,0 +1,95 @@
+{
+  "measuredAt": "2026-11-04T21:29:30.667Z",
+  "methodology": "Three sequential rounds; requests within each round run concurrently. First observed request is not a proven cold start. Timings measure HTTP headers and complete response download, not browser rendering. No authentication or keep-alive scheduling.",
+  "frontend": "https://event-tracker-liard-seven.vercel.app",
+  "api": "https://event-tracker-tio1.onrender.com",
+  "rounds": [
+    {
+      "round": 1,
+      "results": [
+        {
+          "name": "frontend",
+          "status": 200,
+          "headersMs": 566,
+          "totalMs": 568,
+          "bytes": 1682,
+          "cache": "MISS"
+        },
+        {
+          "name": "categories",
+          "status": 200,
+          "headersMs": 22491,
+          "totalMs": 22492,
+          "bytes": 1960,
+          "cache": null
+        },
+        {
+          "name": "eventPage",
+          "status": 200,
+          "headersMs": 22598,
+          "totalMs": 22598,
+          "bytes": 15218,
+          "cache": null
+        }
+      ]
+    },
+    {
+      "round": 2,
+      "results": [
+        {
+          "name": "frontend",
+          "status": 200,
+          "headersMs": 279,
+          "totalMs": 282,
+          "bytes": 1682,
+          "cache": "HIT"
+        },
+        {
+          "name": "categories",
+          "status": 200,
+          "headersMs": 69,
+          "totalMs": 69,
+          "bytes": 1960,
+          "cache": null
+        },
+        {
+          "name": "eventPage",
+          "status": 200,
+          "headersMs": 99,
+          "totalMs": 99,
+          "bytes": 15218,
+          "cache": null
+        }
+      ]
+    },
+    {
+      "round": 3,
+      "results": [
+        {
+          "name": "frontend",
+          "status": 200,
+          "headersMs": 185,
+          "totalMs": 185,
+          "bytes": 1682,
+          "cache": "HIT"
+        },
+        {
+          "name": "categories",
+          "status": 200,
+          "headersMs": 80,
+          "totalMs": 83,
+          "bytes": 1960,
+          "cache": null
+        },
+        {
+          "name": "eventPage",
+          "status": 200,
+          "headersMs": 138,
+          "totalMs": 139,
+          "bytes": 15218,
+          "cache": null
+        }
+      ]
+    }
+  ]
+}

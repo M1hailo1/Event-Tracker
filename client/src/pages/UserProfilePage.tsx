@@ -10,7 +10,7 @@ import {
   unfollowUser,
 } from "../api/followApi";
 import type { PublicUser } from "../types";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/useAuth";
 import { PageSkeleton } from "../components/Skeleton";
 
 function isActivelyBanned(bannedUntil: string | null | undefined): boolean {
@@ -26,6 +26,11 @@ function formatBanStatus(bannedUntil: string): string {
 
 export default function UserProfilePage() {
   const { id } = useParams<{ id: string }>();
+  const { user } = useAuth();
+  return <UserProfile key={`${id}:${user?.id ?? "anonymous"}`} id={id} />;
+}
+
+function UserProfile({ id }: { id: string | undefined }) {
   const { user: currentUser } = useAuth();
   const [profile, setProfile] = useState<PublicUser | null>(null);
   const [isFollowing, setIsFollowing] = useState(false);
@@ -37,7 +42,6 @@ export default function UserProfilePage() {
   useEffect(() => {
     if (!id) return;
     let active = true;
-    setIsLoading(true); setError("");
     Promise.all([getUserById(id), getFollowPage(id, "followers")])
       .then(([profileData, followersData]) => { if (active) { setProfile(profileData); setIsFollowing(followersData.isFollowing); } })
       .catch(() => { if (active) setError("Error loading profile"); })

@@ -23,6 +23,7 @@ export interface EventFilters {
 
 export async function getAllEvents(
   filters: EventFilters = {},
+  signal?: AbortSignal,
 ): Promise<Event[]> {
   const params: Record<string, string> = {};
   for (const key of ["organizerId", "scope", "from", "to"] as const) if (filters[key]) params[key] = filters[key];
@@ -33,7 +34,7 @@ export async function getAllEvents(
   if (filters.sortBy) params.sortBy = filters.sortBy;
   if (filters.attendedOnly) params.attendedOnly = "true";
 
-  const response = await axiosInstance.get<Event[]>("/events", { params });
+  const response = await axiosInstance.get<Event[]>("/events", { params, signal, timeout: 65000 });
   return response.data;
 }
 
@@ -106,7 +107,7 @@ export async function rateEvent(id: string, score: number): Promise<void> {
   await axiosInstance.put(`/events/${id}/rating`, { score });
 }
 
-export async function getEventPage(filters: EventFilters = {}, page = 1): Promise<PageResult<Event>> {
-  const { data } = await axiosInstance.get<PageResult<Event>>("/events", { params: { ...filters, page, pageSize: 12 } });
+export async function getEventPage(filters: EventFilters = {}, page = 1, signal?: AbortSignal): Promise<PageResult<Event>> {
+  const { data } = await axiosInstance.get<PageResult<Event>>("/events", { params: { ...filters, page, pageSize: 12 }, signal, timeout: 65000 });
   return data;
 }

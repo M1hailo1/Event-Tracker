@@ -1,12 +1,12 @@
 import { isStaff } from "../utils/roles";
-import { useConfirmAction } from "./ConfirmDialog";
+import { useConfirmAction } from "./useConfirmAction";
 import LoadingBlock from "./LoadingBlock";
 import CommentReportForm from "./CommentReportForm";
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { MessageSquare, Reply, Pencil, Trash2, Flag } from "lucide-react";
 import { isAxiosError } from "axios";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/useAuth";
 import { createComment, deleteComment, getComments, updateComment } from "../api/commentsApi";
 import type { EventComment } from "../api/commentsApi";
 

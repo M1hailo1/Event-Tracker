@@ -50,6 +50,16 @@ isolated("Private saved events on PostgreSQL", () => {
     for (let i = 0; i < 2; i++) await request(app).delete(`/events/${target.id}/save`).set('Authorization', auth(viewer)).expect(200);
     expect((await list(viewer)).body.total).toBe(0);
   });
+  it('resolves repeated bursts of simultaneous first-time saves without duplicate rows or server errors', async () => {
+    for (let i = 0; i < 20; i++) {
+      const target = await event();
+      const results = await Promise.all(Array.from({ length: 5 }, () =>
+        request(app).put(`/events/${target.id}/save`).set('Authorization', auth(viewer))));
+      expect(results.map(result => ({ status: result.status, body: result.body })))
+        .toEqual(Array.from({ length: 5 }, () => ({ status: 200, body: { saved: true } })));
+      expect(await prisma.savedEvent.count({ where: { userId: viewer, eventId: target.id } })).toBe(1);
+    }
+  });
   it('rechecks follow/invite access and organizer bans on lists, IDs and dashboard', async () => {
     const followed = await event({ visibility: 'FOLLOWERS_ONLY' });
     const invited = await event({ visibility: 'INVITE_ONLY' });

@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import type { FollowUser } from "../types";
-import { usePagedList, ListMore } from "./usePagedList";
+import { usePagedList } from "./usePagedList";
+import { ListMore } from "./ListMore";
 
 function FollowList({ userId, kind }: { userId: string; kind: "followers" | "following" }) {
   const list = usePagedList<FollowUser>(`/users/${userId}/${kind}`);

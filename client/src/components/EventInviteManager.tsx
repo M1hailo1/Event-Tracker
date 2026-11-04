@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { inviteUserToEvent } from "../api/eventsApi";
 import type { FollowUser } from "../types";
-import { usePagedList, ListMore } from "./usePagedList";
+import { usePagedList } from "./usePagedList";
+import { ListMore } from "./ListMore";
 
 function InviteList({ eventId, kind, onInvited }: {
   eventId: string;

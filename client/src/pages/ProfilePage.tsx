@@ -6,7 +6,7 @@ import { Sun, Moon } from "lucide-react";
 import { getMyProfile, getMyStats } from "../api/userApi";
 import type { UserProfile, UserStats } from "../types";
 import { getTitleForCategory } from "../utils/categoryTitles";
-import { useTheme } from "../context/ThemeContext";
+import { useTheme } from "../context/useTheme";
 import { PageSkeleton } from "../components/Skeleton";
 
 export default function ProfilePage() {

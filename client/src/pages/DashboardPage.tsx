@@ -3,8 +3,8 @@ import { Link } from "react-router-dom";
 import { getMyDashboard } from "../api/userApi";
 import type { DashboardData } from "../types";
 import EventCardGrid from "../components/EventCardGrid";
-import { useAuth } from "../context/AuthContext";
-import { useSavedEvents } from "../context/SavedEventsContext";
+import { useAuth } from "../context/useAuth";
+import { useSavedEvents } from "../context/useSavedEvents";
 import { EventCardsSkeleton } from "../components/Skeleton";
 import { useEventClock } from "../utils/eventLifecycle";
 
