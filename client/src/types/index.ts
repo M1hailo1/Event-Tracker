@@ -84,6 +84,8 @@ export interface UserStats {
 }
 
 export interface DashboardData {
+  recommendedEvents?: (Event & { recommendationReason?: string })[];
+  exploreEvents?: Event[];
   hasMore: { myUpcomingEvents: boolean; registeredUpcomingEvents: boolean; followingUpcomingEvents: boolean; savedUpcomingEvents: boolean };
   savedUpcomingEvents: Event[];
   myUpcomingEvents: Event[];

@@ -264,8 +264,8 @@ export default function EventDetailsPage() {
                       onMouseEnter={() => setHoveredRating(score)}
                       onFocus={() => setHoveredRating(score)}
                       onBlur={() => setHoveredRating(0)}
-                      className="rounded p-1 text-amber-500 transition-transform hover:scale-110 focus-visible:outline-2 focus-visible:outline-indigo-500 disabled:opacity-50">
-                      <Star size={28} strokeWidth={1.7} aria-hidden="true" className={`transition-colors ${score <= (hoveredRating || selectedRating) ? "fill-amber-400" : "fill-transparent"}`} />
+                      className="rounded p-1 text-indigo-500 dark:text-indigo-400 transition-transform hover:scale-110 focus-visible:outline-2 focus-visible:outline-indigo-500 disabled:opacity-50">
+                      <Star size={28} strokeWidth={1.7} aria-hidden="true" className={`transition-colors ${score <= (hoveredRating || selectedRating) ? "fill-indigo-500 dark:fill-indigo-400" : "fill-transparent"}`} />
                     </button>
                   ))}
                 </div>

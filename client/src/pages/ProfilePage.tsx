@@ -1,5 +1,5 @@
 import FollowLists from "../components/FollowLists";
-import OrganizerEvents from "../components/OrganizerEvents";
+import InterestSelection from "../components/InterestSelection";
 import RatingDisplay from "../components/RatingDisplay";
 import { useState, useEffect } from "react";
 import { Sun, Moon } from "lucide-react";
@@ -104,8 +104,8 @@ export default function ProfilePage() {
       )}
 
       <FollowLists userId={profile.id} />
+      <InterestSelection key={profile.id} />
 
-      <OrganizerEvents key={profile.id} userId={profile.id} name={profile.name} />
 
       <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 mt-6">
         <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">

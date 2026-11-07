@@ -46,6 +46,7 @@ export const test = base.extend<{ api: FakeApi }>({
       if (api.handlers[path]) return api.handlers[path](route);
       let data: unknown;
       if (path === "/users/me") data = viewer;
+      else if (path === "/users/me/interests") data = [];
       else if (path === "/auth/login" || path === "/auth/register") data = { user: viewer, token: api.nextToken };
       else if (path === "/events/saved-ids") data = [];
       else if (path === "/events") data = url.searchParams.has("page") ? eventPage() : [event];

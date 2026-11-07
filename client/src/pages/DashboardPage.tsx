@@ -17,6 +17,7 @@ interface SectionProps {
   viewAllTo: string;
   actionTo?: string;
   actionLabel?: string;
+  manageInterests?: boolean;
 }
 
 function DashboardSection({
@@ -28,12 +29,14 @@ function DashboardSection({
   actionLabel = "Explore events",
   viewAllTo,
   hasMore,
+  manageInterests = false,
 }: SectionProps) {
   return (
     <section className="mb-10">
       <div className="mb-4">
         <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">{title}</h2>
         <p className="text-sm text-gray-500 dark:text-gray-400">{subtitle}</p>
+        {manageInterests && <Link to="/profile" className="mt-2 inline-block text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:underline">Manage your interests</Link>}
       </div>
 
       {events.length === 0 ? (
@@ -50,7 +53,7 @@ function DashboardSection({
 export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const { revision } = useSavedEvents();
-  const lifecycleClock = useEventClock(data ? [...data.myUpcomingEvents, ...data.registeredUpcomingEvents, ...data.followingUpcomingEvents, ...(data.savedUpcomingEvents ?? [])] : []);
+  const lifecycleClock = useEventClock(data ? [...data.myUpcomingEvents, ...data.registeredUpcomingEvents, ...data.followingUpcomingEvents, ...(data.savedUpcomingEvents ?? []), ...(data.recommendedEvents ?? []), ...(data.exploreEvents ?? [])] : []);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const { user, isLoading: authLoading } = useAuth();
@@ -102,6 +105,9 @@ export default function DashboardPage() {
         </Link>
       </div>
 
+      <DashboardSection manageInterests title="Recommended for you" subtitle="Based on your interests, saved events and past registrations" events={data.recommendedEvents ?? []} emptyText="No matching upcoming events yet. Update your interests on your profile or browse all events." hasMore={false} viewAllTo="/" />
+      {!!data.recommendedEvents?.length && <ul className="-mt-6 mb-8 space-y-1 text-sm text-gray-500 dark:text-gray-400" aria-label="Why these events were recommended">{data.recommendedEvents.map(event => <li key={event.id}><Link to={`/events/${event.id}`} className="text-indigo-600 dark:text-indigo-400 hover:underline">{event.name}</Link>: {event.recommendationReason}</li>)}</ul>}
+      {!!data.recommendedEvents?.length && !!data.exploreEvents?.length && <DashboardSection title="Explore something new" subtitle="Upcoming events outside the categories in your interests and activity" events={data.exploreEvents} emptyText="" hasMore={false} viewAllTo="/" />}
       <DashboardSection
         hasMore={data.hasMore?.savedUpcomingEvents ?? false}
         viewAllTo="/saved"

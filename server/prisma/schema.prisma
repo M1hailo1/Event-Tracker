@@ -42,9 +42,11 @@ model User {
   comments      EventComment[]
   commentReports CommentReport[]
   savedEvents SavedEvent[]
+  interests Category[] @relation("UserInterests")
 }
 
 model Category {
+  interestedUsers User[] @relation("UserInterests")
   categorizedEvents Event[] @relation("EventCategories")
   id              String   @id @default(uuid())
   name            String

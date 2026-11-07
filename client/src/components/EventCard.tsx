@@ -9,6 +9,7 @@ import CategoryIcon from "./CategoryIcon";
 import Availability from "./Availability";
 import SaveEventButton from "./SaveEventButton";
 import { useEventState } from "../utils/eventLifecycle";
+import { formatCardLocation } from "../utils/formatCardLocation";
 
 interface EventCardProps {
   event: Event;
@@ -36,11 +37,11 @@ export default function EventCard({ event }: EventCardProps) {
         {dateLabel}
       </p>
       <p title={event.location} className={`shrink-0 truncate text-sm text-gray-500 dark:text-gray-400 mb-1 ${!hasCover ? "pr-10" : ""}`}>
-        {event.location}
+        {formatCardLocation(event.location)}
       </p>
 
-      {state === "ENDED" && (
-        <div className="min-w-0 shrink-0 mb-1 [&_span]:truncate"><RatingDisplay rating={event.rating} label="Event rating" /></div>
+      {state === "ENDED" && !!event.rating?.count && (
+        <div className="min-w-0 shrink-0 mb-1 [&_span]:truncate"><RatingDisplay rating={event.rating} label="Event rating" compact /></div>
       )}
 
       <p className="mt-auto shrink-0 flex items-center justify-between gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
