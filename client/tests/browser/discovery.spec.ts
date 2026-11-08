@@ -1,5 +1,29 @@
 import { test, expect, event, eventPage, deferred } from "./fixtures";
 
+test("background refresh stays visually quiet unless it takes longer", async ({ page, api }) => {
+  const response = deferred(), requested = deferred();
+  let calls = 0;
+  api.handlers["/events"] = async route => {
+    if (++calls > 1) { requested.resolve(); await response.promise; }
+    await route.fulfill({ json: eventPage() });
+  };
+  await page.clock.install();
+  await page.goto("/");
+  await expect(page.getByRole("heading", { name: event.name })).toBeVisible();
+  const before = await page.getByRole("heading", { name: event.name }).boundingBox();
+  await page.evaluate(() => window.dispatchEvent(new Event("focus")));
+  try {
+    await page.clock.fastForward(350);
+    await requested.promise;
+    await expect(page.getByText("Updating events...")).toHaveClass("sr-only");
+    const during = await page.getByRole("heading", { name: event.name }).boundingBox();
+    expect(during?.y).toBe(before?.y);
+    await page.clock.fastForward(4100);
+    await expect(page.getByText("Refreshing events is taking longer than usual. Your current results are still shown.")).toBeVisible();
+  } finally { response.resolve(); }
+  await expect(page.getByText("Refreshing events is taking longer than usual. Your current results are still shown.")).toHaveCount(0);
+});
+
 test("slow first load gives honest waiting feedback without showing an empty result", async ({ page, api }) => {
   const response = deferred(), requested = deferred();
   api.handlers["/events"] = async route => { requested.resolve(); await response.promise; await route.fulfill({ json: eventPage() }); };

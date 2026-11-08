@@ -32,6 +32,7 @@ export function buildPreview(event, id, site = DEFAULT_SITE) {
       imageType = "image/webp"; width = 960; height = 480;
     }
   }
+  const indexable = isPublic && !event.cancelledAt && !/^\s*\[DEMO\]/i.test(event.name) && !/NOT A REAL EVENT|DEMONSTRATION ONLY/i.test(event.description ?? "");
   const meta = (property, value) => `<meta property="${property}" content="${escapeHtml(value)}" />`;
   return `<!doctype html>
 <html lang="en"><head>
@@ -39,7 +40,7 @@ export function buildPreview(event, id, site = DEFAULT_SITE) {
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>${escapeHtml(title)}</title>
 <meta name="description" content="${escapeHtml(description)}" />
-${!isPublic ? '<meta name="robots" content="noindex, nofollow" />' : ""}
+${!indexable ? '<meta name="robots" content="noindex, nofollow" />' : ""}
 <link rel="canonical" href="${escapeHtml(url)}" />
 ${meta("og:type", "website")}
 ${meta("og:site_name", "EventTracker")}

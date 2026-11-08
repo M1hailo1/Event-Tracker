@@ -3,6 +3,7 @@ import { PageSkeleton } from "./components/Skeleton";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import EventsListPage from "./pages/EventsListPage";
 import Navbar from "./components/Navbar";
+import PageMetadata from "./components/PageMetadata";
 import SessionNotice from "./components/SessionNotice";
 import { SavedEventsProvider } from "./context/SavedEventsContext";
 
@@ -20,6 +21,7 @@ const SavedEventsPage = lazy(() => import("./pages/SavedEventsPage"));
 function App() {
   return (
     <BrowserRouter>
+      <PageMetadata />
       <SavedEventsProvider>
         <Navbar />
         <SessionNotice />

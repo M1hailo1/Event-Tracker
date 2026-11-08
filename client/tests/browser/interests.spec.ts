@@ -31,7 +31,7 @@ test("interests preserve choices after failure, save and refresh recommendations
   await expect(page.getByText("Interests saved.")).toBeVisible();
   await page.goto("/dashboard");
   await expect(page.getByRole("heading", { name: event.name })).toBeVisible();
-  await expect(page.getByText(/Matches your interest in Music/)).toBeVisible();
+  await expect(page.getByRole("list", { name: "Why these events were recommended" })).toHaveCount(0);
   await page.getByRole("link", { name: "Manage your interests" }).click();
   await page.reload();
   await expect(page.getByRole("checkbox", { name: "Music" })).toBeChecked();

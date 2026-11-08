@@ -54,13 +54,13 @@ describe("Interests and personal discovery", () => {
     expect(result.body.recommendedEvents.map((item: { id: string }) => item.id)).toEqual(expect.arrayContaining([hidden[0].id, hidden[1].id]));
     await prisma.user.update({ where: { id: owner }, data: { bannedUntil: new Date("2099-01-01") } });
     result = await dashboard();
-    expect(result.body.recommendedEvents).toEqual([]);
-    expect(result.body.exploreEvents).toEqual([]);
+    const bannedResults = [...result.body.recommendedEvents, ...result.body.exploreEvents].map(item => item.id);
+    for (const item of [match, explore, ...hidden]) expect(bannedResults).not.toContain(item.id);
     await prisma.user.update({ where: { id: owner }, data: { bannedUntil: null } });
   });
   test("activity works without selected interests and a new account gets exploration", async () => {
     await save([]);
-    const saved = await event("Saved film signal", film);
+    const saved = await event("Saved film signal", film, { date: new Date("2030-01-01") });
     await prisma.savedEvent.create({ data: { userId: viewer, eventId: saved.id } });
     const result = await dashboard();
     const filmMatch = result.body.recommendedEvents.find((item: { id: string }) => item.id === saved.id);

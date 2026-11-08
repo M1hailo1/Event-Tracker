@@ -262,7 +262,7 @@ function EventsList({ scope }: { scope: string | undefined }) {
         {events.length > 0 && <p className="mt-1">Showing the last loaded results.</p>}
         <button type="button" disabled={isLoading} onClick={() => setRetry(value => value + 1)} className="mt-3 rounded-lg bg-indigo-600 px-4 py-2 font-medium text-white disabled:opacity-50">Try again</button>
       </div>}
-      {isLoading && events.length > 0 && <p role="status" className="mb-4 text-sm text-gray-500 dark:text-gray-400">Updating events...</p>}
+      {isLoading && events.length > 0 && <p role="status" className={showSlowHint ? "mb-4 text-sm text-gray-500 dark:text-gray-400" : "sr-only"}>{showSlowHint ? "Refreshing events is taking longer than usual. Your current results are still shown." : "Updating events..."}</p>}
 
       {isLoading && events.length === 0 && (
         <div className="w-full space-y-4">

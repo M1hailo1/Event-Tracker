@@ -46,23 +46,27 @@ Unread join notifications group per event. Rating prompts have durable rollout a
 - **Organize:** date ranges, capacity, recurring occurrences, invitations and permanent cancellation with retained history.
 - **Participate:** join/leave before the start, view attendees and rate registered events after they end.
 - **Save:** private account-based bookmarks, upcoming/history views and a six-event dashboard preview.
+- **Personalize:** private category interests on your profile, with recommendations scored from interests, saves and past registrations; no AI service required.
+- **Dashboard:** separate Recommendations, Explore, Saved, Attending, Your events and Following tabs. Recommendations and Explore show up to three events each; other previews show up to six with View all when needed.
 - **Connect:** follows, organizer profiles, comments/replies and in-app notifications.
 - **Moderate:** reports, timed bans, staff event tools and admin-only moderator assignments.
 - **Control access:** public, followers-only and invite-only events with server-enforced permissions.
 - **Share:** public Open Graph previews with generic fallbacks for private or unavailable events.
+- **Search metadata:** route titles/descriptions, canonical URLs, indexing rules and a public-event sitemap that excludes fictional demo events.
 
 ## Try the demo
 
 1. Browse the public **[DEMO]** events, filter by category and switch between list, map and calendar views.
 2. Open an event to see its categories, availability, organizer and discussion.
 3. With your own account, bookmark events and open **Saved events** or the dashboard preview. Saving does not reserve a place.
-4. Create an event to try visibility settings, the cover collection and organizer controls.
+4. Choose interests on **My profile**, then try **Recommendations** and **Explore** on the dashboard. Past registrations indicate interest, not verified physical attendance.
+5. Create an event to try visibility settings, the cover collection and organizer controls. Your organized events appear on the dashboard; other organizers' events appear on their public profiles.
 
 Hosted demo events are explicitly fictional. Their descriptions say **NOT A REAL EVENT**, venues are illustrative and dates do not refresh automatically. No shared admin credentials are published.
 
 ## Screenshots
 
-These screenshots show the current interface with fictional demonstration events, locations and accounts. They do not contain real user records or private addresses.
+These screenshots use fictional demonstration events, locations and accounts. They do not contain real user records or private addresses. They were captured before the latest dashboard tabs, interest selector and compact card metadata changes.
 
 **Discover events:** illustrated covers, category icons, bookmarks, availability labels, search filters and numbered pages.
 
@@ -75,7 +79,7 @@ These screenshots show the current interface with fictional demonstration events
 
 ![Saved events page showing bookmarked demonstration events and upcoming/history controls](assets/screenshots/saved-events.png)
 
-**Dashboard preview:** up to six saved events, with View all when more are available.
+**Earlier dashboard preview:** up to six saved events, with View all when more are available. The current dashboard separates its sections into tabs.
 
 ![Dashboard showing a six-event saved preview and View all link](assets/screenshots/dashboard.png)
 
@@ -137,9 +141,9 @@ Open `http://localhost:5173`. The API defaults to `http://localhost:3000`. See t
 | `client/` | `npm audit --audit-level=moderate` | Check dependencies for reported moderate-or-higher advisories |
 | `client/` | `npm run lint -- --max-warnings=0` | Lint without warnings |
 | `client/` | `npm run build` | Type-check and build the client |
-| `client/` | `npm run test:share` | Public-only metadata, escaping and preview fallbacks |
+| `client/` | `npm run test:share` | Public-only metadata, escaping, preview fallbacks and sitemap responses |
 | `client/` | `npm run typecheck:tests` | Type-check browser tests and their configuration |
-| `client/` | `npm run test:browser` | Desktop/mobile authentication, accessibility, session expiry and discovery retries |
+| `client/` | `npm run test:browser` | Desktop/mobile authentication, accessibility, sessions, discovery, interests, dashboard tabs and SEO metadata |
 
 Before the first browser test run, use `npx playwright install chromium`. Browser tests run a local client with fictional API fixtures and block external requests; real Google OAuth and deployed hosting behavior require separate live verification.
 
@@ -151,7 +155,13 @@ A three-round [HTTP measurement](assets/performance/demo-2026-11-04.json) record
 
 Local [production-build measurements](assets/performance/client-bundle-2026-11-04.json) show upfront JavaScript reduced from **596.7 KB to 346.9 KB** by deferring secondary routes, maps and calendars. That is approximately **42% less uncompressed JavaScript**, or **37% less with the recorded gzip settings**. Shared initial chunks are included in those totals.
 
-Discovery gives slow-load feedback, retains the last results during a failed refresh, supports retry and aborts superseded requests. Requests time out after 65 seconds. These changes improve the waiting experience; they do not remove free-host wake-up delays. Measurements can be repeated manually from `client/` with `npm run measure:demo`; no keep-alive polling is scheduled.
+Discovery gives slow-load feedback, retains the last results during a failed refresh, supports retry and aborts superseded requests. Quick background updates stay visually quiet; a visible refresh notice appears after four seconds. Discovery requests time out after 65 seconds. These changes improve the waiting experience; they do not remove free-host wake-up delays. Measurements can be repeated manually from `client/` with `npm run measure:demo`; no keep-alive polling is scheduled.
+
+## Search indexing and deployment
+
+The basic SEO pass adds route metadata, canonical URLs, `robots.txt` and `/sitemap.xml`. The sitemap uses the API's anonymous `/seo/events` endpoint and includes only future, noncancelled public events from unbanned organizers, excluding explicitly labelled fictional demo events. Account/staff pages request no indexing. Event metadata comes only from the anonymous public-sharing endpoint, even for signed-in visitors; private event metadata stays generic.
+
+Ordinary event pages still render through JavaScript; this is not server-side rendering or a guarantee of search indexing. No event structured data or Search Console setup is included. A sleeping API can cause the sitemap to return a retryable 503 response. Deploy both the API and Vercel client before verifying the live sitemap, indexing headers and latest dashboard changes. No additional database migration is needed for the SEO work.
 
 ## Current boundaries
 

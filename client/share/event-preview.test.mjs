@@ -90,7 +90,7 @@ test("invalid IDs never fetch, HEAD has no body and writes are rejected", async 
 
 test("routing matches preview bots before SPA fallback; fallback image is bundled", () => {
   const config = JSON.parse(readFileSync(new URL('../vercel.json', import.meta.url)));
-  const rule = config.rewrites[0];
+  const rule = config.rewrites.find(rule => rule.destination === "/api/event-preview?id=:id");
   const bot = new RegExp(rule.has[0].value);
   assert(bot.test('Mozilla/5.0 (compatible; Discordbot/2.0; +https://discordapp.com)'));
   assert(bot.test('WhatsApp/2.0'));

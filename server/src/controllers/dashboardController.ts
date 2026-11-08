@@ -15,6 +15,7 @@ const eventInclude = {
 };
 
 const UPCOMING_LIMIT = 6;
+const DISCOVERY_LIMIT = 3;
 
 export async function getMyDashboard(req: Request, res: Response) {
   const userId = req.userId!;
@@ -32,10 +33,10 @@ export async function getMyDashboard(req: Request, res: Response) {
     include: eventInclude,
     orderBy: [{ date: "asc" }, { id: "asc" }],
   }) : [];
-  const recommendedEvents = rankRecommendations(matchingEvents, preferences).slice(0, UPCOMING_LIMIT);
+  const recommendedEvents = rankRecommendations(matchingEvents, preferences).slice(0, DISCOVERY_LIMIT);
   const exploreEvents = await prisma.event.findMany({
     where: { ...eligibleWhere, id: { notIn: recommendedEvents.map(event => event.id) }, categoryId: { notIn: [...preferences.keys()] }, categories: { none: { id: { in: [...preferences.keys()] } } } },
-    include: eventInclude, orderBy: [{ date: "asc" }, { id: "asc" }], take: UPCOMING_LIMIT,
+    include: eventInclude, orderBy: [{ date: "asc" }, { id: "asc" }], take: DISCOVERY_LIMIT,
   });
   const savedUpcomingEvents = await prisma.event.findMany({
     where: { AND: [savedEventsWhere(userId, now), activeEventsWhere(now)] },

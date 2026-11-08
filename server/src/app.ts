@@ -1,4 +1,5 @@
 import express from "express";
+import { getSitemapEvents } from "./controllers/seoController";
 import cors from "cors";
 import prisma from "./prisma";
 import authRoutes from "./routes/authRoutes";
@@ -46,6 +47,7 @@ app.use(ipSafetyLimiter);
 app.use(resolveRateLimitIdentity);
 app.use(createGeneralLimiter());
 app.use(express.json());
+app.get("/seo/events", getSitemapEvents);
 app.use("/auth", authLimiter, authRoutes);
 app.use("/events", eventRoutes);
 app.use("/categories", categoryRoutes);

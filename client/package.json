@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test:share": "node --test share/event-preview.test.mjs",
+    "test:share": "node --test share/*.test.mjs",
     "test:browser": "playwright test",
     "typecheck:tests": "tsc -p tsconfig.test.json",
     "measure:demo": "node ../scripts/measure-demo.mjs"

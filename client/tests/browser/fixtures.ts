@@ -51,10 +51,12 @@ export const test = base.extend<{ api: FakeApi }>({
       else if (path === "/events/saved-ids") data = [];
       else if (path === "/events") data = url.searchParams.has("page") ? eventPage() : [event];
       else if (path === `/events/${event.id}`) data = { ...event, registrations: [], myRating: null };
+      else if (path === `/events/${event.id}/share`) data = event;
       else if (path === `/events/${event.id}/attendees`) data = eventPage([]);
       else if (path === `/events/${event.id}/comments`) data = { comments: [], nextCursor: null };
       else if (path === "/categories") data = [{ id: "music", name: "Music", isCustom: false }];
       else if (path === "/notifications/unread-count") data = { count: 0 };
+      else if (path === `/notifications/events/${event.id}/read`) data = { success: true };
       else if (path === "/users/me/dashboard") data = { myUpcomingEvents: [], registeredUpcomingEvents: [], followingUpcomingEvents: [], savedUpcomingEvents: [], hasMore: {} };
       else { unmatched.push(path); return route.fulfill({ status: 404, json: { error: "Unmatched fixture" } }); }
       return route.fulfill({ json: data });
