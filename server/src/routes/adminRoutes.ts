@@ -1,4 +1,5 @@
 import { getCommentReports, reviewCommentReport } from "../controllers/commentReportController";
+import { getAuditHistory } from "../controllers/auditController";
 import { cancelEventAdmin } from "../controllers/eventCancellationController";
 import { Router } from "express";
 import {
@@ -18,6 +19,7 @@ import { eventWriteLimiter, moderationLimiter } from "../middleware/rateLimiters
 const router = Router();
 
 router.use(requireAuth, requireStaff);
+router.get("/audit-history", requireAdmin, getAuditHistory);
 
 router.patch("/users/:id/role", requireAdmin, moderationLimiter, setModeratorRole);
 

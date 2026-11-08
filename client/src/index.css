@@ -11,6 +11,32 @@ body {
   background-color: inherit;
 }
 
+input[type="date"],
+input[type="datetime-local"] {
+  color-scheme: light;
+}
+
+.dark input[type="date"],
+.dark input[type="datetime-local"] {
+  color-scheme: dark;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  opacity: 1;
+  cursor: pointer;
+}
+
+.audit-detail-panel {
+  background-color: #f9fafb;
+  color: #111827;
+}
+
+.dark .audit-detail-panel {
+  background-color: #111827;
+  color: #f3f4f6;
+}
+
 .leaflet-container {
   isolation: isolate;
 }

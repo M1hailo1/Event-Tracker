@@ -1,11 +1,12 @@
 import { readPagination, paged } from "../utils/pagination";
+import { recordAudit } from "../utils/auditHistory";
 import { z } from "zod";
 import { validUpdatedDates } from "../utils/eventLifecycle";
 import { selectedCategoryIds, validCategorySelection, curatedCategoryWhere } from "../utils/eventCategories";
 import { Request, Response } from "express";
 import prisma from "../prisma";
 import { updateEventSchema } from "./eventController";
-import { createNotification } from "../utils/createNotification";
+import { notifyEventRegistrations, notificationTransactionOptions } from "../utils/bulkNotifications";
 import { computeBannedUntil, type BanDuration } from "../utils/banDuration";
 
 const VALID_DURATIONS: BanDuration[] = ["1h", "1w", "1m", "forever"];
@@ -101,12 +102,21 @@ export async function banUserAdmin(req: Request, res: Response) {
 
   const bannedUntil = computeBannedUntil(duration);
 
-  const updatedUser = await prisma.user.update({
-    where: { id },
-    data: { bannedUntil, banReason: reason?.trim() || null },
-    select: { id: true, name: true, email: true, role: true, bannedUntil: true, banReason: true },
-  });
+  const updatedUser = await prisma.$transaction(async tx => {
+    await tx.$queryRaw`SELECT "id" FROM "User" WHERE "id" = ${id} FOR UPDATE`;
+    const before = await tx.user.findUniqueOrThrow({ where: { id }, select: { bannedUntil: true, banReason: true } });
+    const updated = await tx.user.update({
+      where: { id },
+      data: { bannedUntil, banReason: reason?.trim() || null },
+      select: { id: true, name: true, email: true, role: true, bannedUntil: true, banReason: true },
+    });
 
+    await recordAudit(tx, req.userId!, "USER_BANNED", "USER", id, updated.name, {
+      before: { bannedUntil: before.bannedUntil?.toISOString() ?? null, banReason: before.banReason },
+      after: { bannedUntil: bannedUntil.toISOString(), banReason: updated.banReason },
+    });
+    return updated;
+  });
   res.status(200).json(updatedUser);
 }
 
@@ -124,12 +134,21 @@ export async function unbanUserAdmin(req: Request, res: Response) {
     return res.status(403).json({ error: "Moderators cannot manage admin accounts" });
   }
 
-  const updatedUser = await prisma.user.update({
-    where: { id },
-    data: { bannedUntil: null, banReason: null },
-    select: { id: true, name: true, email: true, role: true, bannedUntil: true, banReason: true },
-  });
+  const updatedUser = await prisma.$transaction(async tx => {
+    await tx.$queryRaw`SELECT "id" FROM "User" WHERE "id" = ${id} FOR UPDATE`;
+    const before = await tx.user.findUniqueOrThrow({ where: { id }, select: { bannedUntil: true, banReason: true } });
+    const updated = await tx.user.update({
+      where: { id },
+      data: { bannedUntil: null, banReason: null },
+      select: { id: true, name: true, email: true, role: true, bannedUntil: true, banReason: true },
+    });
 
+    if (before.bannedUntil || before.banReason) await recordAudit(tx, req.userId!, "USER_UNBANNED", "USER", id, updated.name, {
+      before: { bannedUntil: before.bannedUntil?.toISOString() ?? null, banReason: before.banReason },
+      after: { bannedUntil: null, banReason: null },
+    });
+    return updated;
+  });
   res.status(200).json(updatedUser);
 }
 
@@ -159,21 +178,22 @@ export async function deleteUserAdmin(req: Request, res: Response) {
   });
   const ownedEventIds = ownedEvents.map((e) => e.id);
 
-  await prisma.$transaction([
-    prisma.notification.deleteMany({ where: { userId: id } }),
-    prisma.eventInvite.deleteMany({ where: { invitedUserId: id } }),
-    prisma.follow.deleteMany({
+  await prisma.$transaction(async tx => {
+    await recordAudit(tx, req.userId!, "USER_DELETED", "USER", id, user.name, { role: user.role, ownedEventIds });
+    await tx.notification.deleteMany({ where: { userId: id } });
+    await tx.eventInvite.deleteMany({ where: { invitedUserId: id } });
+    await tx.follow.deleteMany({
       where: { OR: [{ followerId: id }, { followingId: id }] },
-    }),
-    prisma.registration.deleteMany({
+    });
+    await tx.registration.deleteMany({
       where: { OR: [{ userId: id }, { eventId: { in: ownedEventIds } }] },
-    }),
-    prisma.eventInvite.deleteMany({
+    });
+    await tx.eventInvite.deleteMany({
       where: { eventId: { in: ownedEventIds } },
-    }),
-    prisma.event.deleteMany({ where: { id: { in: ownedEventIds } } }),
-    prisma.user.delete({ where: { id } }),
-  ]);
+    });
+    await tx.event.deleteMany({ where: { id: { in: ownedEventIds } } });
+    await tx.user.delete({ where: { id } });
+  });
 
   res.status(200).json({ message: "User successfully deleted" });
 }
@@ -226,46 +246,56 @@ export async function updateEventAdmin(req: Request, res: Response) {
   const categoryIds = selectedCategoryIds(data);
   if (!await validCategorySelection(categoryIds)) return res.status(400).json({ error: "Choose categories from the collection" });
 
-  const updatedEvent = await prisma.event.update({
-    where: { id },
-    data: {
-      ...(data.name !== undefined && { name: data.name }),
-      ...(data.coverId !== undefined && { coverId: data.coverId }),
-      ...(data.description !== undefined && { description: data.description }),
-      ...(categoryIds && { categoryId: categoryIds[0]!, categories: { set: categoryIds.map(id => ({ id })) } }),
-      ...(data.date !== undefined && { date: new Date(data.date) }),
-      ...(data.endDate !== undefined && {
-        endDate: data.endDate ? new Date(data.endDate) : null,
-      }),
-      ...(data.location !== undefined && { location: data.location }),
-      ...(data.latitude !== undefined && { latitude: data.latitude }),
-      ...(data.longitude !== undefined && { longitude: data.longitude }),
-      ...(data.maxCapacity !== undefined && { maxCapacity: data.maxCapacity }),
-      ...(data.isRecurring !== undefined && { isRecurring: data.isRecurring }),
-      ...(data.recurrencePattern !== undefined && {
-        recurrencePattern: data.recurrencePattern,
-      }),
-      ...(data.visibility !== undefined && {
-        visibility: data.visibility,
-      }),
-    },
-  });
+  const updatedEvent = await prisma.$transaction(async tx => {
+    await tx.$queryRaw`SELECT "id" FROM "Event" WHERE "id" = ${id} FOR UPDATE`;
+    const before = await tx.event.findUniqueOrThrow({ where: { id }, include: { categories: { select: { id: true } } } });
+    if (before.cancelledAt || !validUpdatedDates(before, data)) return null;
+    const updated = await tx.event.update({
+      where: { id },
+      data: {
+        ...(data.name !== undefined && { name: data.name }),
+        ...(data.coverId !== undefined && { coverId: data.coverId }),
+        ...(data.description !== undefined && { description: data.description }),
+        ...(categoryIds && { categoryId: categoryIds[0]!, categories: { set: categoryIds.map(id => ({ id })) } }),
+        ...(data.date !== undefined && { date: new Date(data.date) }),
+        ...(data.endDate !== undefined && {
+          endDate: data.endDate ? new Date(data.endDate) : null,
+        }),
+        ...(data.location !== undefined && { location: data.location }),
+        ...(data.latitude !== undefined && { latitude: data.latitude }),
+        ...(data.longitude !== undefined && { longitude: data.longitude }),
+        ...(data.maxCapacity !== undefined && { maxCapacity: data.maxCapacity }),
+        ...(data.isRecurring !== undefined && { isRecurring: data.isRecurring }),
+        ...(data.recurrencePattern !== undefined && {
+          recurrencePattern: data.recurrencePattern,
+        }),
+        ...(data.visibility !== undefined && {
+          visibility: data.visibility,
+        }),
+      },
+    });
 
-  const registeredUsers = await prisma.registration.findMany({
-    where: { eventId: id, status: "CONFIRMED" },
-    select: { userId: true },
-  });
+    const changes: Record<string, { before: string | number | boolean | null; after: string | number | boolean | null }> = {};
+    for (const field of Object.keys(data)) {
+      if (field === "categoryIds" || field === "categoryId") continue;
+      const key = field as keyof typeof updated;
+      const oldValue = before[key] instanceof Date ? (before[key] as Date).toISOString() : before[key];
+      const newValue = updated[key] instanceof Date ? (updated[key] as Date).toISOString() : updated[key];
+      if (oldValue !== newValue) changes[field] = { before: oldValue, after: newValue };
+    }
+    const oldCategories = before.categories.map(category => category.id).sort();
+    const newCategories = categoryIds ? [...categoryIds].sort() : oldCategories;
+    if (before.categoryId !== updated.categoryId) changes.categoryId = { before: before.categoryId, after: updated.categoryId };
+    if (Object.keys(changes).length || JSON.stringify(oldCategories) !== JSON.stringify(newCategories)) {
+      await recordAudit(tx, req.userId!, "EVENT_UPDATED", "EVENT", id, updated.name, {
+        changes, ...(categoryIds && { categories: { before: oldCategories, after: newCategories } }),
+      });
+    }
+    await notifyEventRegistrations(tx, id, "EVENT_UPDATED", `The event "${updated.name}" you're registered for has been updated`);
+    return updated;
+  }, notificationTransactionOptions);
 
-  await Promise.all(
-    registeredUsers.map((r) =>
-      createNotification(
-        r.userId,
-        "EVENT_UPDATED",
-        `The event "${updatedEvent.name}" you're registered for has been updated`,
-        updatedEvent.id,
-      ),
-    ),
-  );
+  if (!updatedEvent) return res.status(409).json({ error: "This event changed. Refresh before editing it." });
 
   res.status(200).json(updatedEvent);
 }
@@ -281,26 +311,17 @@ export async function deleteEventAdmin(req: Request, res: Response) {
     return res.status(404).json({ error: "Event not found" });
   }
 
-  const registeredUsers = await prisma.registration.findMany({
-    where: { eventId: id, status: "CONFIRMED" },
-    select: { userId: true },
-  });
-
-  await prisma.$transaction([
-    prisma.registration.deleteMany({ where: { eventId: id } }),
-    prisma.eventInvite.deleteMany({ where: { eventId: id } }),
-    prisma.event.delete({ where: { id } }),
-  ]);
-
-  await Promise.all(
-    registeredUsers.map((r) =>
-      createNotification(
-        r.userId,
-        "EVENT_CANCELLED",
-        `The event "${existingEvent.name}" you were registered for was permanently deleted by staff`,
-      ),
-    ),
-  );
+  await prisma.$transaction(async tx => {
+    await tx.$queryRaw`SELECT "id" FROM "Event" WHERE "id" = ${id} FOR UPDATE`;
+    const current = await tx.event.findUniqueOrThrow({ where: { id } });
+    await notifyEventRegistrations(tx, id, "EVENT_CANCELLED", `The event "${current.name}" you were registered for was permanently deleted by staff`, undefined, false);
+    await recordAudit(tx, req.userId!, "EVENT_DELETED", "EVENT", id, current.name, {
+      organizerId: current.createdByUserId, date: current.date.toISOString(), visibility: current.visibility,
+    });
+    await tx.registration.deleteMany({ where: { eventId: id } });
+    await tx.eventInvite.deleteMany({ where: { eventId: id } });
+    await tx.event.delete({ where: { id } });
+  }, notificationTransactionOptions);
 
   res.status(200).json({ message: "Event successfully deleted" });
 }
@@ -310,9 +331,17 @@ export async function setModeratorRole(req: Request, res: Response) {
   const parsed = z.object({ role: z.enum(["USER", "MODERATOR"]) }).strict().safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: "Choose USER or MODERATOR" });
   const id = req.params.id as string;
-  const result = await prisma.user.updateMany({
-    where: { id, role: { in: ["USER", "MODERATOR"] } },
-    data: { role: parsed.data.role },
+  const result = await prisma.$transaction(async tx => {
+    await tx.$queryRaw`SELECT "id" FROM "User" WHERE "id" = ${id} FOR UPDATE`;
+    const before = await tx.user.findUnique({ where: { id } });
+    const result = await tx.user.updateMany({
+      where: { id, role: { in: ["USER", "MODERATOR"] } },
+      data: { role: parsed.data.role },
+    });
+    if (result.count && before && before.role !== parsed.data.role) await recordAudit(tx, req.userId!, "USER_ROLE_CHANGED", "USER", id, before.name, {
+      before: { role: before.role }, after: { role: parsed.data.role },
+    });
+    return result;
   });
   if (!result.count) {
     const target = await prisma.user.findUnique({ where: { id }, select: { id: true } });

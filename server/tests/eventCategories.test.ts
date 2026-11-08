@@ -9,16 +9,18 @@ import prisma from "../src/prisma";
 jest.mock("../src/prisma", () => ({ __esModule: true, default: {
   $transaction: jest.fn(), $queryRaw: jest.fn(),
   category: { count: jest.fn(), findMany: jest.fn() },
-  event: { findUnique: jest.fn(), findMany: jest.fn(), update: jest.fn(), create: jest.fn() },
+  event: { findUnique: jest.fn(), findUniqueOrThrow: jest.fn(), findMany: jest.fn(), update: jest.fn(), create: jest.fn() },
   registration: { findMany: jest.fn(), create: jest.fn() },
   user: { findUnique: jest.fn() }, follow: { findMany: jest.fn() },
 } }));
+jest.mock("../src/utils/auditHistory", () => ({ recordAudit: jest.fn() }));
 jest.mock("../src/utils/ratings", () => ({ withEventRatings: jest.fn(async events => events) }));
 const ids = [1, 2, 3, 4].map(n => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`);
 let req: Request;
 let res: Response;
 beforeEach(() => {
   jest.resetAllMocks();
+  (prisma.event.findUniqueOrThrow as jest.Mock).mockResolvedValue({ id: "event", categories: [], date: new Date("2099-01-01"), endDate: null });
   (prisma.$transaction as jest.Mock).mockImplementation(callback => callback(prisma));
   (prisma.$queryRaw as jest.Mock).mockResolvedValue([{ id: 'parent', parentEventId: null }]);
   req = { userId: "owner", params: { id: "event" }, query: {}, body: { categoryIds: ids.slice(0, 3) } } as unknown as Request;

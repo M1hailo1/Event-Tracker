@@ -1,8 +1,14 @@
 import prisma from "../prisma";
 
 const REMINDER_WINDOW_MS = 24 * 60 * 60 * 1000;
+let running: Promise<void> | undefined;
 
-export async function sendDueEventReminders() {
+export function sendDueEventReminders() {
+  running ??= processDueEventReminders().finally(() => { running = undefined; });
+  return running;
+}
+
+async function processDueEventReminders() {
   const now = new Date();
   const windowEnd = new Date(now.getTime() + REMINDER_WINDOW_MS);
 
@@ -18,6 +24,8 @@ export async function sendDueEventReminders() {
     include: {
       event: { select: { id: true, name: true } },
     },
+    orderBy: [{ event: { date: "asc" } }, { id: "asc" }],
+    take: 1000,
   });
 
   for (const registration of dueRegistrations) {

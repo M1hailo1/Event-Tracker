@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { z } from "zod";
 import prisma from "../prisma";
+import { recordAudit } from "../utils/auditHistory";
 
 const reportSchema = z.object({
   reason: z.enum(["HARASSMENT", "SPAM", "INAPPROPRIATE", "OTHER"]),
@@ -66,6 +67,10 @@ export async function reviewCommentReport(req: Request, res: Response) {
     if (updated.count && parsed.data.action === "REMOVE") {
       await tx.eventComment.updateMany({ where: { id: report.commentId, deletedAt: null }, data: { body: "", deletedAt: new Date() } });
     }
+    if (updated.count) await recordAudit(tx, req.userId!, parsed.data.action === "REMOVE" ? "REPORT_REMOVED" : "REPORT_DISMISSED",
+      "COMMENT_REPORT", report.id, "Comment report", {
+        commentId: report.commentId, reason: report.reason, reviewedReportCount: updated.count,
+      });
     return updated.count;
   });
   if (!result) return res.status(409).json({ error: "This comment's reports have already been reviewed" });

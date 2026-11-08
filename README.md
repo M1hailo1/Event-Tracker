@@ -38,6 +38,8 @@ Staff access uses the current database role, so a previously issued token does n
 
 Unread join notifications group per event. Rating prompts have durable rollout and sent flags, and workers recheck eligibility while holding an event lock. This prevents overlapping workers from sending the same prompt again. The simpler in-process scheduler fits free hosting, with the explicit trade-off that sleep and backlogs can delay delivery.
 
+Event creation, edits and permanent deletion write their recipient notifications in the same transaction as the event change. Recipients are read in pages of 500 and notifications use bulk inserts; a failed batch rolls back the operation, including any staff audit entry. This avoids thousands of concurrent individual writes without adding a queue service. Reminder runs process at most 1,000 registrations, prioritizing the nearest event start; overlapping runs within one process share the same work.
+
 [Rating worker](server/src/utils/eventRatingPrompts.ts) | [Notification integration tests](server/tests/eventParticipationNotifications.integration.test.ts)
 
 ## What it does
@@ -49,7 +51,7 @@ Unread join notifications group per event. Rating prompts have durable rollout a
 - **Personalize:** private category interests on your profile, with recommendations scored from interests, saves and past registrations; no AI service required.
 - **Dashboard:** separate Recommendations, Explore, Saved, Attending, Your events and Following tabs. Recommendations and Explore show up to three events each; other previews show up to six with View all when needed.
 - **Connect:** follows, organizer profiles, comments/replies and in-app notifications.
-- **Moderate:** reports, timed bans, staff event tools and admin-only moderator assignments.
+- **Moderate:** reports, timed bans, staff event tools and admin-only moderator assignments. Admins can inspect a private audit history of both admin and moderator actions.
 - **Control access:** public, followers-only and invite-only events with server-enforced permissions.
 - **Share:** public Open Graph previews with generic fallbacks for private or unavailable events.
 - **Search metadata:** route titles/descriptions, canonical URLs, indexing rules and a public-event sitemap that excludes fictional demo events.
@@ -66,22 +68,30 @@ Hosted demo events are explicitly fictional. Their descriptions say **NOT A REAL
 
 ## Screenshots
 
-These screenshots use fictional demonstration events, locations and accounts. They do not contain real user records or private addresses. They were captured before the latest dashboard tabs, interest selector and compact card metadata changes.
+These screenshots use fictional demonstration events, locations and accounts. They do not contain real user records or private addresses. Dashboard, interests and audit-history images were refreshed on 8 November 2026. The remaining images are earlier captures and predate the compact card metadata changes.
 
 **Discover events:** illustrated covers, category icons, bookmarks, availability labels, search filters and numbered pages.
 
 ![Desktop event discovery with covers, category icons, saved bookmarks, available places and pagination](assets/screenshots/events-desktop.png)
 
 <details>
-<summary>More screenshots: saved events, dashboard, profiles, event details, cover selection, categories and mobile</summary>
+<summary>More screenshots: dashboard, interests, audit history, saved events, profiles, event details and mobile</summary>
 
 **Saved events:** a private wishlist with upcoming/ongoing events and a separate history view.
 
 ![Saved events page showing bookmarked demonstration events and upcoming/history controls](assets/screenshots/saved-events.png)
 
-**Earlier dashboard preview:** up to six saved events, with View all when more are available. The current dashboard separates its sections into tabs.
+**Dashboard:** six tabs separate recommendations, exploration and personal event lists; recommendations show up to three events.
 
-![Dashboard showing a six-event saved preview and View all link](assets/screenshots/dashboard.png)
+![Current dashboard with six tabs and three fictional recommended events](assets/screenshots/dashboard.png)
+
+**Private interests:** select categories on your own profile to personalize discovery.
+
+![Profile interest selection with three private categories selected](assets/screenshots/interests.png)
+
+**Audit history:** admins can filter and inspect staff actions, including moderator activity and before/after values.
+
+![Admin-only audit history showing fictional moderation actions and before/after details](assets/screenshots/audit-history.png)
 
 **Organizer profile:** followers and following above the organizer's upcoming and past events.
 
@@ -143,11 +153,13 @@ Open `http://localhost:5173`. The API defaults to `http://localhost:3000`. See t
 | `client/` | `npm run build` | Type-check and build the client |
 | `client/` | `npm run test:share` | Public-only metadata, escaping, preview fallbacks and sitemap responses |
 | `client/` | `npm run typecheck:tests` | Type-check browser tests and their configuration |
-| `client/` | `npm run test:browser` | Desktop/mobile authentication, accessibility, sessions, discovery, interests, dashboard tabs and SEO metadata |
+| `client/` | `npm run test:browser` | Desktop/mobile authentication, accessibility, sessions, discovery, interests, dashboard tabs, audit access/contrast, event-form themes and SEO metadata |
 
 Before the first browser test run, use `npx playwright install chromium`. Browser tests run a local client with fictional API fixtures and block external requests; real Google OAuth and deployed hosting behavior require separate live verification.
 
 The [CI workflow](.github/workflows/ci.yml) runs builds, lint, safety, backend, sharing and browser checks on pushes and pull requests. It uses an isolated PostgreSQL service and does not deploy the application or connect to Neon.
+
+The latest full local backend run passed **27 suites / 184 tests**, including a real PostgreSQL case with 5,000 fictional followers and 5,000 attendees, later-batch failure rollback, staff audit rollback and bounded reminders. The new audit and event-form browser checks reported six successful desktop/mobile cases; on Windows the runner remained open during teardown and required interruption after those results. These local checks do not establish the deployed version or live authenticated readiness.
 
 ## Performance and free-hosting limits
 
@@ -156,6 +168,14 @@ A three-round [HTTP measurement](assets/performance/demo-2026-11-04.json) record
 Local [production-build measurements](assets/performance/client-bundle-2026-11-04.json) show upfront JavaScript reduced from **596.7 KB to 346.9 KB** by deferring secondary routes, maps and calendars. That is approximately **42% less uncompressed JavaScript**, or **37% less with the recorded gzip settings**. Shared initial chunks are included in those totals.
 
 Discovery gives slow-load feedback, retains the last results during a failed refresh, supports retry and aborts superseded requests. Quick background updates stay visually quiet; a visible refresh notice appears after four seconds. Discovery requests time out after 65 seconds. These changes improve the waiting experience; they do not remove free-host wake-up delays. Measurements can be repeated manually from `client/` with `npm run measure:demo`; no keep-alive polling is scheduled.
+
+A local integration run created an event and all 5,000 follower notifications in **211 ms**. This single localhost measurement excludes hosted network latency and concurrent production traffic. Bulk notification writes remain part of the request, with a 15-second transaction timeout; there is no durable delivery queue or automatic retry job for these event mutations.
+
+## Staff audit history
+
+Only current admins can read audit history; moderator actions are recorded but moderators cannot browse it. Entries cover bans/unbans, account deletion, moderator role changes, staff event edits/cancellations/deletions, comment removals and report decisions. The view supports action, staff name/ID and UTC-date filters with 20 entries per page; displayed timestamps use the viewer's local timezone.
+
+Entries retain actor and target snapshots after accounts or events are deleted. Audit writes share the moderation transaction, so a failed record insertion rolls back the action. The application offers no history edit/delete endpoint and does not fabricate past actions. This is application-level append-only history, not database-level tamper protection. Credentials and comment bodies are not copied into audit records; event changes and ban reasons can contain private information, so the endpoint is admin-only and not cached.
 
 ## Search indexing and deployment
 
@@ -169,6 +189,7 @@ Ordinary event pages still render through JavaScript; this is not server-side re
 - Bearer JWTs expire after seven days and are stored in browser local storage. The UI clears expired/invalid sessions while preserving sessions during temporary connection failures. There is no refresh-token or server-side logout/revocation system.
 - Email verification and password recovery are deferred; no email delivery service is configured.
 - Reminders and rating prompts may arrive late when the free backend sleeps.
+- Event notifications are transactional but have no background retry queue. Reminder runs handle up to 1,000 registrations and rating prompts up to 100 per check; a backlog can span several checks.
 - Covers come from the bundled illustration library; user uploads and physical-attendance check-in are not implemented.
 
 Originally developed as a diploma thesis and continued as an independently maintained full-stack project.

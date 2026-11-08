@@ -5,13 +5,16 @@ import { setModeratorRole, banUserAdmin, unbanUserAdmin, deleteUserAdmin } from 
 import prisma from "../src/prisma";
 
 jest.mock("../src/prisma", () => ({ __esModule: true, default: {
+  $transaction: jest.fn(), $queryRaw: jest.fn(),
   user: { findUnique: jest.fn(), updateMany: jest.fn() },
 } }));
+jest.mock("../src/utils/auditHistory", () => ({ recordAudit: jest.fn() }));
 let req: Request;
 let res: Response;
 let next: jest.Mock;
 beforeEach(() => {
   jest.resetAllMocks();
+  (prisma.$transaction as jest.Mock).mockImplementation(callback => callback(prisma));
   req = { userId: "actor", params: { id: "target" }, body: { role: "MODERATOR" } } as unknown as Request;
   res = { status: jest.fn().mockReturnThis(), json: jest.fn() } as unknown as Response;
   next = jest.fn();

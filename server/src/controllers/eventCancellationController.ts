@@ -3,6 +3,7 @@ import { z } from "zod";
 import prisma from "../prisma";
 import { isStaff } from "../utils/roles";
 import { lockEventSeries } from "../utils/eventSeries";
+import { recordAudit } from "../utils/auditHistory";
 
 const schema = z.object({ scope: z.enum(["OCCURRENCE", "SERIES"]).default("OCCURRENCE") });
 
@@ -54,6 +55,12 @@ async function performCancellation(req: Request, res: Response, staffTools: bool
           userId: registration.userId, type: "EVENT_CANCELLED" as const,
           message: `The event "${target.name}" has been cancelled`, eventId: target.id,
         })) });
+      }
+      if (staffTools && (affected.length || (parsed.data.scope === "SERIES" && !current.recurrenceStopped))) {
+        await recordAudit(tx, req.userId!, "EVENT_CANCELLED", "EVENT", id, current.name, {
+          scope: parsed.data.scope, cancelledEventIds: affected.map(target => target.id),
+          stoppedSeries: parsed.data.scope === "SERIES", seriesEventIds: ids,
+        });
       }
       return tx.event.findUniqueOrThrow({ where: { id } });
     });

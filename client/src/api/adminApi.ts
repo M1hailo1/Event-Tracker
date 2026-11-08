@@ -88,3 +88,19 @@ export async function getAdminUserPage(params: Record<string, string | number>):
 export async function getAdminEventPage(params: Record<string, string | number>): Promise<PageResult<Event>> {
   return (await axiosInstance.get("/admin/events", { params: { ...params, pageSize: 20 } })).data;
 }
+
+export const auditActions = {
+  USER_BANNED: "User banned", USER_UNBANNED: "User unbanned", USER_DELETED: "User deleted",
+  USER_ROLE_CHANGED: "User role changed", EVENT_UPDATED: "Event updated", EVENT_CANCELLED: "Event cancelled",
+  EVENT_DELETED: "Event deleted", COMMENT_REMOVED: "Comment removed", REPORT_DISMISSED: "Report dismissed", REPORT_REMOVED: "Report removed",
+} as const;
+
+export interface AuditEntry {
+  id: string; createdAt: string; actorId: string; actorName: string; actorRole: Role;
+  action: keyof typeof auditActions; targetType: string; targetId: string; targetLabel: string;
+  details: Record<string, unknown>;
+}
+
+export async function getAuditHistory(params: Record<string, string | number>): Promise<PageResult<AuditEntry>> {
+  return (await axiosInstance.get("/admin/audit-history", { params: { ...params, pageSize: 20 } })).data;
+}

@@ -18,6 +18,36 @@ enum Role {
   ADMIN
 }
 
+enum AuditAction {
+  USER_BANNED
+  USER_UNBANNED
+  USER_DELETED
+  USER_ROLE_CHANGED
+  EVENT_UPDATED
+  EVENT_CANCELLED
+  EVENT_DELETED
+  COMMENT_REMOVED
+  REPORT_DISMISSED
+  REPORT_REMOVED
+}
+
+model AuditEntry {
+  id          String      @id @default(uuid())
+  createdAt   DateTime    @default(now())
+  actorId     String
+  actorName   String
+  actorRole   Role
+  action      AuditAction
+  targetType  String
+  targetId    String
+  targetLabel String
+  details     Json
+
+  @@index([createdAt, id])
+  @@index([action, createdAt])
+  @@index([actorId, createdAt])
+}
+
 model User {
   id          String    @id @default(uuid())
   email       String    @unique

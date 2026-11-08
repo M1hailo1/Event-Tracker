@@ -8,16 +8,18 @@ import prisma from "../src/prisma";
 
 jest.mock("../src/prisma", () => ({ __esModule: true, default: {
   $transaction: jest.fn(), $queryRaw: jest.fn(),
-  event: { create: jest.fn(), update: jest.fn(), findUnique: jest.fn(), findMany: jest.fn() },
+  event: { create: jest.fn(), update: jest.fn(), findUnique: jest.fn(), findUniqueOrThrow: jest.fn(), findMany: jest.fn() },
   registration: { create: jest.fn(), findMany: jest.fn() },
   user: { findUnique: jest.fn() }, follow: { findMany: jest.fn() },
   category: { count: jest.fn() },
 } }));
+jest.mock("../src/utils/auditHistory", () => ({ recordAudit: jest.fn() }));
 jest.mock("../src/utils/ratings", () => ({ withEventRatings: jest.fn(async events => events) }));
 let req: Request;
 let res: Response;
 beforeEach(() => {
   jest.resetAllMocks();
+  (prisma.event.findUniqueOrThrow as jest.Mock).mockResolvedValue({ id: "event", categories: [], date: new Date("2099-01-01"), endDate: null });
   (prisma.$transaction as jest.Mock).mockImplementation(callback => callback(prisma));
   (prisma.$queryRaw as jest.Mock).mockResolvedValue([{ id: 'parent', parentEventId: null }]);
   req = { userId: "owner", params: { id: "event" }, query: {}, body: { coverId: "music-live" } } as unknown as Request;

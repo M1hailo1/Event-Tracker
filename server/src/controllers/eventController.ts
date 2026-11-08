@@ -10,7 +10,7 @@ import { getRatingSummary, withEventRatings } from "../utils/ratings";
 import { z } from "zod";
 import prisma from "../prisma";
 import { getNextDate } from "../utils/recurrence";
-import { createNotification } from "../utils/createNotification";
+import { notifyEventFollowers, notifyEventRegistrations, notificationTransactionOptions } from "../utils/bulkNotifications";
 
 export const baseEventSchema = z.object({
   coverId: z.enum(eventCoverIds).nullable().optional(),
@@ -58,46 +58,34 @@ export async function createEvent(req: Request, res: Response) {
   const categoryIds = selectedCategoryIds(data)!;
   if (!await validCategorySelection(categoryIds)) return res.status(400).json({ error: "Choose categories from the collection" });
 
-  const event = await prisma.event.create({
-    data: {
-      name: data.name,
-      coverId: data.coverId ?? null,
-      description: data.description ?? null,
-      categoryId: categoryIds[0]!,
-      categories: { connect: categoryIds.map(id => ({ id })) },
-      date: new Date(data.date),
-      endDate: data.endDate ? new Date(data.endDate) : null,
-      location: data.location,
-      latitude: data.latitude,
-      longitude: data.longitude,
-      maxCapacity: data.maxCapacity ?? null,
-      isRecurring: data.isRecurring,
-      recurrencePattern: data.recurrencePattern ?? null,
-      visibility: data.visibility,
-      createdByUserId: req.userId!,
-      registrations: { create: { userId: req.userId!, status: "CONFIRMED" } },
-    },
-  });
-
-  const creator = await prisma.user.findUnique({ where: { id: req.userId! } });
-
-  if (data.visibility !== "INVITE_ONLY") {
-    const followers = await prisma.follow.findMany({
-      where: { followingId: req.userId! },
-      select: { followerId: true },
+  const event = await prisma.$transaction(async tx => {
+    const event = await tx.event.create({
+      data: {
+        name: data.name,
+        coverId: data.coverId ?? null,
+        description: data.description ?? null,
+        categoryId: categoryIds[0]!,
+        categories: { connect: categoryIds.map(id => ({ id })) },
+        date: new Date(data.date),
+        endDate: data.endDate ? new Date(data.endDate) : null,
+        location: data.location,
+        latitude: data.latitude,
+        longitude: data.longitude,
+        maxCapacity: data.maxCapacity ?? null,
+        isRecurring: data.isRecurring,
+        recurrencePattern: data.recurrencePattern ?? null,
+        visibility: data.visibility,
+        createdByUserId: req.userId!,
+        registrations: { create: { userId: req.userId!, status: "CONFIRMED" } },
+      },
     });
 
-    await Promise.all(
-      followers.map((f) =>
-        createNotification(
-          f.followerId,
-          "NEW_EVENT_FROM_FOLLOWED",
-          `${creator?.name} created a new event: ${event.name}`,
-          event.id,
-        ),
-      ),
-    );
-  }
+    if (data.visibility !== "INVITE_ONLY") {
+      const creator = await tx.user.findUnique({ where: { id: req.userId! }, select: { name: true } });
+      await notifyEventFollowers(tx, req.userId!, event.id, `${creator?.name} created a new event: ${event.name}`);
+    }
+    return event;
+  }, notificationTransactionOptions);
 
   res.status(201).json(event);
 }
@@ -346,50 +334,39 @@ export async function updateEvent(req: Request, res: Response) {
   const categoryIds = selectedCategoryIds(data);
   if (!await validCategorySelection(categoryIds)) return res.status(400).json({ error: "Choose categories from the collection" });
 
-  const updatedEvent = await prisma.event.update({
-    where: { id },
-    data: {
-      ...(data.name !== undefined && { name: data.name }),
-      ...(data.coverId !== undefined && { coverId: data.coverId }),
-      ...(data.description !== undefined && { description: data.description }),
-      ...(categoryIds && { categoryId: categoryIds[0]!, categories: { set: categoryIds.map(id => ({ id })) } }),
-      ...(data.date !== undefined && { date: new Date(data.date) }),
-      ...(data.endDate !== undefined && {
-        endDate: data.endDate ? new Date(data.endDate) : null,
-      }),
-      ...(data.location !== undefined && { location: data.location }),
-      ...(data.latitude !== undefined && { latitude: data.latitude }),
-      ...(data.longitude !== undefined && { longitude: data.longitude }),
-      ...(data.maxCapacity !== undefined && { maxCapacity: data.maxCapacity }),
-      ...(data.isRecurring !== undefined && { isRecurring: data.isRecurring }),
-      ...(data.recurrencePattern !== undefined && {
-        recurrencePattern: data.recurrencePattern,
-      }),
-      ...(data.visibility !== undefined && {
-        visibility: data.visibility,
-      }),
-    },
-  });
+  const updatedEvent = await prisma.$transaction(async tx => {
+    await tx.$queryRaw`SELECT "id" FROM "Event" WHERE "id" = ${id} FOR UPDATE`;
+    const current = await tx.event.findUnique({ where: { id } });
+    if (!current || current.cancelledAt || current.date <= new Date() || !validUpdatedDates(current, data)) return null;
+    const updated = await tx.event.update({
+      where: { id },
+      data: {
+        ...(data.name !== undefined && { name: data.name }),
+        ...(data.coverId !== undefined && { coverId: data.coverId }),
+        ...(data.description !== undefined && { description: data.description }),
+        ...(categoryIds && { categoryId: categoryIds[0]!, categories: { set: categoryIds.map(id => ({ id })) } }),
+        ...(data.date !== undefined && { date: new Date(data.date) }),
+        ...(data.endDate !== undefined && {
+          endDate: data.endDate ? new Date(data.endDate) : null,
+        }),
+        ...(data.location !== undefined && { location: data.location }),
+        ...(data.latitude !== undefined && { latitude: data.latitude }),
+        ...(data.longitude !== undefined && { longitude: data.longitude }),
+        ...(data.maxCapacity !== undefined && { maxCapacity: data.maxCapacity }),
+        ...(data.isRecurring !== undefined && { isRecurring: data.isRecurring }),
+        ...(data.recurrencePattern !== undefined && {
+          recurrencePattern: data.recurrencePattern,
+        }),
+        ...(data.visibility !== undefined && {
+          visibility: data.visibility,
+        }),
+      },
+    });
 
-  const registeredUsers = await prisma.registration.findMany({
-    where: {
-      eventId: id,
-      status: "CONFIRMED",
-      userId: { not: req.userId! },
-    },
-    select: { userId: true },
-  });
-
-  await Promise.all(
-    registeredUsers.map((r) =>
-      createNotification(
-        r.userId,
-        "EVENT_UPDATED",
-        `The event "${updatedEvent.name}" you're registered for has been updated`,
-        updatedEvent.id,
-      ),
-    ),
-  );
+    await notifyEventRegistrations(tx, id, "EVENT_UPDATED", `The event "${updated.name}" you're registered for has been updated`, req.userId!);
+    return updated;
+  }, notificationTransactionOptions);
+  if (!updatedEvent) return res.status(409).json({ error: "This event changed. Refresh before editing it." });
 
   res.status(200).json(updatedEvent);
 }
@@ -417,30 +394,17 @@ export async function deleteEvent(req: Request, res: Response) {
       .json({ error: "You can't delete events that have started" });
   }
 
-  const registeredUsers = await prisma.registration.findMany({
-    where: {
-      eventId: id,
-      status: "CONFIRMED",
-      userId: { not: req.userId! },
-    },
-    select: { userId: true },
-  });
-
-  await prisma.$transaction([
-    prisma.registration.deleteMany({ where: { eventId: id } }),
-    prisma.eventInvite.deleteMany({ where: { eventId: id } }),
-    prisma.event.delete({ where: { id } }),
-  ]);
-
-  await Promise.all(
-    registeredUsers.map((r) =>
-      createNotification(
-        r.userId,
-        "EVENT_CANCELLED",
-        `The event "${existingEvent.name}" you were registered for was permanently deleted`,
-      ),
-    ),
-  );
+  const deleted = await prisma.$transaction(async tx => {
+    await tx.$queryRaw`SELECT "id" FROM "Event" WHERE "id" = ${id} FOR UPDATE`;
+    const current = await tx.event.findUnique({ where: { id } });
+    if (!current || current.createdByUserId !== req.userId || current.date <= new Date()) return false;
+    await notifyEventRegistrations(tx, id, "EVENT_CANCELLED", `The event "${current.name}" you were registered for was permanently deleted`, req.userId!, false);
+    await tx.registration.deleteMany({ where: { eventId: id } });
+    await tx.eventInvite.deleteMany({ where: { eventId: id } });
+    await tx.event.delete({ where: { id } });
+    return true;
+  }, notificationTransactionOptions);
+  if (!deleted) return res.status(409).json({ error: "This event changed. Refresh before deleting it." });
 
   res.status(200).json({ message: "Event successfully deleted" });
 }

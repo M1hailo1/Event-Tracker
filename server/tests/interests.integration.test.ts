@@ -10,10 +10,18 @@ describe("Interests and personal discovery", () => {
     const users = await Promise.all(["viewer", "owner"].map(name => prisma.user.create({ data: { name, email: `interests-${name}@example.test` } })));
     [viewer, owner] = users.map(user => user.id);
     token = `Bearer ${generateToken(viewer)}`;
-    music = (await prisma.category.findFirstOrThrow({ where: { name: "Music", isCustom: false } })).id;
-    film = (await prisma.category.findFirstOrThrow({ where: { name: "Film", isCustom: false } })).id;
+    [music, film] = (await Promise.all(["Music", "Film"].map(name => prisma.category.create({ data: { name, isCustom: false } })))).map(category => category.id);
   });
-  afterAll(async () => { await prisma.$disconnect(); });
+  afterAll(async () => {
+    if (viewer && owner && music && film) {
+      await prisma.registration.deleteMany({ where: { event: { createdByUserId: { in: [viewer, owner] } } } });
+      await prisma.eventInvite.deleteMany({ where: { event: { createdByUserId: { in: [viewer, owner] } } } });
+      await prisma.event.deleteMany({ where: { createdByUserId: { in: [viewer, owner] } } });
+      await prisma.user.update({ where: { id: viewer }, data: { interests: { set: [] } } });
+      await prisma.category.deleteMany({ where: { id: { in: [music, film] } } });
+    }
+    await prisma.$disconnect();
+  });
   const dashboard = () => request(app).get("/users/me/dashboard").set("Authorization", token);
   const save = (categoryIds: unknown) => request(app).put("/users/me/interests").set("Authorization", token).send({ categoryIds });
   async function event(name: string, categoryId = music, extra = {}) {
@@ -32,7 +40,7 @@ describe("Interests and personal discovery", () => {
   test("recommendations and exploration enforce eligibility, access and disjoint categories", async () => {
     await save([music]);
     const match = await event("Interest match");
-    const explore = await event("Explore film", film);
+    const explore = await event("Explore film", film, { date: new Date(Date.now() + 300000) });
     const hidden = await Promise.all([
       event("Private", music, { visibility: "INVITE_ONLY" }),
       event("Followers", music, { visibility: "FOLLOWERS_ONLY" }),
@@ -46,6 +54,11 @@ describe("Interests and personal discovery", () => {
     expect(result.status).toBe(200);
     expect(result.body.recommendedEvents.map((item: { id: string }) => item.id)).toContain(match.id);
     expect(result.body.exploreEvents.map((item: { id: string }) => item.id)).toContain(explore.id);
+    expect(result.body.recommendedEvents).toHaveLength(1);
+    for (const item of result.body.exploreEvents) {
+      expect(item.categoryId).not.toBe(music);
+      expect(item.categories.map((category: { id: string }) => category.id)).not.toContain(music);
+    }
     const ids = [...result.body.recommendedEvents, ...result.body.exploreEvents].map(item => item.id);
     for (const item of hidden) expect(ids).not.toContain(item.id);
     await prisma.follow.create({ data: { followerId: viewer, followingId: owner } });

@@ -1,4 +1,5 @@
 import { isStaff } from "../utils/roles";
+import { recordAudit } from "../utils/auditHistory";
 import { notifyComment } from "../utils/notifyComment";
 import { Request, Response, NextFunction } from "express";
 import { z } from "zod";
@@ -152,14 +153,21 @@ export async function deleteComment(req: Request, res: Response) {
     where: { id: req.userId! },
     select: { role: true },
   });
-  const result = await prisma.eventComment.updateMany({
-    where: {
-      id: req.params.commentId as string,
-      eventId: req.params.id as string,
-      deletedAt: null,
-      ...(isStaff(user?.role) ? {} : { userId: req.userId! }),
-    },
-    data: { body: "", deletedAt: new Date() },
+  const result = await prisma.$transaction(async tx => {
+    const comment = await tx.eventComment.findFirst({ where: { id: req.params.commentId as string, eventId: req.params.id as string, deletedAt: null } });
+    const result = await tx.eventComment.updateMany({
+      where: {
+        id: req.params.commentId as string,
+        eventId: req.params.id as string,
+        deletedAt: null,
+        ...(isStaff(user?.role) ? {} : { userId: req.userId! }),
+      },
+      data: { body: "", deletedAt: new Date() },
+    });
+    if (result.count && comment && isStaff(user?.role)) await recordAudit(tx, req.userId!, "COMMENT_REMOVED", "COMMENT", comment.id, "Event comment", {
+      eventId: comment.eventId, authorId: comment.userId,
+    });
+    return result;
   });
   if (!result.count)
     return res.status(403).json({ error: "You can't delete this comment" });

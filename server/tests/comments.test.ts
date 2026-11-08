@@ -4,14 +4,17 @@ import prisma from "../src/prisma";
 import { userCanViewEvent } from "../src/controllers/eventController";
 
 jest.mock("../src/prisma", () => ({ __esModule: true, default: {
+  $transaction: jest.fn(),
   event: { findUnique: jest.fn() }, user: { findUnique: jest.fn() },
   eventComment: { findFirst: jest.fn(), findMany: jest.fn(), create: jest.fn(), updateMany: jest.fn() },
 } }));
+jest.mock("../src/utils/auditHistory", () => ({ recordAudit: jest.fn() }));
 jest.mock("../src/controllers/eventController", () => ({ userCanViewEvent: jest.fn() }));
 let req: Request;
 let res: Response;
 beforeEach(() => {
   jest.resetAllMocks();
+  (prisma.$transaction as jest.Mock).mockImplementation(callback => callback(prisma));
   req = { params: { id: "event", commentId: "comment" }, query: {}, userId: "author", body: { body: "Hello" } } as unknown as Request;
   res = { status: jest.fn().mockReturnThis(), json: jest.fn().mockReturnThis() } as unknown as Response;
 });

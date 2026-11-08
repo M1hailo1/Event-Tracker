@@ -86,6 +86,7 @@ Admin filters run before paging: users accept `search`, `role`, `status`; events
 | Method | Endpoint                              | Description                                                |
 | ------ | ------------------------------------- | ---------------------------------------------------------- |
 | GET    | `/admin/stats` 🛡️                     | Platform statistics                                        |
+| GET    | `/admin/audit-history`                 | Admin-only paginated staff audit history                    |
 | GET    | `/admin/users` 🛡️                     | List all users                                             |
 | PATCH  | `/admin/users/:id/ban` 🛡️             | Ban a user                                                 |
 | PATCH  | `/admin/users/:id/unban` 🛡️           | Unban a user                                               |
@@ -97,3 +98,5 @@ Admin filters run before paging: users accept `search`, `role`, `status`; events
 | PATCH  | `/admin/users/:id/role` 🛡️            | Admin-only: grant/revoke moderator (`USER` or `MODERATOR`) |
 | GET    | `/admin/comment-reports` 🛡️           | List the comment-report queue                              |
 | PATCH  | `/admin/comment-reports/:reportId` 🛡️ | Dismiss a report or remove the comment                     |
+
+`GET /admin/audit-history` requires the current database role `ADMIN`; moderator access is denied. It returns `{ items, total, page, pageSize, totalPages }`, defaults to 20 entries and orders newest first with an ID tie-breaker. Optional filters: `action` (an `AuditAction` enum value), `actor` (staff name substring or exact ID), and `from` / `to` (`YYYY-MM-DD`, inclusive UTC dates). Responses use `Cache-Control: no-store`. Entries contain actor ID/name/role, action/time, target ID/type/label and action-specific details. No history mutation endpoints are exposed.
